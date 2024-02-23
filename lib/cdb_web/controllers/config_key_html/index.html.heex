@@ -1,0 +1,23 @@
+<.header>
+  Listing Config keys
+  <:actions>
+    <.link href={~p"/config_keys/new"}>
+      <.button>New Config key</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="config_keys" rows={@config_keys} row_click={&JS.navigate(~p"/config_keys/#{&1}")}>
+  <:col :let={config_key} label="Name"><%= config_key.name %></:col>
+  <:action :let={config_key}>
+    <div class="sr-only">
+      <.link navigate={~p"/config_keys/#{config_key}"}>Show</.link>
+    </div>
+    <.link navigate={~p"/config_keys/#{config_key}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={config_key}>
+    <.link href={~p"/config_keys/#{config_key}"} method="delete" data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>

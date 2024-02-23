@@ -1,0 +1,22 @@
+<.header>
+  Listing Config values
+  <:actions>
+    <.link href={~p"/config_values/new"}>
+      <.button>New Config value</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="config_values" rows={@config_values} row_click={&JS.navigate(~p"/config_values/#{&1}")}>
+  <:action :let={config_value}>
+    <div class="sr-only">
+      <.link navigate={~p"/config_values/#{config_value}"}>Show</.link>
+    </div>
+    <.link navigate={~p"/config_values/#{config_value}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={config_value}>
+    <.link href={~p"/config_values/#{config_value}"} method="delete" data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>

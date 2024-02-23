@@ -1,0 +1,8 @@
+<.header>
+  Edit Config value <%= @config_value.id %>
+  <:subtitle>Use this form to manage config_value records in your database.</:subtitle>
+</.header>
+
+<.config_value_form changeset={@changeset} action={~p"/config_values/#{@config_value}"} />
+
+<.back navigate={~p"/config_values"}>Back to config_values</.back>

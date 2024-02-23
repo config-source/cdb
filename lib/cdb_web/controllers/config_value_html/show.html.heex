@@ -1,0 +1,14 @@
+<.header>
+  Config value <%= @config_value.id %>
+  <:subtitle>This is a config_value record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"/config_values/#{@config_value}/edit"}>
+      <.button>Edit config_value</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+</.list>
+
+<.back navigate={~p"/config_values"}>Back to config_values</.back>

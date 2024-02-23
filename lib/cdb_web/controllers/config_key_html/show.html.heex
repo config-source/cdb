@@ -1,0 +1,15 @@
+<.header>
+  Config key <%= @config_key.id %>
+  <:subtitle>This is a config_key record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"/config_keys/#{@config_key}/edit"}>
+      <.button>Edit config_key</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @config_key.name %></:item>
+</.list>
+
+<.back navigate={~p"/config_keys"}>Back to config_keys</.back>

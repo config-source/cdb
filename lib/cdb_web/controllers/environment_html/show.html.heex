@@ -1,0 +1,15 @@
+<.header>
+  Environment <%= @environment.id %>
+  <:subtitle>This is a environment record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"/environments/#{@environment}/edit"}>
+      <.button>Edit environment</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @environment.name %></:item>
+</.list>
+
+<.back navigate={~p"/environments"}>Back to environments</.back>
