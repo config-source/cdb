@@ -7,6 +7,7 @@ defmodule Cdb.Configuration do
   alias Cdb.Repo
 
   alias Cdb.Configuration.ConfigKey
+  alias Cdb.Configuration.ConfigValue
 
   @doc """
   Returns the list of config_keys.
@@ -196,5 +197,66 @@ defmodule Cdb.Configuration do
   """
   def change_config_value(%ConfigValue{} = config_value, attrs \\ %{}) do
     ConfigValue.changeset(config_value, attrs)
+  end
+
+  @doc """
+  Return the primitive value for this config_value based on the value_type of
+  it's config_key.
+
+  ## Examples
+
+    iex> get_value(config_value)
+    1
+
+    iex> get_value(config_value)
+    "somevalue"
+
+    iex> get_value(config_value)
+    100.20
+  """
+  def get_value(config_value) do
+    config_value = config_value |> Repo.preload(:config_key)
+
+    case config_value.config_key.value_type do
+      :string -> config_value.str_value
+      :integer -> config_value.int_value
+      :float -> config_value.float_value
+      :boolean -> config_value.bool_value
+    end
+  end
+
+  @doc """
+  Returns a list of all the config values for the given environment. Handles
+  inheritance of parent environment values.
+
+  ## Examples
+
+    iex> get_configuration(environment)
+    [%{key: "somekey", value: "somevalue"}]
+  """
+  def get_configuration(%Cdb.Environments.Environment{} = environment, child_values \\ []) do
+    existing_keys = Enum.map(child_values, & &1[:key])
+
+    values =
+      Repo.all(
+        from cv in ConfigValue,
+          join: key in ConfigKey,
+          on: cv.config_key_id == key.id,
+          where: cv.environment_id == ^environment.id and key.name not in ^existing_keys,
+          preload: [:config_key]
+      )
+
+    converted =
+      Enum.map(values, fn cv ->
+        %{
+          key: cv.config_key.name,
+          value: get_value(cv)
+        }
+      end) ++ child_values
+
+    case Cdb.Environments.get_parent(environment) do
+      nil -> converted
+      parent -> get_configuration(parent, converted)
+    end
   end
 end

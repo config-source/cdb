@@ -101,4 +101,16 @@ defmodule Cdb.Environments do
   def change_environment(%Environment{} = environment, attrs \\ %{}) do
     Environment.changeset(environment, attrs)
   end
+
+  @doc """
+  Returns the parent environment if one exists. Returns nil if the environment
+  has no parent.
+  """
+  def get_parent(%Environment{} = environment) do
+    cond do
+      environment.promotes_to == nil -> nil
+      Ecto.assoc_loaded?(environment.parent) -> environment.parent
+      true -> get_environment!(environment.promotes_to)
+    end
+  end
 end
