@@ -18,7 +18,7 @@ defmodule Cdb.Environments do
 
   """
   def list_environments do
-    Repo.all(Environment)
+    Repo.all(from e in Environment, preload: [:parent])
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Cdb.Environments do
       ** (Ecto.NoResultsError)
 
   """
-  def get_environment!(id), do: Repo.get!(Environment, id)
+  def get_environment!(id), do: Repo.get!(Environment, id) |> Repo.preload(:parent)
 
   @doc """
   Creates a environment.
