@@ -4,6 +4,8 @@ defmodule Cdb.Configuration.ConfigKey do
 
   schema "config_keys" do
     field :name, :string
+    field :value_type, Ecto.Enum, values: [:string, :integer, :float, :boolean]
+    field :can_propagate, :boolean, default: true
 
     timestamps()
   end

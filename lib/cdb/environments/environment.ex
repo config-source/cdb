@@ -4,7 +4,11 @@ defmodule Cdb.Environments.Environment do
 
   schema "environments" do
     field :name, :string
-    field :promotes_to, :id
+
+    belongs_to :parent, Cdb.Environments.Environment, foreign_key: :promotes_to
+    has_many :children, Cdb.Environments.Environment, foreign_key: :promotes_to
+
+    has_many :config_values, Cdb.Configuration.ConfigValue
 
     timestamps()
   end

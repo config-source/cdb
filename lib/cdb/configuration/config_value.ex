@@ -3,8 +3,13 @@ defmodule Cdb.Configuration.ConfigValue do
   import Ecto.Changeset
 
   schema "config_values" do
-    field :config_key_id, :id
-    field :environment_id, :id
+    field :str_value, :string
+    field :int_value, :integer
+    field :float_value, :float
+    field :bool_value, :boolean, default: false
+
+    belongs_to :environment, Cdb.Environments.Environment
+    belongs_to :config_key, Cdb.Configuration.ConfigKey
 
     timestamps()
   end

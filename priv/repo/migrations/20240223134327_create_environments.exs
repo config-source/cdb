@@ -5,7 +5,7 @@ defmodule Cdb.Repo.Migrations.CreateEnvironments do
     create table(:environments, primary_key: false) do
       add :id, :uuid, primary_key: true
       add :name, :string
-      add :promotes_to, references(:environments, on_delete: :nothing, type: :uuid)
+      add :promotes_to, references(:environments, on_delete: :nilify_all, type: :uuid)
 
       timestamps()
     end
