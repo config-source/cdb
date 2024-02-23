@@ -18,6 +18,9 @@ defmodule CdbWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    resources "/environments", EnvironmentController
+    resources "/config-keys", ConfigKeyController
+    resources "/config-values", ConfigValueController
   end
 
   # Other scopes may use custom stacks.
