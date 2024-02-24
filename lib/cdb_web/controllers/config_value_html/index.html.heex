@@ -7,7 +7,14 @@
   </:actions>
 </.header>
 
-<.table id="config_values" rows={@config_values} row_click={&JS.navigate(~p"/config_values/#{&1}")}>
+<.table
+  id="config_values"
+  rows={@config_values}
+  row_click={&JS.navigate(~p"/config_values/#{&1}")}
+>
+  <:col :let={config_value} label="Environment"><%= config_value.environment.name %></:col>
+  <:col :let={config_value} label="Key"><%= config_value.config_key.name %></:col>
+  <:col :let={config_value} label="Value"><%= Cdb.Configuration.get_value(config_value) %></:col>
   <:action :let={config_value}>
     <div class="sr-only">
       <.link navigate={~p"/config_values/#{config_value}"}>Show</.link>

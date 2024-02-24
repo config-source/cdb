@@ -21,7 +21,7 @@ defmodule Cdb.ConfigurationTest do
     end
 
     test "create_config_key/1 with valid data creates a config_key" do
-      valid_attrs = %{name: "some name"}
+      valid_attrs = %{name: "some name", value_type: :string}
 
       assert {:ok, %ConfigKey{} = config_key} = Configuration.create_config_key(valid_attrs)
       assert config_key.name == "some name"
@@ -35,13 +35,18 @@ defmodule Cdb.ConfigurationTest do
       config_key = config_key_fixture()
       update_attrs = %{name: "some updated name"}
 
-      assert {:ok, %ConfigKey{} = config_key} = Configuration.update_config_key(config_key, update_attrs)
+      assert {:ok, %ConfigKey{} = config_key} =
+               Configuration.update_config_key(config_key, update_attrs)
+
       assert config_key.name == "some updated name"
     end
 
     test "update_config_key/2 with invalid data returns error changeset" do
       config_key = config_key_fixture()
-      assert {:error, %Ecto.Changeset{}} = Configuration.update_config_key(config_key, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Configuration.update_config_key(config_key, @invalid_attrs)
+
       assert config_key == Configuration.get_config_key!(config_key.id)
     end
 
@@ -61,23 +66,39 @@ defmodule Cdb.ConfigurationTest do
     alias Cdb.Configuration.ConfigValue
 
     import Cdb.ConfigurationFixtures
+    import Cdb.EnvironmentsFixtures
 
-    @invalid_attrs %{}
+    @invalid_attrs %{str_value: 1}
 
     test "list_config_values/0 returns all config_values" do
-      config_value = config_value_fixture()
+      config_value =
+        Repo.preload(
+          config_value_fixture(),
+          [:environment, :config_key]
+        )
+
       assert Configuration.list_config_values() == [config_value]
     end
 
     test "get_config_value!/1 returns the config_value with given id" do
-      config_value = config_value_fixture()
+      config_value =
+        Repo.preload(
+          config_value_fixture(),
+          [:environment, :config_key]
+        )
+
       assert Configuration.get_config_value!(config_value.id) == config_value
     end
 
     test "create_config_value/1 with valid data creates a config_value" do
-      valid_attrs = %{}
+      valid_attrs = %{
+        str_value: "somevalue",
+        environment_id: environment_fixture().id,
+        config_key_id: config_key_fixture().id
+      }
 
-      assert {:ok, %ConfigValue{} = config_value} = Configuration.create_config_value(valid_attrs)
+      assert {:ok, %ConfigValue{} = _config_value} =
+               Configuration.create_config_value(valid_attrs)
     end
 
     test "create_config_value/1 with invalid data returns error changeset" do
@@ -88,13 +109,20 @@ defmodule Cdb.ConfigurationTest do
       config_value = config_value_fixture()
       update_attrs = %{}
 
-      assert {:ok, %ConfigValue{} = config_value} = Configuration.update_config_value(config_value, update_attrs)
+      assert {:ok, %ConfigValue{} = _config_value} =
+               Configuration.update_config_value(config_value, update_attrs)
     end
 
     test "update_config_value/2 with invalid data returns error changeset" do
       config_value = config_value_fixture()
-      assert {:error, %Ecto.Changeset{}} = Configuration.update_config_value(config_value, @invalid_attrs)
-      assert config_value == Configuration.get_config_value!(config_value.id)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Configuration.update_config_value(config_value, @invalid_attrs)
+
+      assert Repo.preload(
+               config_value,
+               [:environment, :config_key]
+             ) == Configuration.get_config_value!(config_value.id)
     end
 
     test "delete_config_value/1 deletes the config_value" do

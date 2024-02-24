@@ -4,6 +4,8 @@ defmodule Cdb.ConfigurationFixtures do
   entities via the `Cdb.Configuration` context.
   """
 
+  import Cdb.EnvironmentsFixtures
+
   @doc """
   Generate a config_key.
   """
@@ -11,7 +13,8 @@ defmodule Cdb.ConfigurationFixtures do
     {:ok, config_key} =
       attrs
       |> Enum.into(%{
-        name: "some name"
+        name: "some name",
+        value_type: :string
       })
       |> Cdb.Configuration.create_config_key()
 
@@ -25,7 +28,9 @@ defmodule Cdb.ConfigurationFixtures do
     {:ok, config_value} =
       attrs
       |> Enum.into(%{
-
+        environment_id: environment_fixture().id,
+        config_key_id: config_key_fixture().id,
+        str_value: "some value"
       })
       |> Cdb.Configuration.create_config_value()
 

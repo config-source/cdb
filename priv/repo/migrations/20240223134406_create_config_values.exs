@@ -4,8 +4,8 @@ defmodule Cdb.Repo.Migrations.CreateConfigValues do
   def change do
     create table(:config_values, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :config_key_id, references(:config_keys, on_delete: :nothing, type: :uuid)
-      add :environment_id, references(:environments, on_delete: :nothing, type: :uuid)
+      add :config_key_id, references(:config_keys, on_delete: :delete_all, type: :uuid), null: false
+      add :environment_id, references(:environments, on_delete: :delete_all, type: :uuid), null: false
 
       timestamps()
     end

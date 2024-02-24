@@ -15,6 +15,6 @@ defmodule Cdb.EnvironmentsFixtures do
       })
       |> Cdb.Environments.create_environment()
 
-    environment
+    environment |> Cdb.Repo.preload([:parent])
   end
 end

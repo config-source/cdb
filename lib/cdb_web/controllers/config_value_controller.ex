@@ -19,7 +19,7 @@ defmodule CdbWeb.ConfigValueController do
       {:ok, config_value} ->
         conn
         |> put_flash(:info, "Config value created successfully.")
-        |> redirect(to: ~p"/config_values/#{config_value}")
+        |> redirect(to: ~p"/config-values/#{config_value}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :new, changeset: changeset)
@@ -44,7 +44,7 @@ defmodule CdbWeb.ConfigValueController do
       {:ok, config_value} ->
         conn
         |> put_flash(:info, "Config value updated successfully.")
-        |> redirect(to: ~p"/config_values/#{config_value}")
+        |> redirect(to: ~p"/config-values/#{config_value}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :edit, config_value: config_value, changeset: changeset)
@@ -57,6 +57,6 @@ defmodule CdbWeb.ConfigValueController do
 
     conn
     |> put_flash(:info, "Config value deleted successfully.")
-    |> redirect(to: ~p"/config_values")
+    |> redirect(to: ~p"/config-values")
   end
 end

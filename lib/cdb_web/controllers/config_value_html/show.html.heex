@@ -9,6 +9,9 @@
 </.header>
 
 <.list>
+  <:item title="Environment"><%= @config_value.environment.name %></:item>
+  <:item title="Key"><%= @config_value.config_key.name %></:item>
+  <:item title="Value"><%= Cdb.Configuration.get_value(@config_value) %></:item>
 </.list>
 
 <.back navigate={~p"/config_values"}>Back to config_values</.back>

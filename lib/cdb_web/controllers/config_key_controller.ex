@@ -19,7 +19,7 @@ defmodule CdbWeb.ConfigKeyController do
       {:ok, config_key} ->
         conn
         |> put_flash(:info, "Config key created successfully.")
-        |> redirect(to: ~p"/config_keys/#{config_key}")
+        |> redirect(to: ~p"/config-keys/#{config_key}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :new, changeset: changeset)
@@ -44,7 +44,7 @@ defmodule CdbWeb.ConfigKeyController do
       {:ok, config_key} ->
         conn
         |> put_flash(:info, "Config key updated successfully.")
-        |> redirect(to: ~p"/config_keys/#{config_key}")
+        |> redirect(to: ~p"/config-keys/#{config_key}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :edit, config_key: config_key, changeset: changeset)
@@ -57,6 +57,6 @@ defmodule CdbWeb.ConfigKeyController do
 
     conn
     |> put_flash(:info, "Config key deleted successfully.")
-    |> redirect(to: ~p"/config_keys")
+    |> redirect(to: ~p"/config-keys")
   end
 end

@@ -13,7 +13,7 @@ defmodule Cdb.Configuration.ConfigKey do
   @doc false
   def changeset(config_key, attrs) do
     config_key
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> cast(attrs, [:name, :value_type])
+    |> validate_required([:name, :value_type])
   end
 end

@@ -115,7 +115,7 @@ defmodule Cdb.Configuration do
 
   """
   def list_config_values do
-    Repo.all(ConfigValue)
+    Repo.all(from cv in ConfigValue, preload: [:config_key, :environment])
   end
 
   @doc """
@@ -132,7 +132,8 @@ defmodule Cdb.Configuration do
       ** (Ecto.NoResultsError)
 
   """
-  def get_config_value!(id), do: Repo.get!(ConfigValue, id)
+  def get_config_value!(id),
+    do: Repo.get!(ConfigValue, id) |> Repo.preload([:environment, :config_key])
 
   @doc """
   Creates a config_value.

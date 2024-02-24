@@ -17,7 +17,14 @@ defmodule Cdb.Configuration.ConfigValue do
   @doc false
   def changeset(config_value, attrs) do
     config_value
-    |> cast(attrs, [])
-    |> validate_required([])
+    |> cast(attrs, [
+      :str_value,
+      :int_value,
+      :float_value,
+      :bool_value,
+      :environment_id,
+      :config_key_id
+    ])
+    |> validate_required([:environment_id, :config_key_id])
   end
 end
