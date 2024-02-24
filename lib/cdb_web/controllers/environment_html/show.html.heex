@@ -10,6 +10,15 @@
 
 <.list>
   <:item title="Name"><%= @environment.name %></:item>
+  <:item title="Promotes To">
+    <%= if @environment.promotes_to do %>
+      <.link href={~p"/environments/#{@environment.promotes_to.id}"}>
+        <%= @environment.promotes_to.name %>
+      </.link>
+    <% else %>
+      None
+    <% end %>
+  </:item>
 </.list>
 
 <.back navigate={~p"/environments"}>Back to environments</.back>
