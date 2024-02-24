@@ -5,8 +5,8 @@ defmodule Cdb.Environments.Environment do
   schema "environments" do
     field :name, :string
 
-    belongs_to :parent, Cdb.Environments.Environment, foreign_key: :promotes_to
-    has_many :children, Cdb.Environments.Environment, foreign_key: :promotes_to
+    belongs_to :promotes_to, Cdb.Environments.Environment, foreign_key: :promotes_to_id
+    has_many :promotes_from, Cdb.Environments.Environment, foreign_key: :promotes_to_id
 
     has_many :config_values, Cdb.Configuration.ConfigValue
 

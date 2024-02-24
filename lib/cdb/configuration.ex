@@ -228,7 +228,7 @@ defmodule Cdb.Configuration do
 
   @doc """
   Returns a list of all the config values for the given environment. Handles
-  inheritance of parent environment values.
+  inheritance of promotes_to environment values.
 
   ## Examples
 
@@ -255,9 +255,9 @@ defmodule Cdb.Configuration do
         }
       end) ++ child_values
 
-    case Cdb.Environments.get_parent(environment) do
+    case Cdb.Environments.get_promotes_to(environment) do
       nil -> converted
-      parent -> get_configuration(parent, converted)
+      promotes_to -> get_configuration(promotes_to, converted)
     end
   end
 end

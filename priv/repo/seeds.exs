@@ -13,10 +13,10 @@
 production = Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "production"})
 
 staging =
-  Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "staging", parent: production})
+  Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "staging", promotes_to: production})
 
-dev1 = Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "dev1", parent: staging})
-dev2 = Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "dev2", parent: staging})
+dev1 = Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "dev1", promotes_to: staging})
+dev2 = Cdb.Repo.insert!(%Cdb.Environments.Environment{name: "dev2", promotes_to: staging})
 
 owner = Cdb.Repo.insert!(%Cdb.Configuration.ConfigKey{name: "owner", value_type: :string})
 

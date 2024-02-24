@@ -18,7 +18,7 @@ defmodule Cdb.Environments do
 
   """
   def list_environments do
-    Repo.all(from e in Environment, preload: [:parent])
+    Repo.all(from e in Environment, preload: [:promotes_to])
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Cdb.Environments do
       ** (Ecto.NoResultsError)
 
   """
-  def get_environment!(id), do: Repo.get!(Environment, id) |> Repo.preload(:parent)
+  def get_environment!(id), do: Repo.get!(Environment, id) |> Repo.preload(:promotes_to)
 
   @doc """
   Creates a environment.
@@ -103,13 +103,13 @@ defmodule Cdb.Environments do
   end
 
   @doc """
-  Returns the parent environment if one exists. Returns nil if the environment
-  has no parent.
+  Returns the promotes_to environment if one exists. Returns nil if the environment
+  has no promotes_to.
   """
-  def get_parent(%Environment{} = environment) do
+  def get_promotes_to(%Environment{} = environment) do
     cond do
       environment.promotes_to == nil -> nil
-      Ecto.assoc_loaded?(environment.parent) -> environment.parent
+      Ecto.assoc_loaded?(environment.promotes_to) -> environment.promotes_to
       true -> get_environment!(environment.promotes_to)
     end
   end
