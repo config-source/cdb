@@ -5,5 +5,5 @@ CREATE TABLE config_keys (
     can_propagate BOOLEAN NOT NULL DEFAULT TRUE,
     value_type integer NOT NULL CONSTRAINT value_type_range CHECK (value_type BETWEEN 0 AND 3),
     
-    inserted_at timestamp DEFAULT current_timestamp
+    created_at timestamp DEFAULT current_timestamp
 );

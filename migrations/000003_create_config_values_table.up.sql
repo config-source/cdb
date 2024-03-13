@@ -12,7 +12,7 @@ CREATE TABLE config_values (
     float_value FLOAT,
     bool_value BOOLEAN,
 
-    inserted_at timestamp DEFAULT current_timestamp,
+    created_at timestamp DEFAULT current_timestamp,
     updated_at timestamp
 );
 

@@ -1,11 +1,14 @@
 package cdb
 
-import uuid "github.com/gofrs/uuid/v5"
+import (
+	"context"
+	"time"
+)
 
 type ConfigValue struct {
-	ID            uuid.UUID `db:"id"`
-	ConfigKeyID   uuid.UUID `db:"config_key_id"`
-	EnvironmentID uuid.UUID `db:"environment_id"`
+	ID            int `db:"id"`
+	ConfigKeyID   int `db:"config_key_id"`
+	EnvironmentID int `db:"environment_id"`
 
 	// From config_key tables
 	Name      string    `db:"name"`
@@ -15,6 +18,8 @@ type ConfigValue struct {
 	IntValue   *int     `db:"int_value"`
 	FloatValue *float64 `db:"float_value"`
 	BoolValue  *bool    `db:"bool_value"`
+
+	CreatedAt time.Time `db:"created_at"`
 }
 
 func (cv *ConfigValue) Value() interface{} {
@@ -33,8 +38,8 @@ func (cv *ConfigValue) Value() interface{} {
 }
 
 type ConfigValueRepository interface {
-	GetConfiguration(environmentID uuid.UUID) ([]ConfigValue, error)
-	GetConfigurationValue(environmentID uuid.UUID, key string) (ConfigValue, error)
+	GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error)
+	GetConfigurationValue(ctx context.Context, int, key string) (ConfigValue, error)
 
-	CreateConfigValue(ConfigValue) (ConfigValue, error)
+	CreateConfigValue(context.Context, ConfigValue) (ConfigValue, error)
 }

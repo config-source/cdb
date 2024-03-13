@@ -1,6 +1,9 @@
 package cdb
 
-import uuid "github.com/gofrs/uuid/v5"
+import (
+	"context"
+	"time"
+)
 
 type ValueType int
 
@@ -12,14 +15,16 @@ const (
 )
 
 type ConfigKey struct {
-	ID uuid.UUID `db:"id"`
+	ID int `db:"id"`
 
 	Name         string    `db:"name"`
 	ValueType    ValueType `db:"value_type"`
 	CanPropagate bool      `db:"can_propagate"`
+
+	CreatedAt time.Time `db:"created_at"`
 }
 
 type ConfigKeyRepository interface {
-	GetConfigKey(id uuid.UUID) (ConfigKey, error)
-	ListConfigKeys()
+	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
+	ListConfigKeys(context.Context)
 }
