@@ -42,17 +42,22 @@ var migrateCmd = &cobra.Command{
 		var migrationErr error
 		if steps > 0 {
 			if rollback {
+				fmt.Printf("Rolling back %d database migrations...\n", steps)
 				steps = -1 * steps
+			} else {
+				fmt.Printf("Applying %d database migrations...\n", steps)
 			}
 
 			migrationErr = m.Steps(steps)
 		} else if rollback {
+			fmt.Println("Rolling back database migrations...")
 			migrationErr = m.Down()
 		} else {
+			fmt.Println("Applying database migrations...")
 			migrationErr = m.Up()
 		}
 
-		if errors.Is(migrationErr, migrate.ErrNoChange) {
+		if errors.Is(migrationErr, migrate.ErrNoChange) || migrationErr == nil {
 			fmt.Println("Database is up to date.")
 			return nil
 		}
