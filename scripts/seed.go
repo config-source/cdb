@@ -14,16 +14,20 @@ func fail(err error) {
 	}
 }
 
+func clearTable(repository *postgres.Repository, name string) {
+	_, err := repository.Raw().Exec(context.Background(), fmt.Sprintf("DELETE FROM %s", name))
+	fail(err)
+}
+
 func main() {
 	repository, err := postgres.NewRepository(context.Background(), "")
 	fail(err)
 
 	ctx := context.Background()
 
-	_, err = repository.Raw().Exec(ctx, "DELETE FROM environments")
-	fail(err)
-
 	fmt.Println("Seeding environments...")
+	clearTable(repository, "environments")
+
 	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production"})
 	fail(err)
 
@@ -47,4 +51,33 @@ func main() {
 		_, err = repository.GetEnvironment(ctx, env.ID)
 		fail(err)
 	}
+
+	fmt.Println("Seeding config keys...")
+	clearTable(repository, "config_keys")
+
+	owner, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("owner", cdb.TypeString))
+	fail(err)
+
+	maxReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("maxReplicas", cdb.TypeInteger))
+	fail(err)
+
+	minReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("minReplicas", cdb.TypeInteger))
+	fail(err)
+
+	// here for a bit of "testing" and to keep go from freaking out about the
+	// config key vars being unused for now.
+	allKeys, err := repository.ListConfigKeys(ctx)
+	fail(err)
+
+	for idx, ck := range []cdb.ConfigKey{owner, maxReplicas, minReplicas} {
+		if allKeys[idx].ID != ck.ID && allKeys[idx].Name != ck.Name && *allKeys[idx].CanPropagate != *ck.CanPropagate {
+			fail(fmt.Errorf("Expected: %v Got: %v", ck, allKeys[idx]))
+		}
+
+		_, err = repository.GetConfigKey(ctx, ck.ID)
+		fail(err)
+	}
+
+	fmt.Println("Done seeding config keys.")
+
 }

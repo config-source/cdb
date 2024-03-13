@@ -19,12 +19,22 @@ type ConfigKey struct {
 
 	Name         string    `db:"name"`
 	ValueType    ValueType `db:"value_type"`
-	CanPropagate bool      `db:"can_propagate"`
+	CanPropagate *bool     `db:"can_propagate"`
 
 	CreatedAt time.Time `db:"created_at"`
 }
 
 type ConfigKeyRepository interface {
+	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
 	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
 	ListConfigKeys(context.Context)
+}
+
+func NewConfigKey(name string, valueType ValueType) ConfigKey {
+	canPropagate := true
+	return ConfigKey{
+		Name:         name,
+		ValueType:    valueType,
+		CanPropagate: &canPropagate,
+	}
 }
