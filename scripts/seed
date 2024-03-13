@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+go run "$(git rev-parse --show-toplevel)/scripts/seed.go"
