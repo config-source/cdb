@@ -5,10 +5,10 @@ import uuid "github.com/gofrs/uuid/v5"
 type ValueType int
 
 const (
-	TypeString ValueType = iota
-	TypeInteger
-	TypeFloat
-	TypeBoolean
+	TypeString  ValueType = 0
+	TypeInteger ValueType = 1
+	TypeFloat   ValueType = 2
+	TypeBoolean ValueType = 3
 )
 
 type ConfigKey struct {
