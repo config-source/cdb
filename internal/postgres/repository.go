@@ -37,7 +37,7 @@ func getOne[T any](r *Repository, ctx context.Context, sql string, args ...inter
 		return def, err
 	}
 
-	return pgx.CollectExactlyOneRow[T](rows, pgx.RowToStructByName[T])
+	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
 
 func getAll[T any](r *Repository, ctx context.Context, sql string, args ...interface{}) ([]T, error) {

@@ -3,17 +3,18 @@ BEGIN;
 CREATE TABLE config_values (
     id SERIAL PRIMARY KEY,
     config_key_id integer REFERENCES config_keys
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        NOT NULL,
     environment_id integer REFERENCES environments
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        NOT NULL,
 
     str_value TEXT,
     int_value INTEGER,
     float_value FLOAT,
     bool_value BOOLEAN,
 
-    created_at timestamp DEFAULT current_timestamp,
-    updated_at timestamp
+    created_at timestamp DEFAULT current_timestamp
 );
 
 CREATE OR REPLACE FUNCTION update_config_value_updated_at()

@@ -37,20 +37,10 @@ func main() {
 	dev1, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev1", PromotesToID: &staging.ID})
 	fail(err)
 
-	dev2, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev2", PromotesToID: &staging.ID})
+	_, err = repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev2", PromotesToID: &staging.ID})
 	fail(err)
 
 	fmt.Println("Done seeding environments.")
-
-	// here for a bit of "testing" and to keep go from freaking out about dev1
-	// and dev2 being unused for now.
-	for _, env := range []cdb.Environment{production, staging, dev1, dev2} {
-		_, err = repository.GetEnvironmentByName(ctx, env.Name)
-		fail(err)
-
-		_, err = repository.GetEnvironment(ctx, env.ID)
-		fail(err)
-	}
 
 	fmt.Println("Seeding config keys...")
 	clearTable(repository, "config_keys")
@@ -64,20 +54,45 @@ func main() {
 	minReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("minReplicas", cdb.TypeInteger))
 	fail(err)
 
-	// here for a bit of "testing" and to keep go from freaking out about the
-	// config key vars being unused for now.
-	allKeys, err := repository.ListConfigKeys(ctx)
-	fail(err)
-
-	for idx, ck := range []cdb.ConfigKey{owner, maxReplicas, minReplicas} {
-		if allKeys[idx].ID != ck.ID && allKeys[idx].Name != ck.Name && *allKeys[idx].CanPropagate != *ck.CanPropagate {
-			fail(fmt.Errorf("Expected: %v Got: %v", ck, allKeys[idx]))
-		}
-
-		_, err = repository.GetConfigKey(ctx, ck.ID)
-		fail(err)
-	}
-
 	fmt.Println("Done seeding config keys.")
 
+	fmt.Println("Seeding config values...")
+	clearTable(repository, "config_values")
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewStringConfigValue(
+		production.ID,
+		owner.ID,
+		"SRE",
+	))
+	fail(err)
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+		production.ID,
+		maxReplicas.ID,
+		100,
+	))
+	fail(err)
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+		production.ID,
+		minReplicas.ID,
+		10,
+	))
+	fail(err)
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+		staging.ID,
+		minReplicas.ID,
+		1,
+	))
+	fail(err)
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+		dev1.ID,
+		maxReplicas.ID,
+		10,
+	))
+	fail(err)
+
+	fmt.Println("Done seeding config values.")
 }
