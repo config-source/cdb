@@ -12,6 +12,9 @@ import (
 //go:embed queries/configValues/create_config_value.sql
 var createConfigValueSql string
 
+//go:embed queries/configValues/get_config_value_by_id.sql
+var getConfigValueByIDSql string
+
 //go:embed queries/configValues/get_config_value_by_environment_id_and_key.sql
 var getConfigValueByEnvironmentAndKeySql string
 
@@ -80,4 +83,7 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 
 func (r *Repository) GetConfiguration(ctx context.Context, environmentID int) ([]cdb.ConfigValue, error) {
 	return getConfigurationRecursively(ctx, r, environmentID, []string{})
+}
+func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (cdb.ConfigValue, error) {
+	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByIDSql, configValueID)
 }
