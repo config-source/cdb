@@ -64,17 +64,18 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 		return immediateValues, err
 	}
 
-	row := r.Raw().QueryRow(ctx, "SELECT promotes_to_id FROM environments WHERE environment_id = $1", environmentID)
-	var promotesToID int
-	err = row.Scan(&promotesToID)
-	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		return immediateValues, nil
-	} else if err != nil {
+	var promotesToID *int
+	err = r.Raw().QueryRow(
+		ctx,
+		"SELECT promotes_to_id FROM environments WHERE id = $1",
+		environmentID,
+	).Scan(&promotesToID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return immediateValues, err
 	}
 
-	if promotesToID != 0 {
-		parentValues, err := getConfigurationRecursively(ctx, r, promotesToID, getAllKeys(immediateValues))
+	if promotesToID != nil {
+		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToID, append(excludedKeys, getAllKeys(immediateValues)...))
 		return append(immediateValues, parentValues...), err
 	}
 
