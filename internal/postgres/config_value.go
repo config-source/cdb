@@ -85,6 +85,11 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 func (r *Repository) GetConfiguration(ctx context.Context, environmentID int) ([]cdb.ConfigValue, error) {
 	return getConfigurationRecursively(ctx, r, environmentID, []string{})
 }
+
+func (r *Repository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (cdb.ConfigValue, error) {
+	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByEnvironmentAndKeySql, environmentID, key)
+}
+
 func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (cdb.ConfigValue, error) {
 	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByIDSql, configValueID)
 }
