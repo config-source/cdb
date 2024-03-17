@@ -162,8 +162,8 @@ func createConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigVal
 }
 
 func TestGetConfiguration(t *testing.T) {
-	repo, _ := initTestDB(t, "TestGetConfiguration")
-	// defer tr.Cleanup()
+	repo, tr := initTestDB(t, "TestGetConfiguration")
+	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
 	staging := envFixture(t, repo, "staging", &production.ID)
@@ -191,6 +191,79 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expectedValues, retrieved) {
-		t.Fatalf("Expected %v Got %v", expectedValues, retrieved)
+		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+	}
+}
+
+func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
+	repo, tr := initTestDB(t, "TestGetConfigurationDoesntPropagateKeysWhichDoNot")
+	defer tr.Cleanup()
+
+	production := envFixture(t, repo, "production", nil)
+	staging := envFixture(t, repo, "staging", &production.ID)
+	dev := envFixture(t, repo, "dev", &staging.ID)
+
+	owner := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	noChildren := configKeyFixture(t, repo, "noChildren", cdb.TypeString, false)
+	minReplicas := configKeyFixture(t, repo, "minReplicas", cdb.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, repo, "maxReplicas", cdb.TypeInteger, true)
+
+	// Throw in duplicate settings higher in the parent tree to ensure
+	// inheritance overrides these values.
+	createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
+
+	expectedValues := []cdb.ConfigValue{
+		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+	}
+
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(expectedValues, retrieved) {
+		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+	}
+}
+
+func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testing.T) {
+	repo, tr := initTestDB(t, "TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment")
+	defer tr.Cleanup()
+
+	production := envFixture(t, repo, "production", nil)
+	staging := envFixture(t, repo, "staging", &production.ID)
+	dev := envFixture(t, repo, "dev", &staging.ID)
+
+	owner := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	noChildren := configKeyFixture(t, repo, "noChildren", cdb.TypeString, false)
+	minReplicas := configKeyFixture(t, repo, "minReplicas", cdb.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, repo, "maxReplicas", cdb.TypeInteger, true)
+
+	// Throw in duplicate settings higher in the parent tree to ensure
+	// inheritance overrides these values.
+	createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
+
+	expectedValues := []cdb.ConfigValue{
+		createConfigValue(t, repo, cdb.NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
+		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+	}
+
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(expectedValues, retrieved) {
+		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
 	}
 }
