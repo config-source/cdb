@@ -14,7 +14,9 @@ CREATE TABLE config_values (
     float_value FLOAT,
     bool_value BOOLEAN,
 
-    created_at timestamp DEFAULT current_timestamp
+    created_at timestamp DEFAULT current_timestamp,
+
+    UNIQUE (environment_id, config_key_id)
 );
 
 CREATE OR REPLACE FUNCTION update_config_value_updated_at()
