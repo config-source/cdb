@@ -38,3 +38,11 @@ func NewConfigKey(name string, valueType ValueType) ConfigKey {
 		CanPropagate: &canPropagate,
 	}
 }
+
+func NewConfigKeyWithCanPropagate(name string, valueType ValueType, canPropagate bool) ConfigKey {
+	return ConfigKey{
+		Name:         name,
+		ValueType:    valueType,
+		CanPropagate: &canPropagate,
+	}
+}
