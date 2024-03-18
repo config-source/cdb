@@ -51,7 +51,7 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatalf("Expected can propagate to default to true got: %v", *ck.CanPropagate)
 	}
 
-	ck2, err := repo.CreateConfigKey(context.Background(), cdb.NewConfigKeyWithCanPropagate("mat", cdb.TypeString, false))
+	ck2, err := repo.CreateConfigKey(context.Background(), cdb.NewConfigKeyWithCanPropagate("mat2", cdb.TypeString, false))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatalf("Expected ID to be set got: %d", ck2.ID)
 	}
 
-	if ck2.Name != "mat" {
+	if ck2.Name != "mat2" {
 		t.Fatalf("Expected Name to be mat got: %s", ck2.Name)
 	}
 
@@ -77,8 +77,8 @@ func TestGetConfigKey(t *testing.T) {
 	repo, tr := initTestDB(t, "TestGetConfigKey")
 	defer tr.Cleanup()
 
-	configKey1 := configKeyFixture(t, repo, "configKey1", cdb.TypeInteger, true)
-	configKeyFixture(t, repo, "configKey2", cdb.TypeString, true)
+	configKey1 := configKeyFixture(t, repo, "getConfigKey1", cdb.TypeInteger, true)
+	configKeyFixture(t, repo, "getConfigKey2", cdb.TypeString, true)
 
 	configKey, err := repo.GetConfigKey(context.Background(), configKey1.ID)
 	if err != nil {
@@ -97,7 +97,7 @@ func TestListConfigKeys(t *testing.T) {
 	configKeys := []cdb.ConfigKey{
 		configKeyFixture(t, repo, "configKey1", cdb.TypeInteger, true),
 		configKeyFixture(t, repo, "configKey2", cdb.TypeString, true),
-		configKeyFixture(t, repo, "configKey2", cdb.TypeBoolean, true),
+		configKeyFixture(t, repo, "configKey3", cdb.TypeBoolean, true),
 	}
 
 	retrieved, err := repo.ListConfigKeys(context.Background())
