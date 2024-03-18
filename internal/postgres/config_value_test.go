@@ -132,7 +132,7 @@ func TestGetConfigValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	retrieved, err := repo.GetConfigurationValue(context.Background(), env.ID, key.Name)
+	retrieved, err := repo.GetConfigurationValue(context.Background(), env.Name, key.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

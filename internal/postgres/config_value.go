@@ -15,7 +15,7 @@ var createConfigValueSql string
 //go:embed queries/configValues/get_config_value_by_id.sql
 var getConfigValueByIDSql string
 
-//go:embed queries/configValues/get_config_value_by_environment_id_and_key.sql
+//go:embed queries/configValues/get_config_value_by_environment_and_key.sql
 var getConfigValueByEnvironmentAndKeySql string
 
 //go:embed queries/configValues/get_all_config_values_for_environment.sql
@@ -113,8 +113,8 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentID int) ([
 	return immediateValues, nil
 }
 
-func (r *Repository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (cdb.ConfigValue, error) {
-	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByEnvironmentAndKeySql, environmentID, key)
+func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (cdb.ConfigValue, error) {
+	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByEnvironmentAndKeySql, environmentName, key)
 }
 
 func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (cdb.ConfigValue, error) {
