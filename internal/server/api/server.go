@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -16,6 +17,7 @@ var (
 type Server struct {
 	repo ModelRepository
 	mux  *http.ServeMux
+	log  zerolog.Logger
 }
 
 type ModelRepository interface {
@@ -24,9 +26,10 @@ type ModelRepository interface {
 	cdb.ConfigKeyRepository
 }
 
-func New(repo ModelRepository) *Server {
+func New(repo ModelRepository, log zerolog.Logger) *Server {
 	server := &Server{
 		repo: repo,
+		log:  log,
 	}
 
 	mux := http.NewServeMux()
@@ -37,6 +40,10 @@ func New(repo ModelRepository) *Server {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.log.Info().
+		Str("url", r.URL.String()).
+		Msg("request received")
+
 	w.Header().Set("Content-Type", "application/json")
 	s.mux.ServeHTTP(w, r)
 }
