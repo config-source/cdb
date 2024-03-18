@@ -27,7 +27,7 @@ type ConfigKey struct {
 type ConfigKeyRepository interface {
 	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
 	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
-	ListConfigKeys(context.Context)
+	ListConfigKeys(context.Context) ([]ConfigKey, error)
 }
 
 func NewConfigKey(name string, valueType ValueType) ConfigKey {
