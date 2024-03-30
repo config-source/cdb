@@ -1,2 +1,9 @@
 #!/usr/bin/env bash
-go run ./cmd/cdbd server
+
+if [[ ! -x $(which air) ]]; then
+    echo "Install air to run the server with live reload:"
+    echo "https://github.com/cosmtrek/air"
+    air
+else
+    go run ./cmd/cdbd server
+fi
