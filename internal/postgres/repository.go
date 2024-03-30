@@ -37,8 +37,9 @@ func (r *Repository) Healthy(ctx context.Context) bool {
 	var healthy int
 	err := r.pool.QueryRow(ctx, "SELECT 1 FROM environments LIMIT 1").Scan(&healthy)
 	if err != nil {
-		r.log.Err(err)
-		return false
+		r.log.Err(err).
+			Int("healthy", healthy).
+			Msg("Postgres health check failed")
 	}
 
 	return healthy == 1
