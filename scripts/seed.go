@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/internal/postgres"
+	"github.com/rs/zerolog"
 )
 
 func fail(err error) {
@@ -20,7 +23,17 @@ func clearTable(repository *postgres.Repository, name string) {
 }
 
 func main() {
-	repository, err := postgres.NewRepository(context.Background(), "")
+	logger := zerolog.New(os.Stdout).
+		Level(zerolog.ErrorLevel).
+		With().
+		Timestamp().
+		Logger().
+		Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+
+	repository, err := postgres.NewRepository(context.Background(), logger, "")
 	fail(err)
 
 	ctx := context.Background()

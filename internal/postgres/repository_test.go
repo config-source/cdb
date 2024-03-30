@@ -14,6 +14,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -127,7 +128,11 @@ func initTestDB(t *testing.T, testName string) (*pg.Repository, *testRepository)
 		t.Fatal(err)
 	}
 
-	repo, err := pg.NewRepository(context.Background(), tr.TestDBURL)
+	repo, err := pg.NewRepository(
+		context.Background(),
+		zerolog.New(nil).Level(zerolog.Disabled),
+		tr.TestDBURL,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

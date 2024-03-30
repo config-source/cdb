@@ -17,11 +17,6 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run database migrations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repo, err := postgres.NewRepository(context.Background(), settings.DBUrl())
-		if err != nil {
-			return err
-		}
-
 		logger := zerolog.New(os.Stdout).
 			Level(settings.LogLevel()).
 			With().
@@ -32,6 +27,15 @@ var serverCmd = &cobra.Command{
 				Out:        os.Stdout,
 				TimeFormat: time.RFC3339,
 			})
+		}
+
+		repo, err := postgres.NewRepository(
+			context.Background(),
+			logger,
+			settings.DBUrl(),
+		)
+		if err != nil {
+			return err
 		}
 
 		server := api.New(repo, logger)

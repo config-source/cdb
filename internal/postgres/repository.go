@@ -5,13 +5,15 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
 )
 
 type Repository struct {
 	pool *pgxpool.Pool
+	log  zerolog.Logger
 }
 
-func NewRepository(ctx context.Context, connString string) (*Repository, error) {
+func NewRepository(ctx context.Context, log zerolog.Logger, connString string) (*Repository, error) {
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, err
@@ -19,6 +21,7 @@ func NewRepository(ctx context.Context, connString string) (*Repository, error) 
 
 	return &Repository{
 		pool: pool,
+		log:  log,
 	}, nil
 }
 
