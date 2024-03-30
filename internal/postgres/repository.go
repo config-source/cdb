@@ -31,6 +31,19 @@ func (r *Repository) Raw() *pgxpool.Pool {
 	return r.pool
 }
 
+// Healthy returns a boolean indicating that the connection pool is working and
+// queries can be run.
+func (r *Repository) Healthy(ctx context.Context) bool {
+	var healthy int
+	err := r.pool.QueryRow(ctx, "SELECT 1 FROM environments LIMIT 1").Scan(&healthy)
+	if err != nil {
+		r.log.Err(err)
+		return false
+	}
+
+	return healthy == 1
+}
+
 // boilerplate reducing utilities
 
 func getOne[T any](r *Repository, ctx context.Context, sql string, args ...interface{}) (T, error) {

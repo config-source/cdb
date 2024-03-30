@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,7 @@ type ModelRepository interface {
 	cdb.EnvironmentRepository
 	cdb.ConfigValueRepository
 	cdb.ConfigKeyRepository
+	Healthy(context.Context) bool
 }
 
 func New(repo ModelRepository, log zerolog.Logger) *Server {
@@ -34,18 +36,35 @@ func New(repo ModelRepository, log zerolog.Logger) *Server {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", server.GetEnvironmentByName)
+	mux.HandleFunc("GET /healthz", server.HealtCheck)
 
 	server.mux = mux
 	return server
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.log.Info().
-		Str("url", r.URL.String()).
-		Msg("request received")
+type StatusRecorder struct {
+	http.ResponseWriter
+	Status int
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	s.mux.ServeHTTP(w, r)
+func (r *StatusRecorder) WriteHeader(status int) {
+	r.Status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	wr := &StatusRecorder{ResponseWriter: w}
+	wr.Header().Set("Content-Type", "application/json")
+	s.mux.ServeHTTP(wr, r)
+	accessLog := s.log.Info()
+	if wr.Status >= 400 {
+		accessLog = s.log.Error()
+	}
+
+	accessLog.
+		Str("url", r.URL.String()).
+		Int("statusCode", wr.Status).
+		Msg("request served")
 }
 
 type ErrorResponse struct {
