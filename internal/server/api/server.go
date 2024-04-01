@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/config-source/cdb"
@@ -42,46 +41,24 @@ func New(repo ModelRepository, log zerolog.Logger) *Server {
 	return server
 }
 
-type StatusRecorder struct {
-	http.ResponseWriter
-	Status int
-}
-
-func (r *StatusRecorder) WriteHeader(status int) {
-	r.Status = status
-	r.ResponseWriter.WriteHeader(status)
-}
-
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	wr := &StatusRecorder{ResponseWriter: w}
-	wr.Header().Set("Content-Type", "application/json")
-	s.mux.ServeHTTP(wr, r)
-	accessLog := s.log.Info()
-	if wr.Status >= 400 {
-		accessLog = s.log.Error()
-	}
-
-	accessLog.
-		Str("url", r.URL.String()).
-		Int("statusCode", wr.Status).
-		Msg("request served")
+	s.mux.ServeHTTP(w, r)
 }
 
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-func sendJson(w http.ResponseWriter, payload interface{}) {
+func (s *Server) sendJson(w http.ResponseWriter, payload interface{}) {
 	err := json.NewEncoder(w).Encode(payload)
 	if err != nil {
-		// TODO: logging
-		fmt.Println(err)
+		s.log.Err(err).Msg("failed to encode a payload")
 	}
 }
 
-func errorResponse(w http.ResponseWriter, message error) {
+func (s *Server) errorResponse(w http.ResponseWriter, message error) {
 	response := ErrorResponse{
 		Message: message.Error(),
 	}
-	sendJson(w, response)
+	s.sendJson(w, response)
 }

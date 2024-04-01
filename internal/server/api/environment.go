@@ -9,7 +9,7 @@ func (s *Server) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		errorResponse(w, errors.New("name missing from url"))
+		s.errorResponse(w, errors.New("name missing from url"))
 		return
 	}
 
@@ -22,9 +22,9 @@ func (s *Server) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		errorResponse(w, err)
+		s.errorResponse(w, err)
 		return
 	}
 
-	sendJson(w, env)
+	s.sendJson(w, env)
 }
