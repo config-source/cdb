@@ -9,5 +9,5 @@ func (s *API) HealtCheck(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 	}
 
-	w.Write([]byte{})
+	w.Write([]byte{}) // nolint:errcheck
 }

@@ -71,7 +71,19 @@ var migrationPath = findMigrationPath()
 //
 // Use testRepository.TestDBURL to connect to this new database.
 func (tr *testRepository) Start(testName string) error {
-	connUrl := "postgres://localhost:5432/postgres"
+	port := os.Getenv("PGPORT")
+	if port == "" {
+		port = "5432"
+	}
+
+	host := os.Getenv("PGHOST")
+	if host == "" {
+		host = "localhost"
+	}
+
+	connUrlPrefix := fmt.Sprintf("postgres://%s:%s", host, port)
+
+	connUrl := fmt.Sprintf("%s/%s", connUrlPrefix, "postgres")
 	conn, err := pgx.Connect(context.Background(), connUrl)
 	if err != nil {
 		return err
@@ -82,12 +94,13 @@ func (tr *testRepository) Start(testName string) error {
 	ctx := context.Background()
 
 	tr.Cleanup()
+
 	_, err = tr.conn.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", tr.testName))
 	if err != nil {
 		return err
 	}
 
-	tr.TestDBURL = fmt.Sprintf("postgres://localhost:5432/%s", tr.testName)
+	tr.TestDBURL = fmt.Sprintf("%s/%s", connUrlPrefix, tr.testName)
 	db, err := sql.Open("pgx", tr.TestDBURL)
 	if err != nil {
 		return err
