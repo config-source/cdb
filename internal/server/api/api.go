@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/rs/zerolog"
 )
@@ -25,6 +26,8 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 	}
 
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
+	mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
+	mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
 	mux.HandleFunc("GET /healthz", api.HealtCheck)
 
 	return api
@@ -41,9 +44,20 @@ func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 	}
 }
 
-func (a *API) errorResponse(w http.ResponseWriter, message error) {
+func (a *API) errorResponse(w http.ResponseWriter, err error) {
+	switch err {
+	case cdb.ErrEnvNotFound:
+		w.WriteHeader(http.StatusNotFound)
+		err = ErrNotFound
+	// This is safe because subsequent calls to WriteHeader are ignored so
+	// callers can set the status code before calling errorResponse but if they
+	// haven't we want to send a 500.
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	response := ErrorResponse{
-		Message: message.Error(),
+		Message: err.Error(),
 	}
 
 	a.sendJson(w, response)

@@ -54,6 +54,10 @@ func (tr *TestRepository) CreateEnvironment(ctx context.Context, env cdb.Environ
 		return cdb.Environment{}, tr.Error
 	}
 
+	if tr.Environments == nil {
+		tr.Environments = make(map[int]cdb.Environment)
+	}
+
 	env.ID = len(tr.Environments) + 1
 	env.CreatedAt = time.Now()
 	if env.PromotesToID != nil && *env.PromotesToID != 0 {
@@ -67,6 +71,10 @@ func (tr *TestRepository) CreateEnvironment(ctx context.Context, env cdb.Environ
 }
 
 func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck cdb.ConfigKey) (cdb.ConfigKey, error) {
+	if tr.ConfigKeys == nil {
+		tr.ConfigKeys = make(map[int]cdb.ConfigKey)
+	}
+
 	ck.ID = len(tr.ConfigKeys) + 1
 	ck.CreatedAt = time.Now()
 	tr.ConfigKeys[ck.ID] = ck
@@ -104,6 +112,10 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return cv, err
+	}
+
+	if tr.ConfigValues == nil {
+		tr.ConfigValues = make(map[int]cdb.ConfigValue)
 	}
 
 	cv.ID = len(tr.ConfigKeys) + 1
