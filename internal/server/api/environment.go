@@ -5,15 +5,15 @@ import (
 	"net/http"
 )
 
-func (s *Server) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
+func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		s.errorResponse(w, errors.New("name missing from url"))
+		a.errorResponse(w, errors.New("name missing from url"))
 		return
 	}
 
-	env, err := s.repo.GetEnvironmentByName(r.Context(), name)
+	env, err := a.repo.GetEnvironmentByName(r.Context(), name)
 	if err != nil {
 		switch err.Error() {
 		case "no rows in result set":
@@ -22,9 +22,9 @@ func (s *Server) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		s.errorResponse(w, err)
+		a.errorResponse(w, err)
 		return
 	}
 
-	s.sendJson(w, env)
+	a.sendJson(w, env)
 }

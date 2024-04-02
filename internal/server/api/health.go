@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (s *Server) HealtCheck(w http.ResponseWriter, r *http.Request) {
+func (s *API) HealtCheck(w http.ResponseWriter, r *http.Request) {
 	if !s.repo.Healthy(r.Context()) {
 		w.WriteHeader(400)
 	}

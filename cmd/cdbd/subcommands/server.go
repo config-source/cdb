@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/config-source/cdb/internal/postgres"
-	"github.com/config-source/cdb/internal/server/api"
+	"github.com/config-source/cdb/internal/server"
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/settings"
 	"github.com/rs/zerolog"
@@ -39,8 +39,9 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
-		var server http.Handler = api.New(repo, logger)
+		var server http.Handler = server.New(repo, logger)
 		server = middleware.AccessLog(logger, server)
+
 		return http.ListenAndServe(":8080", server)
 	},
 }

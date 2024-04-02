@@ -7,7 +7,14 @@ tmp_dir = "tmp"
   bin = "./tmp/cdbd"
   cmd = "go build -o ./tmp/cdbd ./cmd/cdbd"
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = [
+    "assets",
+    "tmp",
+    "vendor",
+    "testdata",
+    "scripts",
+    "migrations",
+  ]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
