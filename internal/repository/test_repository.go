@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"math"
 	"time"
 
 	"github.com/config-source/cdb"
@@ -118,7 +117,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 		tr.ConfigValues = make(map[int]cdb.ConfigValue)
 	}
 
-	cv.ID = len(tr.ConfigKeys) + 1
+	cv.ID = len(tr.ConfigValues) + 1
 	cv.CreatedAt = time.Now()
 	tr.ConfigValues[cv.ID] = cv
 	return cv, nil
@@ -126,7 +125,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 
 func keyAlreadyInSet(values []cdb.ConfigValue, newValue cdb.ConfigValue) bool {
 	for _, cv := range values {
-		if cv.ID == newValue.ID {
+		if cv.ConfigKeyID == newValue.ConfigKeyID {
 			return true
 		}
 	}
@@ -134,10 +133,10 @@ func keyAlreadyInSet(values []cdb.ConfigValue, newValue cdb.ConfigValue) bool {
 	return false
 }
 
-func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentID int) ([]cdb.ConfigValue, error) {
+func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName string) ([]cdb.ConfigValue, error) {
 	values := make([]cdb.ConfigValue, 0)
 
-	env, err := tr.GetEnvironment(ctx, environmentID)
+	env, err := tr.GetEnvironmentByName(ctx, environmentName)
 	if err != nil {
 		return values, err
 	}
@@ -156,7 +155,12 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentID in
 	}
 
 	if env.PromotesToID != nil {
-		parentValues, err := tr.GetConfiguration(ctx, *env.PromotesToID)
+		parent, err := tr.GetEnvironment(ctx, *env.PromotesToID)
+		if err != nil {
+			return values, err
+		}
+
+		parentValues, err := tr.GetConfiguration(ctx, parent.Name)
 		if err != nil {
 			return values, err
 		}
@@ -172,53 +176,16 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentID in
 }
 
 func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (cdb.ConfigValue, error) {
-	env, err := tr.GetEnvironmentByName(ctx, environmentName)
+	configValues, err := tr.GetConfiguration(ctx, environmentName)
 	if err != nil {
 		return cdb.ConfigValue{}, err
 	}
 
-	validEnvIds := []int{env.ID}
-	for env.PromotesToID != nil {
-		validEnvIds = append(validEnvIds, *env.PromotesToID)
-
-		env, err = tr.GetEnvironment(ctx, *env.PromotesToID)
-		if err != nil {
-			return cdb.ConfigValue{}, err
+	for _, cv := range configValues {
+		if cv.Name == key {
+			return cv, nil
 		}
 	}
 
-	// Gotta be a smarter way to do this...
-	var bestMatch cdb.ConfigValue
-	var bestMatchIndex int = math.MaxInt
-
-	for _, cv := range tr.ConfigValues {
-		matchedIndex := -1
-
-		for idx, id := range validEnvIds {
-			if cv.EnvironmentID == id {
-				matchedIndex = idx
-				break
-			}
-		}
-
-		if matchedIndex == -1 {
-			continue
-		}
-
-		ck, err := tr.GetConfigKey(ctx, cv.ConfigKeyID)
-		if err != nil {
-			return cdb.ConfigValue{}, err
-		}
-
-		if ck.Name == key && bestMatchIndex > matchedIndex {
-			bestMatch = cv
-			bestMatchIndex = matchedIndex
-		}
-	}
-
-	if bestMatchIndex == math.MaxInt {
-		return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
-	}
-
-	return bestMatch, nil
+	return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
 }

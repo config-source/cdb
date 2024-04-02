@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -72,25 +73,25 @@ func (cv *ConfigValue) Value() interface{} {
 	switch cv.ValueType {
 	case TypeString:
 		if cv.StrValue == nil {
-			panic("UNKNOWN STR VALUE")
+			return "UNKNOWN STR VALUE"
 		}
 
 		return *cv.StrValue
 	case TypeInteger:
 		if cv.IntValue == nil {
-			panic("UNKNOWN INT VALUE")
+			return math.MaxInt
 		}
 
 		return *cv.IntValue
 	case TypeFloat:
 		if cv.FloatValue == nil {
-			panic("UNKNOWN FLOAT VALUE")
+			return math.MaxFloat32
 		}
 
 		return *cv.FloatValue
 	case TypeBoolean:
 		if cv.BoolValue == nil {
-			panic("UNKNOWN BOOLEAN VALUE")
+			return false
 		}
 
 		return *cv.BoolValue
@@ -101,10 +102,11 @@ func (cv *ConfigValue) Value() interface{} {
 
 func (cv ConfigValue) String() string {
 	return fmt.Sprintf(
-		"ConfigValue(%d, %d, %s, %v)",
+		"ConfigValue(%d, %d, %s, %s, %v)",
 		cv.EnvironmentID,
 		cv.ConfigKeyID,
 		cv.Name,
+		cv.ValueType,
 		cv.Value(),
 	)
 }
@@ -112,6 +114,6 @@ func (cv ConfigValue) String() string {
 type ConfigValueRepository interface {
 	CreateConfigValue(context.Context, ConfigValue) (ConfigValue, error)
 
-	GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error)
+	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
 	GetConfigurationValue(ctx context.Context, environmentName, key string) (ConfigValue, error)
 }

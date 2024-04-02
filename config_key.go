@@ -19,6 +19,21 @@ const (
 	TypeBoolean ValueType = 3
 )
 
+func (vt ValueType) String() string {
+	switch vt {
+	case TypeString:
+		return "STRING"
+	case TypeInteger:
+		return "INTEGER"
+	case TypeFloat:
+		return "FLOAT"
+	case TypeBoolean:
+		return "BOOLEAN"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 type ConfigKey struct {
 	ID int `db:"id"`
 

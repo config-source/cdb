@@ -3,6 +3,7 @@ package cdb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -17,6 +18,20 @@ type Environment struct {
 	PromotesToID *int   `db:"promotes_to_id"`
 
 	CreatedAt time.Time `db:"created_at"`
+}
+
+func (e Environment) String() string {
+	promotesToID := 0
+	if e.PromotesToID != nil {
+		promotesToID = *e.PromotesToID
+	}
+
+	return fmt.Sprintf(
+		"Environment(id=%d, name=%s, promotes_to=%d)",
+		e.ID,
+		e.Name,
+		promotesToID,
+	)
 }
 
 type EnvironmentRepository interface {

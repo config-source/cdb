@@ -185,7 +185,7 @@ func TestGetConfiguration(t *testing.T) {
 		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -258,7 +258,7 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

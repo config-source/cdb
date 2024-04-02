@@ -94,14 +94,19 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 	return immediateValues, nil
 }
 
-func (r *Repository) GetConfiguration(ctx context.Context, environmentID int) ([]cdb.ConfigValue, error) {
-	immediateValues, err := getAll[cdb.ConfigValue](r, ctx, getAllConfigValuesForEnvironmentSql, environmentID)
+func (r *Repository) GetConfiguration(ctx context.Context, environmentName string) ([]cdb.ConfigValue, error) {
+	immediateValues, err := getAll[cdb.ConfigValue](r, ctx, getAllConfigValuesForEnvironmentSql, environmentName)
 	if err != nil {
 		return immediateValues, err
 	}
 
-	promotesToID, err := r.getPromotesToID(ctx, environmentID)
-	if err != nil {
+	var promotesToID *int
+	err = r.Raw().QueryRow(
+		ctx,
+		"SELECT promotes_to_id FROM environments WHERE name = $1",
+		environmentName,
+	).Scan(&promotesToID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return immediateValues, err
 	}
 
