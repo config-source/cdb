@@ -62,6 +62,20 @@ func TestGetEnvironment(t *testing.T) {
 	}
 }
 
+func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
+	repo, tr := initTestDB(t, "TestGetEnvironment")
+	defer tr.Cleanup()
+
+	_, err := repo.GetEnvironment(context.Background(), 1)
+	if err == nil {
+		t.Fatal("Expected an error but got none!")
+	}
+
+	if err != cdb.ErrEnvNotFound {
+		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
+	}
+}
+
 func TestGetEnvironmentByName(t *testing.T) {
 	repo, tr := initTestDB(t, "TestGetEnvironmentByName")
 	defer tr.Cleanup()
@@ -76,5 +90,19 @@ func TestGetEnvironmentByName(t *testing.T) {
 
 	if !reflect.DeepEqual(env1, env) {
 		t.Fatalf("Got wrong environment expected %v got %v", env1, env)
+	}
+}
+
+func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
+	repo, tr := initTestDB(t, "TestGetEnvironment")
+	defer tr.Cleanup()
+
+	_, err := repo.GetEnvironmentByName(context.Background(), "dev")
+	if err == nil {
+		t.Fatal("Expected an error but got none!")
+	}
+
+	if err != cdb.ErrEnvNotFound {
+		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
 	}
 }

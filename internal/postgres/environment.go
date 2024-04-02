@@ -21,9 +21,19 @@ func (r *Repository) CreateEnvironment(ctx context.Context, env cdb.Environment)
 }
 
 func (r *Repository) GetEnvironment(ctx context.Context, id int) (cdb.Environment, error) {
-	return getOne[cdb.Environment](r, ctx, getEnvironmentByIDSql, id)
+	env, err := getOne[cdb.Environment](r, ctx, getEnvironmentByIDSql, id)
+	if err != nil && err.Error() == "no rows in result set" {
+		return env, cdb.ErrEnvNotFound
+	}
+
+	return env, err
 }
 
 func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (cdb.Environment, error) {
-	return getOne[cdb.Environment](r, ctx, getEnvironmentByNameSql, name)
+	env, err := getOne[cdb.Environment](r, ctx, getEnvironmentByNameSql, name)
+	if err != nil && err.Error() == "no rows in result set" {
+		return env, cdb.ErrEnvNotFound
+	}
+
+	return env, err
 }

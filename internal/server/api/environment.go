@@ -3,6 +3,8 @@ package api
 import (
 	"errors"
 	"net/http"
+
+	"github.com/config-source/cdb"
 )
 
 func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
@@ -15,8 +17,8 @@ func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 
 	env, err := a.repo.GetEnvironmentByName(r.Context(), name)
 	if err != nil {
-		switch err.Error() {
-		case "no rows in result set":
+		switch err {
+		case cdb.ErrEnvNotFound:
 			w.WriteHeader(http.StatusNotFound)
 			err = ErrNotFound
 		default:
