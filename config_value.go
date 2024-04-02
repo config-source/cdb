@@ -2,8 +2,13 @@ package cdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
+)
+
+var (
+	ErrConfigValueNotFound = errors.New("config value not found")
 )
 
 type ConfigValue struct {

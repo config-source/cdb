@@ -22,6 +22,7 @@ func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+
 		a.errorResponse(w, err)
 		return
 	}

@@ -2,7 +2,12 @@ package cdb
 
 import (
 	"context"
+	"errors"
 	"time"
+)
+
+var (
+	ErrEnvNotFound = errors.New("environment not found")
 )
 
 type Environment struct {

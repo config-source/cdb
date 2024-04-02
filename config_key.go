@@ -2,7 +2,12 @@ package cdb
 
 import (
 	"context"
+	"errors"
 	"time"
+)
+
+var (
+	ErrConfigKeyNotFound = errors.New("config key not found")
 )
 
 type ValueType int

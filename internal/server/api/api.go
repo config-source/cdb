@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/config-source/cdb/internal"
+	"github.com/config-source/cdb/internal/repository"
 	"github.com/rs/zerolog"
 )
 
@@ -14,11 +14,11 @@ var (
 )
 
 type API struct {
-	repo internal.ModelRepository
+	repo repository.ModelRepository
 	log  zerolog.Logger
 }
 
-func New(repo internal.ModelRepository, log zerolog.Logger, mux *http.ServeMux) *API {
+func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux) *API {
 	api := &API{
 		repo: repo,
 		log:  log,
