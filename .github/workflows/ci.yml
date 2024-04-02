@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    container: golang:1.22
+    env:
+      GOFLAGS: "--buildvcs=false"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: go build -v ./...
+
+  test:
+    runs-on: ubuntu-latest
+    container: golang:1.22
+    env:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      GOFLAGS: "--buildvcs=false"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: go test -v ./...
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+  lint:
+    runs-on: ubuntu-latest
+    container: golang:1.22
+    env:
+      GOFLAGS: "--buildvcs=false"
+    steps:
+      - uses: actions/checkout@v4
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          install-mode: "binary"

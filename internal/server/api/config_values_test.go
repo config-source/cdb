@@ -46,7 +46,10 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	for _, cv := range fixtures {
-		repo.CreateConfigValue(context.Background(), cv)
+		_, err := repo.CreateConfigValue(context.Background(), cv)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	_, mux := testAPI(repo)
@@ -183,7 +186,10 @@ func TestGetConfigurationByKey(t *testing.T) {
 	}
 
 	for _, cv := range fixtures {
-		repo.CreateConfigValue(context.Background(), cv)
+		_, err := repo.CreateConfigValue(context.Background(), cv)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	_, mux := testAPI(repo)
