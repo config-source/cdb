@@ -28,6 +28,11 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
 	mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
 	mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
+
+	mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
+	mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
+	mux.HandleFunc("GET /api/v1/config-keys/{id}", api.GetConfigKeyByID)
+
 	mux.HandleFunc("GET /healthz", api.HealtCheck)
 
 	return api
@@ -46,7 +51,7 @@ func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 
 func (a *API) errorResponse(w http.ResponseWriter, err error) {
 	switch err {
-	case cdb.ErrEnvNotFound:
+	case cdb.ErrEnvNotFound, cdb.ErrConfigKeyNotFound, cdb.ErrConfigValueNotFound:
 		w.WriteHeader(http.StatusNotFound)
 		err = ErrNotFound
 	// This is safe because subsequent calls to WriteHeader are ignored so
