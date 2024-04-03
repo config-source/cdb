@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ -z "$(docker compose ps --format json)" ]]; then
+    docker compose up -d
+fi
+
+docker compose exec -it server go test ./...

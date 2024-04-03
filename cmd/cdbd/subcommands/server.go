@@ -42,7 +42,7 @@ var serverCmd = &cobra.Command{
 		var server http.Handler = server.New(repo, logger)
 		server = middleware.AccessLog(logger, server)
 
-		return http.ListenAndServe(":8080", server)
+		return http.ListenAndServe(settings.ListenAddr(), server)
 	},
 }
 

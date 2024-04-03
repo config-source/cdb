@@ -1,0 +1,21 @@
+services:
+  server:
+    environment:
+      RUN_MIGRATIONS: 1
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: cdb
+    image: cdb:latest
+    build: 
+      context: .
+    ports:
+      - "8080:8080"
+
+  postgres:
+    image: "postgres:16"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: cdb
+    ports:
+      - "5432:5432"
