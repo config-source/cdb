@@ -32,3 +32,12 @@ func LogLevel() zerolog.Level {
 		return zerolog.InfoLevel
 	}
 }
+
+func ListenAddr() string {
+	addr := os.Getenv("LISTEN_ADDRESS")
+	if addr == "" {
+		return ":8080"
+	}
+
+	return addr
+}
