@@ -111,6 +111,21 @@ func (cv ConfigValue) String() string {
 	)
 }
 
+func (cv ConfigValue) ValueAsString() string {
+	switch v := cv.Value().(type) {
+	case string:
+		return v
+	case int:
+		return fmt.Sprintf("%d", v)
+	case float64, float32:
+		return fmt.Sprintf("%f", v)
+	case bool:
+		return fmt.Sprintf("%t", v)
+	default:
+		return ""
+	}
+}
+
 type ConfigValueRepository interface {
 	CreateConfigValue(context.Context, ConfigValue) (ConfigValue, error)
 
