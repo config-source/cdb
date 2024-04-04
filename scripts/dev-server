@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-if [[ -x $(which air) ]]; then
-    air
-else
-    echo "Install air to run the server with live reload:"
-    echo "https://github.com/cosmtrek/air"
-    go run ./cmd/cdbd server
+if [[ ! -x $(which docker 2>/dev/null) ]]; then
+    echo "Install docker to use the dev-server script."
+    exit 1
 fi
+
+docker compose up -d
+docker compose logs -f server

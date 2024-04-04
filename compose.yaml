@@ -10,7 +10,7 @@ services:
     image: cdb:latest
     entrypoint: /app/docker/compose-entrypoint.sh
     volumes:
-      - ./.air.toml:/app/.air.toml
+      - .:/app
     build: 
       context: .
     ports:

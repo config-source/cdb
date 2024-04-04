@@ -5,7 +5,7 @@ until psql -c "select 1" >/dev/null 2>/dev/null; do
   sleep 1
 done
 
-/app/cdbd migrate
+go run /app/cmd/cdbd migrate
 
 go install github.com/cosmtrek/air@latest
 air
