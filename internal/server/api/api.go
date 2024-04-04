@@ -38,10 +38,6 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 	return api
 }
 
-type ErrorResponse struct {
-	Message string `json:"message"`
-}
-
 func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 	err := json.NewEncoder(w).Encode(payload)
 	if err != nil {
@@ -60,7 +56,7 @@ func (a *API) errorResponse(w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	response := ErrorResponse{
+	response := cdb.ErrorResponse{
 		Message: err.Error(),
 	}
 
