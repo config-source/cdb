@@ -22,6 +22,19 @@ func (tr *TestRepository) Healthy(ctx context.Context) bool {
 	return tr.IsHealthy
 }
 
+func (tr *TestRepository) ListEnvironments(ctx context.Context) ([]cdb.Environment, error) {
+	if tr.Error != nil {
+		return nil, tr.Error
+	}
+
+	envs := make([]cdb.Environment, len(tr.Environments))
+	for id, env := range tr.Environments {
+		envs[id-1] = env
+	}
+
+	return envs, nil
+}
+
 func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string) (cdb.Environment, error) {
 	if tr.Error != nil {
 		return cdb.Environment{}, tr.Error
