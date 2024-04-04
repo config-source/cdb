@@ -64,7 +64,7 @@ func TestGetConfigKeyByID(t *testing.T) {
 	}
 
 	_, mux := testAPI(repo)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/1", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
