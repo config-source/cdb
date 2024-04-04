@@ -19,7 +19,7 @@ func (r *StatusRecorder) WriteHeader(status int) {
 func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			wr := &StatusRecorder{ResponseWriter: w}
+			wr := &StatusRecorder{ResponseWriter: w, Status: 200}
 			wr.Header().Set("Content-Type", "application/json")
 
 			next.ServeHTTP(wr, r)
@@ -30,6 +30,7 @@ func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 			}
 			accessLog.
 				Str("url", r.URL.String()).
+				Str("method", r.Method).
 				Int("statusCode", wr.Status).
 				Msg("request served")
 		},
