@@ -35,12 +35,20 @@ func (r *Repository) Raw() *pgxpool.Pool {
 // queries can be run.
 func (r *Repository) Healthy(ctx context.Context) bool {
 	var healthy int
-	err := r.pool.QueryRow(ctx, "SELECT 1 FROM environments LIMIT 1").Scan(&healthy)
+	var log *zerolog.Event
+
+	err := r.pool.QueryRow(ctx, "SELECT 1").Scan(&healthy)
 	if err != nil {
-		r.log.Err(err).
-			Int("healthy", healthy).
-			Msg("Postgres health check failed")
+		log = r.log.Err(err)
+	} else if healthy != 1 {
+		log = r.log.Error()
+	} else {
+		log = r.log.Info()
 	}
+
+	log.
+		Int("healthy", healthy).
+		Msg("Postgres health check")
 
 	return healthy == 1
 }
