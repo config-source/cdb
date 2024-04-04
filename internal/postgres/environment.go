@@ -16,6 +16,9 @@ var getEnvironmentByIDSql string
 //go:embed queries/environments/get_environment_by_name.sql
 var getEnvironmentByNameSql string
 
+//go:embed queries/environments/list_environments.sql
+var listEnvironmentsSql string
+
 func (r *Repository) CreateEnvironment(ctx context.Context, env cdb.Environment) (cdb.Environment, error) {
 	return getOne[cdb.Environment](r, ctx, createEnvironmentSql, env.Name, env.PromotesToID)
 }
@@ -36,4 +39,9 @@ func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (cdb
 	}
 
 	return env, err
+}
+
+func (r *Repository) ListEnvironments(ctx context.Context) ([]cdb.Environment, error) {
+	environs, err := getAll[cdb.Environment](r, ctx, listEnvironmentsSql)
+	return environs, err
 }

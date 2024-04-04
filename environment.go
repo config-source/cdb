@@ -39,4 +39,11 @@ type EnvironmentRepository interface {
 
 	GetEnvironment(ctx context.Context, id int) (Environment, error)
 	GetEnvironmentByName(ctx context.Context, name string) (Environment, error)
+
+	ListEnvironments(ctx context.Context) ([]Environment, error)
+}
+
+type EnvTree struct {
+	Env      Environment `json:"env"`
+	Children []EnvTree   `json:"children"`
 }

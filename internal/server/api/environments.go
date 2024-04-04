@@ -64,3 +64,39 @@ func (a *API) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	a.sendJson(w, env)
 }
+
+func getChildren(parent cdb.Environment, environments []cdb.Environment) []cdb.EnvTree {
+	children := []cdb.EnvTree{}
+
+	for _, env := range environments {
+		isChild := env.PromotesToID != nil && *env.PromotesToID == parent.ID
+		if isChild {
+			children = append(children, cdb.EnvTree{
+				Env:      env,
+				Children: getChildren(env, environments),
+			})
+		}
+	}
+
+	return children
+}
+
+func (a *API) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
+	environs, err := a.repo.ListEnvironments(r.Context())
+	if err != nil {
+		a.errorResponse(w, err)
+		return
+	}
+
+	trees := []cdb.EnvTree{}
+	for _, env := range environs {
+		if env.PromotesToID == nil {
+			trees = append(trees, cdb.EnvTree{
+				Env:      env,
+				Children: getChildren(env, environs),
+			})
+		}
+	}
+
+	a.sendJson(w, trees)
+}

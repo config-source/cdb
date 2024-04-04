@@ -22,6 +22,7 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
 	mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
+	mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
 	mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
 
 	mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
