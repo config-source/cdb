@@ -27,7 +27,8 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 
 	mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
 	mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
-	mux.HandleFunc("GET /api/v1/config-keys/{id}", api.GetConfigKeyByID)
+	mux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
+	mux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
 
 	mux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
 	mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -17,6 +18,23 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ck, err := a.repo.GetConfigKey(r.Context(), id)
+	if err != nil {
+		a.errorResponse(w, err)
+		return
+	}
+
+	a.sendJson(w, ck)
+}
+
+func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		a.errorResponse(w, errors.New("name must be provided"))
+		return
+	}
+
+	ck, err := a.repo.GetConfigKeyByName(r.Context(), name)
 	if err != nil {
 		a.errorResponse(w, err)
 		return

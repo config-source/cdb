@@ -105,6 +105,20 @@ func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (cdb.ConfigK
 	return cdb.ConfigKey{}, cdb.ErrConfigKeyNotFound
 }
 
+func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (cdb.ConfigKey, error) {
+	if tr.Error != nil {
+		return cdb.ConfigKey{}, tr.Error
+	}
+
+	for _, ck := range tr.ConfigKeys {
+		if ck.Name == name {
+			return ck, nil
+		}
+	}
+
+	return cdb.ConfigKey{}, cdb.ErrEnvNotFound
+}
+
 func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, error) {
 	keys := make([]cdb.ConfigKey, len(tr.ConfigKeys))
 

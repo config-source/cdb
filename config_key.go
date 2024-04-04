@@ -46,7 +46,10 @@ type ConfigKey struct {
 
 type ConfigKeyRepository interface {
 	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
+
 	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
+	GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error)
+
 	ListConfigKeys(context.Context) ([]ConfigKey, error)
 }
 
