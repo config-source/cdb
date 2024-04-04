@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-go run "$(git rev-parse --show-toplevel)/scripts/seed.go"
+docker compose exec -it server go run "/app/scripts/seed.go"
