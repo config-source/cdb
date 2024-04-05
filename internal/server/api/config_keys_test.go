@@ -87,7 +87,7 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 	}
 
 	_, mux := testAPI(repo)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/2", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -139,5 +139,51 @@ func TestCreateConfigKey(t *testing.T) {
 
 	if created.ID == 0 {
 		t.Fatal("Expected ID to not be zero.")
+	}
+}
+
+func TestGetConfigKeyByName(t *testing.T) {
+	repo := &repository.TestRepository{
+		ConfigKeys: map[int]cdb.ConfigKey{
+			1: {
+				ID:        1,
+				Name:      "owner",
+				ValueType: cdb.TypeString,
+			},
+		},
+	}
+
+	_, mux := testAPI(repo)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/owner", nil)
+	rr := httptest.NewRecorder()
+	rr.Body = bytes.NewBuffer([]byte{})
+
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != 200 {
+		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestGetConfigKeyByNameNotFound(t *testing.T) {
+	repo := &repository.TestRepository{
+		ConfigKeys: map[int]cdb.ConfigKey{
+			1: {
+				ID:        1,
+				Name:      "owner",
+				ValueType: cdb.TypeString,
+			},
+		},
+	}
+
+	_, mux := testAPI(repo)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/minReplicas", nil)
+	rr := httptest.NewRecorder()
+	rr.Body = bytes.NewBuffer([]byte{})
+
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != 404 {
+		t.Fatalf("Expected status code 404 got: %d %s", rr.Code, rr.Body.String())
 	}
 }
