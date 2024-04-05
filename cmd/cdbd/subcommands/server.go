@@ -30,6 +30,8 @@ var serverCmd = &cobra.Command{
 				TimeFormat: time.RFC3339,
 			})
 		}
+		// Set durations to render as seconds
+		zerolog.DurationFieldUnit = time.Second
 
 		repo, err := postgres.NewRepository(
 			context.Background(),

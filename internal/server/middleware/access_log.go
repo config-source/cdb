@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -22,16 +23,20 @@ func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 			wr := &StatusRecorder{ResponseWriter: w, Status: 200}
 			wr.Header().Set("Content-Type", "application/json")
 
+			startTime := time.Now()
 			next.ServeHTTP(wr, r)
+			responseTime := time.Since(startTime)
 
 			accessLog := log.Info()
 			if wr.Status >= 400 {
 				accessLog = log.Error()
 			}
+
 			accessLog.
 				Str("url", r.URL.String()).
 				Str("method", r.Method).
 				Int("statusCode", wr.Status).
+				Dur("responseTime", responseTime).
 				Msg("request served")
 		},
 	)
