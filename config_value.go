@@ -27,6 +27,7 @@ type ConfigValue struct {
 	BoolValue  *bool    `db:"bool_value"`
 
 	CreatedAt time.Time `db:"created_at"`
+	Inherited bool      `db:"-"`
 }
 
 func NewBoolConfigValue(environmentID int, configKeyID int, value bool) ConfigValue {

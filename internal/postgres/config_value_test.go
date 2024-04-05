@@ -161,6 +161,12 @@ func createConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigVal
 	return retrieved
 }
 
+func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigValue) cdb.ConfigValue {
+	created := createConfigValue(t, repo, cv)
+	created.Inherited = true
+	return created
+}
+
 func TestGetConfiguration(t *testing.T) {
 	repo, tr := initTestDB(t, "TestGetConfiguration")
 	defer tr.Cleanup()
@@ -181,8 +187,8 @@ func TestGetConfiguration(t *testing.T) {
 
 	expectedValues := []cdb.ConfigValue{
 		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -217,8 +223,8 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 
 	expectedValues := []cdb.ConfigValue{
 		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -254,8 +260,42 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 	expectedValues := []cdb.ConfigValue{
 		createConfigValue(t, repo, cdb.NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
 		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+	}
+
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(expectedValues, retrieved) {
+		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+	}
+}
+
+func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
+	repo, tr := initTestDB(t, "TestGetConfiguration")
+	defer tr.Cleanup()
+
+	production := envFixture(t, repo, "production", nil)
+	staging := envFixture(t, repo, "staging", &production.ID)
+	dev := envFixture(t, repo, "dev", &staging.ID)
+
+	owner := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	minReplicas := configKeyFixture(t, repo, "minReplicas", cdb.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, repo, "maxReplicas", cdb.TypeInteger, true)
+
+	// Throw in duplicate settings higher in the parent tree to ensure
+	// inheritance overrides these values.
+	createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+
+	expectedValues := []cdb.ConfigValue{
+		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)

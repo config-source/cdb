@@ -112,6 +112,10 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 
 	if promotesToID != nil {
 		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToID, getAllKeys(immediateValues))
+		for idx := range parentValues {
+			parentValues[idx].Inherited = true
+		}
+
 		return append(immediateValues, parentValues...), err
 	}
 
