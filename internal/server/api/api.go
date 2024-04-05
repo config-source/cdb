@@ -5,19 +5,22 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/rs/zerolog"
 )
 
 type API struct {
-	repo repository.ModelRepository
-	log  zerolog.Logger
+	repo               repository.ModelRepository
+	configValueService *configvalues.Service
+	log                zerolog.Logger
 }
 
-func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux) *API {
+func New(repo repository.ModelRepository, configValueService *configvalues.Service, log zerolog.Logger, mux *http.ServeMux) *API {
 	api := &API{
-		repo: repo,
-		log:  log,
+		repo:               repo,
+		log:                log,
+		configValueService: configValueService,
 	}
 
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
@@ -32,6 +35,7 @@ func New(repo repository.ModelRepository, log zerolog.Logger, mux *http.ServeMux
 
 	mux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
 	mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
+	mux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
 	mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
 
 	mux.HandleFunc("GET /healthz", api.HealtCheck)

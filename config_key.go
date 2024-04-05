@@ -3,6 +3,7 @@ package cdb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -44,15 +45,6 @@ type ConfigKey struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-type ConfigKeyRepository interface {
-	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
-
-	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
-	GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error)
-
-	ListConfigKeys(context.Context) ([]ConfigKey, error)
-}
-
 func NewConfigKey(name string, valueType ValueType) ConfigKey {
 	canPropagate := true
 	return ConfigKey{
@@ -68,4 +60,22 @@ func NewConfigKeyWithCanPropagate(name string, valueType ValueType, canPropagate
 		ValueType:    valueType,
 		CanPropagate: &canPropagate,
 	}
+}
+
+func (ck ConfigKey) String() string {
+	return fmt.Sprintf(
+		"ConfigKey(id=%d, name=%s, canPropagate=%t)",
+		ck.ID,
+		ck.Name,
+		*ck.CanPropagate,
+	)
+}
+
+type ConfigKeyRepository interface {
+	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
+
+	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
+	GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error)
+
+	ListConfigKeys(context.Context) ([]ConfigKey, error)
 }

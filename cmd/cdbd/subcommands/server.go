@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/postgres"
 	"github.com/config-source/cdb/internal/server"
 	"github.com/config-source/cdb/internal/server/middleware"
@@ -39,7 +40,7 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
-		var server http.Handler = server.New(repo, logger)
+		var server http.Handler = server.New(repo, configvalues.NewService(repo, settings.DynamicConfigKeys()), logger)
 		server = middleware.AccessLog(logger, server)
 
 		return http.ListenAndServe(settings.ListenAddr(), server)

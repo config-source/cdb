@@ -216,3 +216,81 @@ func TestGetConfigurationByKey(t *testing.T) {
 		t.Fatalf("Expected \"SRE\" got: %v", owner)
 	}
 }
+
+func TestSetConfigurationByKey(t *testing.T) {
+	promotesToID := 1
+	repo := &repository.TestRepository{
+		Environments: map[int]cdb.Environment{
+			1: {
+				ID:   1,
+				Name: "production",
+			},
+			2: {
+				ID:           2,
+				Name:         "staging",
+				PromotesToID: &promotesToID,
+			},
+		},
+		ConfigKeys: map[int]cdb.ConfigKey{
+			1: {
+				ID:        1,
+				Name:      "owner",
+				ValueType: cdb.TypeString,
+			},
+			2: {
+				ID:        2,
+				Name:      "maxReplicas",
+				ValueType: cdb.TypeInteger,
+			},
+		},
+	}
+
+	fixtures := []cdb.ConfigValue{
+		cdb.NewStringConfigValue(1, 1, "SRE"),
+		cdb.NewIntConfigValue(1, 2, 100),
+		cdb.NewIntConfigValue(2, 2, 10),
+	}
+
+	for _, cv := range fixtures {
+		_, err := repo.CreateConfigValue(context.Background(), cv)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, mux := testAPI(repo)
+
+	val := 10
+	env := cdb.ConfigValue{
+		ValueType: cdb.TypeInteger,
+		IntValue:  &val,
+	}
+
+	marshalled, err := json.Marshal(env)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("POST", "/api/v1/config-values/staging/minReplicas", bytes.NewBuffer(marshalled))
+	rr := httptest.NewRecorder()
+	rr.Body = bytes.NewBuffer([]byte{})
+
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != 200 {
+		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
+	}
+
+	var maxReplicas cdb.ConfigValue
+	if err := json.NewDecoder(rr.Body).Decode(&maxReplicas); err != nil {
+		t.Fatal(err)
+	}
+
+	if maxReplicas.ValueType != cdb.TypeInteger {
+		t.Fatalf("Expected cdb.TypeInteger (%d) config got: %v", cdb.TypeInteger, maxReplicas)
+	}
+
+	if maxReplicas.Value().(int) != 10 {
+		t.Fatalf("Expected 10 got: %v", maxReplicas)
+	}
+}

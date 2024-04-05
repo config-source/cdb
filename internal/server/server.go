@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/api"
 	"github.com/rs/zerolog"
@@ -13,9 +14,9 @@ type Server struct {
 	api *api.API
 }
 
-func New(repo repository.ModelRepository, log zerolog.Logger) *Server {
+func New(repo repository.ModelRepository, configValueService *configvalues.Service, log zerolog.Logger) *Server {
 	mux := http.NewServeMux()
-	apiServer := api.New(repo, log, mux)
+	apiServer := api.New(repo, configValueService, log, mux)
 
 	return &Server{
 		mux: mux,

@@ -116,7 +116,7 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (
 		}
 	}
 
-	return cdb.ConfigKey{}, cdb.ErrEnvNotFound
+	return cdb.ConfigKey{}, cdb.ErrConfigKeyNotFound
 }
 
 func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, error) {
