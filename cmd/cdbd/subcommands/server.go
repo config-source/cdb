@@ -30,8 +30,8 @@ var serverCmd = &cobra.Command{
 				TimeFormat: time.RFC3339,
 			})
 		}
-		// Set durations to render as seconds
-		zerolog.DurationFieldUnit = time.Second
+		// Set durations to render as Milliseconds
+		zerolog.DurationFieldUnit = time.Millisecond
 
 		repo, err := postgres.NewRepository(
 			context.Background(),
@@ -42,7 +42,12 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
-		var server http.Handler = server.New(repo, configvalues.NewService(repo, settings.DynamicConfigKeys()), logger)
+		var server http.Handler = server.New(
+			repo,
+			configvalues.NewService(repo, settings.DynamicConfigKeys()),
+			logger,
+			settings.FrontendLocation(),
+		)
 		server = middleware.AccessLog(logger, server)
 
 		return http.ListenAndServe(settings.ListenAddr(), server)

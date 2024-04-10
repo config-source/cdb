@@ -2,6 +2,8 @@ package server
 
 import (
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
@@ -12,15 +14,32 @@ import (
 type Server struct {
 	mux *http.ServeMux
 	api *api.API
+	ui  http.Handler
 }
 
-func New(repo repository.ModelRepository, configValueService *configvalues.Service, log zerolog.Logger) *Server {
+func New(
+	repo repository.ModelRepository,
+	configValueService *configvalues.Service,
+	log zerolog.Logger,
+	frontendLocation string,
+) *Server {
 	mux := http.NewServeMux()
 	apiServer := api.New(repo, configValueService, log, mux)
+
+	var frontendHandler http.Handler
+	if upstream, err := url.Parse(frontendLocation); err == nil && upstream.Scheme != "" {
+		log.Info().Str("upstream", upstream.String()).Msg("Serving frontend from")
+		frontendHandler = httputil.NewSingleHostReverseProxy(upstream)
+	} else {
+		log.Info().Str("location", frontendLocation).Msg("Serving frontend from")
+		frontendHandler = http.FileServer(http.Dir(frontendLocation))
+	}
+	mux.Handle("GET /", frontendHandler)
 
 	return &Server{
 		mux: mux,
 		api: apiServer,
+		ui:  frontendHandler,
 	}
 }
 

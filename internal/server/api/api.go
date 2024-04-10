@@ -44,6 +44,7 @@ func New(repo repository.ModelRepository, configValueService *configvalues.Servi
 }
 
 func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
+	w.Header().Add("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(payload)
 	if err != nil {
 		a.log.Err(err).Msg("failed to encode a payload")

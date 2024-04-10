@@ -58,3 +58,14 @@ func ListenAddr() string {
 
 	return addr
 }
+
+// FrontendLocation returns the location of the statically built frontend files
+// or an http upstream to proxy to.
+func FrontendLocation() string {
+	location := os.Getenv("FRONTEND_LOCATION")
+	if location == "" {
+		return "./frontend/build"
+	}
+
+	return location
+}
