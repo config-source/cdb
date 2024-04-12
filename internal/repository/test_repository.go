@@ -150,6 +150,26 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 	return cv, nil
 }
 
+func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
+	if err != nil {
+		return cv, err
+	}
+
+	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
+	if err != nil {
+		return cv, err
+	}
+
+	if tr.ConfigValues == nil {
+		tr.ConfigValues = make(map[int]cdb.ConfigValue)
+	}
+
+	cv.CreatedAt = time.Now()
+	tr.ConfigValues[cv.ID] = cv
+	return cv, nil
+}
+
 func keyAlreadyInSet(values []cdb.ConfigValue, newValue cdb.ConfigValue) bool {
 	for _, cv := range values {
 		if cv.ConfigKeyID == newValue.ConfigKeyID {

@@ -133,4 +133,6 @@ type ConfigValueRepository interface {
 
 	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
 	GetConfigurationValue(ctx context.Context, environmentName, key string) (ConfigValue, error)
+
+	UpdateConfigurationValue(context.Context, ConfigValue) (ConfigValue, error)
 }

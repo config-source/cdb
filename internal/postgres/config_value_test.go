@@ -3,6 +3,7 @@ package postgres_test
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -55,6 +56,119 @@ func TestCreateConfigValue(t *testing.T) {
 		}
 	default:
 		t.Fatalf("Expected a string got %v", retrieved)
+	}
+}
+
+func TestUpdateConfigValue(t *testing.T) {
+	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	defer tr.Cleanup()
+
+	env := envFixture(t, repo, "cdb", nil)
+	key := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	cv := createConfigValue(t, repo, cdb.NewStringConfigValue(
+		env.ID,
+		key.ID,
+		"test",
+	))
+	cv.SetStrValue("updated")
+
+	var err error
+	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if cv.ID == 0 {
+		t.Fatalf("Expected ID to be set got: %d", cv.ID)
+	}
+
+	if *cv.StrValue != "updated" {
+		t.Fatalf("Expected string value %s got %s", "updated", *cv.StrValue)
+	}
+
+	if cv.IntValue != nil {
+		t.Fatalf("Expected IntValue to be nil got: %v", cv.IntValue)
+	}
+
+	if cv.FloatValue != nil {
+		t.Fatalf("Expected FloatValue to be nil got: %v", cv.FloatValue)
+	}
+
+	if cv.BoolValue != nil {
+		t.Fatalf("Expected BoolValue to be nil got: %v", cv.BoolValue)
+	}
+
+	retrieved := cv.Value()
+	switch retrieved.(type) {
+	case string:
+		if retrieved != "updated" {
+			t.Fatalf("Expected %s got %s", "updated", retrieved)
+		}
+	default:
+		t.Fatalf("Expected a string got %v", retrieved)
+	}
+}
+
+func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
+	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	defer tr.Cleanup()
+
+	env := envFixture(t, repo, "cdb", nil)
+	key := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	cv := createConfigValue(t, repo, cdb.NewStringConfigValue(
+		env.ID,
+		key.ID,
+		"test",
+	))
+	cv.ID = cv.ID + 1
+
+	var err error
+	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	expectedError := cdb.ErrConfigValueNotFound
+	if !errors.Is(err, expectedError) {
+		t.Fatalf("Expected %s Got %s", expectedError, err)
+	}
+}
+
+func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
+	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	defer tr.Cleanup()
+
+	env := envFixture(t, repo, "cdb", nil)
+	key := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	cv := createConfigValue(t, repo, cdb.NewStringConfigValue(
+		env.ID,
+		key.ID,
+		"test",
+	))
+	cv.ConfigKeyID = cv.ConfigKeyID + 1
+
+	var err error
+	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	expectedError := cdb.ErrConfigKeyNotFound
+	if !errors.Is(err, expectedError) {
+		t.Fatalf("Expected %s Got %s", expectedError, err)
+	}
+}
+
+func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
+	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	defer tr.Cleanup()
+
+	env := envFixture(t, repo, "cdb", nil)
+	key := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
+	cv := createConfigValue(t, repo, cdb.NewStringConfigValue(
+		env.ID,
+		key.ID,
+		"test",
+	))
+	cv.EnvironmentID = cv.EnvironmentID + 1
+
+	var err error
+	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	expectedError := cdb.ErrEnvNotFound
+	if !errors.Is(err, expectedError) {
+		t.Fatalf("Expected %s Got %s", expectedError, err)
 	}
 }
 

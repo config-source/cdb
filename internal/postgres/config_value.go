@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"strings"
 
 	"github.com/config-source/cdb"
 	"github.com/jackc/pgx/v5"
@@ -11,6 +12,9 @@ import (
 
 //go:embed queries/configValues/create_config_value.sql
 var createConfigValueSql string
+
+//go:embed queries/configValues/update_config_value.sql
+var updateConfigValueSql string
 
 //go:embed queries/configValues/get_config_value_by_id.sql
 var getConfigValueByIDSql string
@@ -36,11 +40,47 @@ func (r *Repository) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) 
 		cv.BoolValue,
 	)
 	if err != nil {
-		var def cdb.ConfigValue
-		return def, err
+		return cdb.ConfigValue{}, err
 	}
 
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[cdb.ConfigValue])
+}
+
+func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+	rows, err := r.pool.Query(
+		ctx,
+		updateConfigValueSql,
+		cv.EnvironmentID,
+		cv.ConfigKeyID,
+		cv.StrValue,
+		cv.IntValue,
+		cv.FloatValue,
+		cv.BoolValue,
+		cv.ID,
+	)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[cdb.ConfigValue])
+	if err == nil {
+		return updated, err
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
+	}
+
+	msg := err.Error()
+	if strings.Contains(msg, "config_values_environment_id_fkey") {
+		return updated, cdb.ErrEnvNotFound
+	}
+
+	if strings.Contains(msg, "config_values_config_key_id_fkey") {
+		return updated, cdb.ErrConfigKeyNotFound
+	}
+
+	return updated, err
 }
 
 func (r *Repository) GetConfigValue(ctx context.Context, environmentID int, key string) (cdb.ConfigValue, error) {
