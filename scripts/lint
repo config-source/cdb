@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o errexit
+
 # Check if running inside docker:
 # https://stackoverflow.com/a/20012536
 if [[ $(cat /proc/1/cgroup 2>/dev/null) != '/' ]]; then

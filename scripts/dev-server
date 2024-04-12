@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o errexit
+
 if [[ ! -x $(which docker 2>/dev/null) ]]; then
     echo "Install docker to use the dev-server script."
     exit 1
