@@ -44,13 +44,27 @@ func (r *Repository) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) 
 }
 
 func (r *Repository) GetConfigValue(ctx context.Context, environmentID int, key string) (cdb.ConfigValue, error) {
-	return getOne[cdb.ConfigValue](
+	cv, err := getOne[cdb.ConfigValue](
 		r,
 		ctx,
 		getConfigValueByEnvironmentAndKeySql,
 		environmentID,
 		key,
 	)
+	if err == nil {
+		return cv, err
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		promotesToID, _ := r.getPromotesToID(ctx, environmentID)
+		if promotesToID != nil {
+			return r.GetConfigValue(ctx, *promotesToID, key)
+		}
+
+		return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
+	}
+
+	return cdb.ConfigValue{}, err
 }
 
 func getAllKeys(values []cdb.ConfigValue) []string {
@@ -123,7 +137,12 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 }
 
 func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (cdb.ConfigValue, error) {
-	return getOne[cdb.ConfigValue](r, ctx, getConfigValueByEnvironmentAndKeySql, environmentName, key)
+	env, err := r.GetEnvironmentByName(ctx, environmentName)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	return r.GetConfigValue(ctx, env.ID, key)
 }
 
 func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (cdb.ConfigValue, error) {
