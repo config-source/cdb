@@ -162,10 +162,19 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, minReplicas.ID, 5))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
-	createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1))
 
+	setDirectly := createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1))
 	stagingInherited := createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
 	productionInherited := createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
+
+	setDirectlyValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, setDirectly.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if setDirectly.ID != setDirectlyValue.ID {
+		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", setDirectly, setDirectlyValue)
+	}
 
 	stagingValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, stagingInherited.Name)
 	if err != nil {
@@ -176,6 +185,10 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", stagingInherited, stagingValue)
 	}
 
+	if !stagingValue.Inherited {
+		t.Fatalf("Expected staging inherited value to be marked as such: %t\n", stagingValue.Inherited)
+	}
+
 	productionValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, productionInherited.Name)
 	if err != nil {
 		t.Fatal(err)
@@ -183,6 +196,10 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 
 	if productionInherited.ID != productionValue.ID {
 		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", productionInherited, productionValue)
+	}
+
+	if !productionValue.Inherited {
+		t.Fatalf("Expected production inherited value to be marked as such: %t\n", productionValue.Inherited)
 	}
 }
 

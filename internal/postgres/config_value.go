@@ -58,7 +58,9 @@ func (r *Repository) GetConfigValue(ctx context.Context, environmentID int, key 
 	if errors.Is(err, pgx.ErrNoRows) {
 		promotesToID, _ := r.getPromotesToID(ctx, environmentID)
 		if promotesToID != nil {
-			return r.GetConfigValue(ctx, *promotesToID, key)
+			cv, err := r.GetConfigValue(ctx, *promotesToID, key)
+			cv.Inherited = true
+			return cv, err
 		}
 
 		return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
