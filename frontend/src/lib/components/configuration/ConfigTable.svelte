@@ -4,6 +4,8 @@
 	let configuration = [];
 
 	const fetchConfig = async (name) => {
+		if (name === '') return;
+
 		const res = await fetch(`/api/v1/config-values/${name}`);
 		if (!res.ok) return;
 
