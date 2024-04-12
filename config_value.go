@@ -103,7 +103,8 @@ func (cv *ConfigValue) Value() interface{} {
 
 func (cv ConfigValue) String() string {
 	return fmt.Sprintf(
-		"ConfigValue(%d, %d, %s, %s, %v)",
+		"ConfigValue(id=%d, environment=%d, keyID=%d, name=%s, valueType=%s, value=%v)",
+		cv.ID,
 		cv.EnvironmentID,
 		cv.ConfigKeyID,
 		cv.Name,
