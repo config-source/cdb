@@ -30,44 +30,27 @@ type ConfigValue struct {
 	Inherited bool      `db:"-"`
 }
 
-func NewBoolConfigValue(environmentID int, configKeyID int, value bool) ConfigValue {
-	storedValue := value
-	return ConfigValue{
-		ValueType:     TypeBoolean,
+func NewConfigValue(environmentID, configKeyID int) *ConfigValue {
+	return &ConfigValue{
 		EnvironmentID: environmentID,
 		ConfigKeyID:   configKeyID,
-		BoolValue:     &storedValue,
 	}
+}
+
+func NewBoolConfigValue(environmentID int, configKeyID int, value bool) ConfigValue {
+	return *NewConfigValue(environmentID, configKeyID).SetBoolValue(value)
 }
 
 func NewFloatConfigValue(environmentID int, configKeyID int, value float64) ConfigValue {
-	storedValue := value
-	return ConfigValue{
-		ValueType:     TypeFloat,
-		EnvironmentID: environmentID,
-		ConfigKeyID:   configKeyID,
-		FloatValue:    &storedValue,
-	}
+	return *NewConfigValue(environmentID, configKeyID).SetFloatValue(value)
 }
 
 func NewStringConfigValue(environmentID int, configKeyID int, value string) ConfigValue {
-	storedValue := value
-	return ConfigValue{
-		ValueType:     TypeFloat,
-		EnvironmentID: environmentID,
-		ConfigKeyID:   configKeyID,
-		StrValue:      &storedValue,
-	}
+	return *NewConfigValue(environmentID, configKeyID).SetStrValue(value)
 }
 
 func NewIntConfigValue(environmentID int, configKeyID int, value int) ConfigValue {
-	storedValue := value
-	return ConfigValue{
-		ValueType:     TypeFloat,
-		EnvironmentID: environmentID,
-		ConfigKeyID:   configKeyID,
-		IntValue:      &storedValue,
-	}
+	return *NewConfigValue(environmentID, configKeyID).SetIntValue(value)
 }
 
 func (cv *ConfigValue) Value() interface{} {
@@ -126,6 +109,46 @@ func (cv ConfigValue) ValueAsString() string {
 	default:
 		return ""
 	}
+}
+
+func (cv *ConfigValue) resetValues() *ConfigValue {
+	cv.StrValue = nil
+	cv.IntValue = nil
+	cv.FloatValue = nil
+	cv.BoolValue = nil
+	return cv
+}
+
+func (cv *ConfigValue) SetStrValue(val string) *ConfigValue {
+	cv.resetValues()
+	storage := val
+	cv.StrValue = &storage
+	cv.ValueType = TypeString
+	return cv
+}
+
+func (cv *ConfigValue) SetIntValue(val int) *ConfigValue {
+	cv.resetValues()
+	storage := val
+	cv.IntValue = &storage
+	cv.ValueType = TypeInteger
+	return cv
+}
+
+func (cv *ConfigValue) SetFloatValue(val float64) *ConfigValue {
+	cv.resetValues()
+	storage := val
+	cv.FloatValue = &storage
+	cv.ValueType = TypeFloat
+	return cv
+}
+
+func (cv *ConfigValue) SetBoolValue(val bool) *ConfigValue {
+	cv.resetValues()
+	storage := val
+	cv.BoolValue = &storage
+	cv.ValueType = TypeBoolean
+	return cv
 }
 
 type ConfigValueRepository interface {
