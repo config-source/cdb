@@ -56,6 +56,37 @@ func (s *Service) SetConfigurationValue(
 		return cdb.ConfigValue{}, err
 	}
 	cv.ConfigKeyID = ck.ID
+	// Force the ValueType to match the config key so that the client can't send
+	// us a new ValueType that doesn't match it's config key thereby bypassing
+	// the validity check.
+	cv.ValueType = ck.ValueType
+	if err := cv.Valid(); err != nil {
+		return cdb.ConfigValue{}, err
+	}
 
-	return s.repo.CreateConfigValue(ctx, cv)
+	created, err := s.repo.CreateConfigValue(ctx, &cv)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	return *created, nil
+}
+
+func (s *Service) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+	ck, err := s.repo.GetConfigKey(ctx, cv.ConfigKeyID)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	cv.ValueType = ck.ValueType
+	if err := cv.Valid(); err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	created, err := s.repo.CreateConfigValue(ctx, &cv)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	return *created, nil
 }

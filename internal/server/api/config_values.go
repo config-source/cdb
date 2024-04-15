@@ -72,7 +72,7 @@ func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newConfigValue, err = a.repo.CreateConfigValue(r.Context(), newConfigValue)
+	newConfigValue, err = a.configValueService.CreateConfigValue(r.Context(), newConfigValue)
 	if err != nil {
 		a.errorResponse(w, err)
 		return

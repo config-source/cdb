@@ -19,11 +19,10 @@ func TestCreateConfigValue(t *testing.T) {
 	key := configKeyFixture(t, repo, "owner", cdb.TypeString, true)
 
 	val := "test"
-	cv, err := repo.CreateConfigValue(context.Background(), cdb.ConfigValue{
-		EnvironmentID: env.ID,
-		ConfigKeyID:   key.ID,
-		StrValue:      &val,
-	})
+	cv, err := repo.CreateConfigValue(
+		context.Background(),
+		cdb.NewStringConfigValue(env.ID, key.ID, val),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,11 +179,10 @@ func TestCreateIntConfigValue(t *testing.T) {
 	key := configKeyFixture(t, repo, "owner", cdb.TypeInteger, true)
 
 	val := "test"
-	cv, err := repo.CreateConfigValue(context.Background(), cdb.ConfigValue{
-		EnvironmentID: env.ID,
-		ConfigKeyID:   key.ID,
-		StrValue:      &val,
-	})
+	cv, err := repo.CreateConfigValue(
+		context.Background(),
+		cdb.NewStringConfigValue(env.ID, key.ID, val),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -371,7 +369,7 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	}
 }
 
-func createConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigValue) cdb.ConfigValue {
+func createConfigValue(t *testing.T, repo *postgres.Repository, cv *cdb.ConfigValue) *cdb.ConfigValue {
 	created, err := repo.CreateConfigValue(context.Background(), cv)
 	if err != nil {
 		t.Fatal(err)
@@ -387,7 +385,7 @@ func createConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigVal
 	return retrieved
 }
 
-func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, cv cdb.ConfigValue) cdb.ConfigValue {
+func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, cv *cdb.ConfigValue) *cdb.ConfigValue {
 	created := createConfigValue(t, repo, cv)
 	created.Inherited = true
 	return created
@@ -412,9 +410,9 @@ func TestGetConfiguration(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
 
 	expectedValues := []cdb.ConfigValue{
-		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -448,9 +446,9 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
 
 	expectedValues := []cdb.ConfigValue{
-		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -484,10 +482,10 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 	createConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
 
 	expectedValues := []cdb.ConfigValue{
-		createConfigValue(t, repo, cdb.NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
-		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, cdb.NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
+		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -519,9 +517,9 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
 
 	expectedValues := []cdb.ConfigValue{
-		createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)

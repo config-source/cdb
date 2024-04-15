@@ -2,6 +2,7 @@ package configvalues_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/config-source/cdb"
@@ -58,11 +59,11 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	}
 
 	if cv.ConfigKeyID != newKey.ID {
-		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, cv)
+		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, &cv)
 	}
 
 	if cv.IntValue == nil {
-		t.Fatalf("Expected non-nil IntValue: %s", cv)
+		t.Fatalf("Expected non-nil IntValue: %s", &cv)
 	}
 }
 
@@ -107,5 +108,49 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 	)
 	if err != cdb.ErrConfigKeyNotFound {
 		t.Fatalf("Expected %s got: %s", cdb.ErrConfigKeyNotFound, err)
+	}
+}
+
+func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
+	promotesToID := 1
+	repo := &repository.TestRepository{
+		Environments: map[int]cdb.Environment{
+			1: {
+				ID:   1,
+				Name: "production",
+			},
+			2: {
+				ID:           2,
+				Name:         "staging",
+				PromotesToID: &promotesToID,
+			},
+		},
+		ConfigKeys: map[int]cdb.ConfigKey{
+			1: {
+				ID:        1,
+				Name:      "owner",
+				ValueType: cdb.TypeString,
+			},
+			2: {
+				ID:        2,
+				Name:      "maxReplicas",
+				ValueType: cdb.TypeInteger,
+			},
+		},
+	}
+
+	service := configvalues.NewService(repo, false)
+	val := "test"
+	_, err := service.SetConfigurationValue(
+		context.Background(),
+		"staging",
+		"maxReplicas",
+		cdb.ConfigValue{
+			ValueType: cdb.TypeString,
+			StrValue:  &val,
+		},
+	)
+	if !errors.Is(err, cdb.ErrConfigValueNotValid) {
+		t.Fatalf("Expected %s got: %s", cdb.ErrConfigValueNotValid, err)
 	}
 }

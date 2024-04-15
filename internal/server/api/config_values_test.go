@@ -39,7 +39,7 @@ func TestGetConfiguration(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),
@@ -110,11 +110,13 @@ func TestCreateConfigValue(t *testing.T) {
 
 	_, mux := testAPI(repo)
 
+	val := "test"
 	env := cdb.ConfigValue{
 		Name:          "owner",
 		ValueType:     cdb.TypeString,
 		EnvironmentID: 1,
 		ConfigKeyID:   1,
+		StrValue:      &val,
 	}
 
 	marshalled, err := json.Marshal(env)
@@ -179,7 +181,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),
@@ -245,7 +247,7 @@ func TestSetConfigurationByKey(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),
