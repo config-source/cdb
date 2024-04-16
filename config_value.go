@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"time"
 )
 
@@ -55,32 +54,22 @@ func NewIntConfigValue(environmentID int, configKeyID int, value int) *ConfigVal
 }
 
 func (cv *ConfigValue) Value() interface{} {
+	if err := cv.Valid(); err != nil {
+		return err
+	}
+
 	switch cv.ValueType {
 	case TypeString:
-		if cv.StrValue == nil {
-			return "UNKNOWN STR VALUE"
-		}
-
 		return *cv.StrValue
 	case TypeInteger:
-		if cv.IntValue == nil {
-			return math.MaxInt
-		}
-
 		return *cv.IntValue
 	case TypeFloat:
-		if cv.FloatValue == nil {
-			return math.MaxFloat32
-		}
-
 		return *cv.FloatValue
 	case TypeBoolean:
-		if cv.BoolValue == nil {
-			return false
-		}
-
 		return *cv.BoolValue
+	// This should be unreachable.
 	default:
+		fmt.Println("ConfigValue somehow reached unreachable code!")
 		return nil
 	}
 }
@@ -228,7 +217,6 @@ func (cv *ConfigValue) validateFloat() error {
 }
 
 func (cv *ConfigValue) validateBoolean() error {
-	fmt.Println("inside", *cv)
 	if cv.StrValue != nil {
 		return fmt.Errorf("%w: StrValue must be null for boolean ConfigValue", ErrConfigValueNotValid)
 	}
@@ -249,10 +237,10 @@ func (cv *ConfigValue) validateBoolean() error {
 }
 
 type ConfigValueRepository interface {
-	CreateConfigValue(context.Context, ConfigValue) (ConfigValue, error)
+	CreateConfigValue(context.Context, *ConfigValue) (*ConfigValue, error)
 
 	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
 	GetConfigurationValue(ctx context.Context, environmentName, key string) (ConfigValue, error)
 
-	UpdateConfigurationValue(context.Context, ConfigValue) (ConfigValue, error)
+	UpdateConfigurationValue(context.Context, *ConfigValue) (*ConfigValue, error)
 }

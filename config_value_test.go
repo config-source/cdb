@@ -2,32 +2,39 @@ package cdb_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/config-source/cdb"
 )
 
-func setBoolValue(cv *cdb.ConfigValue) *cdb.ConfigValue {
-	return cv.SetBoolValue(false)
+func setBoolValue(cv *cdb.ConfigValue, vt cdb.ValueType) *cdb.ConfigValue {
+	cv.SetBoolValue(false)
+	cv.ValueType = vt
+	return cv
+
 }
 
-func setFloatValue(cv *cdb.ConfigValue) *cdb.ConfigValue {
-	return cv.SetFloatValue(10.10)
+func setFloatValue(cv *cdb.ConfigValue, vt cdb.ValueType) *cdb.ConfigValue {
+	cv.SetFloatValue(10.10)
+	cv.ValueType = vt
+	return cv
 }
 
-func setIntValue(cv *cdb.ConfigValue) *cdb.ConfigValue {
-	return cv.SetIntValue(10)
+func setIntValue(cv *cdb.ConfigValue, vt cdb.ValueType) *cdb.ConfigValue {
+	cv.SetIntValue(10)
+	cv.ValueType = vt
+	return cv
 }
 
-func setStrValue(cv *cdb.ConfigValue) *cdb.ConfigValue {
-	return cv.SetStrValue("test")
+func setStrValue(cv *cdb.ConfigValue, vt cdb.ValueType) *cdb.ConfigValue {
+	cv.SetStrValue("test")
+	cv.ValueType = vt
+	return cv
 }
 
-type mutatorFunc func(*cdb.ConfigValue) *cdb.ConfigValue
+type mutatorFunc func(*cdb.ConfigValue, cdb.ValueType) *cdb.ConfigValue
 
 func TestConfigValueValidatesStrValue(t *testing.T) {
-	reset := setStrValue
 	mutations := []mutatorFunc{
 		setBoolValue,
 		setIntValue,
@@ -40,7 +47,7 @@ func TestConfigValueValidatesStrValue(t *testing.T) {
 	}
 
 	for _, mutation := range mutations {
-		cv := mutation(reset(value))
+		cv := mutation(value, cdb.TypeString)
 		err := cv.Valid()
 		if err == nil {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
@@ -53,7 +60,6 @@ func TestConfigValueValidatesStrValue(t *testing.T) {
 }
 
 func TestConfigValueValidatesBoolValue(t *testing.T) {
-	// reset := setBoolValue
 	mutations := []mutatorFunc{
 		setStrValue,
 		setIntValue,
@@ -66,11 +72,10 @@ func TestConfigValueValidatesBoolValue(t *testing.T) {
 	}
 
 	for _, mutation := range mutations {
-		cv := mutation(value)
-		fmt.Println("outside", cv)
-		err := cv.Valid()
+		mutation(value, cdb.TypeBoolean)
+		err := value.Valid()
 		if err == nil {
-			t.Fatalf("Expected an error for %s got: %s", cv, err)
+			t.Fatalf("Expected an error for %s got: %s", value, err)
 		}
 
 		if !errors.Is(err, cdb.ErrConfigValueNotValid) {
@@ -80,7 +85,6 @@ func TestConfigValueValidatesBoolValue(t *testing.T) {
 }
 
 func TestConfigValueValidatesIntValue(t *testing.T) {
-	reset := setIntValue
 	mutations := []mutatorFunc{
 		setStrValue,
 		setBoolValue,
@@ -93,7 +97,7 @@ func TestConfigValueValidatesIntValue(t *testing.T) {
 	}
 
 	for _, mutation := range mutations {
-		cv := mutation(reset(value))
+		cv := mutation(value, cdb.TypeInteger)
 		err := cv.Valid()
 		if err == nil {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
@@ -106,7 +110,6 @@ func TestConfigValueValidatesIntValue(t *testing.T) {
 }
 
 func TestConfigValueValidatesFloatValue(t *testing.T) {
-	reset := setFloatValue
 	mutations := []mutatorFunc{
 		setStrValue,
 		setBoolValue,
@@ -119,7 +122,7 @@ func TestConfigValueValidatesFloatValue(t *testing.T) {
 	}
 
 	for _, mutation := range mutations {
-		cv := mutation(reset(value))
+		cv := mutation(value, cdb.TypeFloat)
 		err := cv.Valid()
 		if err == nil {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
