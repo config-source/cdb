@@ -57,5 +57,10 @@ func (s *Service) SetConfigurationValue(
 	}
 	cv.ConfigKeyID = ck.ID
 
-	return s.repo.CreateConfigValue(ctx, cv)
+	created, err := s.repo.CreateConfigValue(ctx, &cv)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	return *created, nil
 }

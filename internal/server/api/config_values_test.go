@@ -39,7 +39,7 @@ func TestGetConfiguration(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),
@@ -179,7 +179,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),
@@ -245,7 +245,7 @@ func TestSetConfigurationByKey(t *testing.T) {
 		},
 	}
 
-	fixtures := []cdb.ConfigValue{
+	fixtures := []*cdb.ConfigValue{
 		cdb.NewStringConfigValue(1, 1, "SRE"),
 		cdb.NewIntConfigValue(1, 2, 100),
 		cdb.NewIntConfigValue(2, 2, 10),

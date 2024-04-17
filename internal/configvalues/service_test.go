@@ -58,11 +58,11 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	}
 
 	if cv.ConfigKeyID != newKey.ID {
-		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, cv)
+		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, &cv)
 	}
 
 	if cv.IntValue == nil {
-		t.Fatalf("Expected non-nil IntValue: %s", cv)
+		t.Fatalf("Expected non-nil IntValue: %s", &cv)
 	}
 }
 

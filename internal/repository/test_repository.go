@@ -15,7 +15,7 @@ type TestRepository struct {
 
 	Environments map[int]cdb.Environment
 	ConfigKeys   map[int]cdb.ConfigKey
-	ConfigValues map[int]cdb.ConfigValue
+	ConfigValues map[int]*cdb.ConfigValue
 }
 
 func (tr *TestRepository) Healthy(ctx context.Context) bool {
@@ -129,7 +129,7 @@ func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, 
 	return keys, nil
 }
 
-func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
 	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
@@ -141,7 +141,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 	}
 
 	if tr.ConfigValues == nil {
-		tr.ConfigValues = make(map[int]cdb.ConfigValue)
+		tr.ConfigValues = make(map[int]*cdb.ConfigValue)
 	}
 
 	cv.ID = len(tr.ConfigValues) + 1
@@ -150,7 +150,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv cdb.ConfigVa
 	return cv, nil
 }
 
-func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
 	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
@@ -162,7 +162,7 @@ func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv cdb.C
 	}
 
 	if tr.ConfigValues == nil {
-		tr.ConfigValues = make(map[int]cdb.ConfigValue)
+		tr.ConfigValues = make(map[int]*cdb.ConfigValue)
 	}
 
 	cv.CreatedAt = time.Now()
@@ -197,7 +197,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 
 			cv.Name = ck.Name
 			cv.ValueType = ck.ValueType
-			values = append(values, cv)
+			values = append(values, *cv)
 		}
 	}
 
@@ -223,17 +223,17 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 	return values, nil
 }
 
-func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (cdb.ConfigValue, error) {
+func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
 	configValues, err := tr.GetConfiguration(ctx, environmentName)
 	if err != nil {
-		return cdb.ConfigValue{}, err
+		return nil, err
 	}
 
 	for _, cv := range configValues {
 		if cv.Name == key {
-			return cv, nil
+			return &cv, nil
 		}
 	}
 
-	return cdb.ConfigValue{}, cdb.ErrConfigValueNotFound
+	return nil, cdb.ErrConfigValueNotFound
 }

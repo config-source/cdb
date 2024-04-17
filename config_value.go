@@ -240,7 +240,7 @@ type ConfigValueRepository interface {
 	CreateConfigValue(context.Context, *ConfigValue) (*ConfigValue, error)
 
 	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
-	GetConfigurationValue(ctx context.Context, environmentName, key string) (ConfigValue, error)
+	GetConfigurationValue(ctx context.Context, environmentName, key string) (*ConfigValue, error)
 
 	UpdateConfigurationValue(context.Context, *ConfigValue) (*ConfigValue, error)
 }
