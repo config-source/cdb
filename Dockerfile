@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 
 # Build the server binary
-FROM golang:1.22 as backend
+FROM golang:1.22-alpine as backend
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY --exclude=frontend . .
 RUN go build -o /app/cdbd ./cmd/cdbd
 
 # Build the frontend
-FROM node:lts as frontend
+FROM node:lts-alpine as frontend
 
 WORKDIR /app
 COPY ./frontend/package.json .
@@ -25,12 +25,14 @@ COPY ./frontend .
 RUN npm run build
 
 # Build the final image
-FROM fedora:latest as final
+FROM alpine:latest as final
 
 WORKDIR /app
 
-COPY --from=backend /app/cdbd /app/cdbd
-COPY --from=backend /app/docker/entrypoint.sh /app/entrypoint.sh
-COPY --from=frontend /app/build /app/frontend/build
+RUN adduser --home /app --no-create-home --uid 600 --disabled-password cdb 
+
+COPY --chown=cdb --from=backend /app/cdbd /app/cdbd
+COPY --chown=cdb --from=backend /app/docker/entrypoint.sh /app/entrypoint.sh
+COPY --chown=cdb --from=frontend /app/build /app/frontend/build
 
 ENTRYPOINT /app/entrypoint.sh
