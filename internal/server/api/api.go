@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/config-source/cdb"
@@ -52,9 +53,14 @@ func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 }
 
 func (a *API) sendErr(w http.ResponseWriter, err error) {
-	switch err {
-	case cdb.ErrEnvNotFound, cdb.ErrConfigKeyNotFound, cdb.ErrConfigValueNotFound:
+	switch {
+	case
+		errors.Is(err, cdb.ErrEnvNotFound),
+		errors.Is(err, cdb.ErrConfigKeyNotFound),
+		errors.Is(err, cdb.ErrConfigValueNotFound):
 		w.WriteHeader(http.StatusNotFound)
+	case errors.Is(err, cdb.ErrConfigValueNotValid):
+		w.WriteHeader(http.StatusBadRequest)
 	// This is safe because subsequent calls to WriteHeader are ignored so
 	// callers can set the status code before calling errorResponse but if they
 	// haven't we want to send a 500.
