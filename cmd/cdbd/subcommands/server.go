@@ -2,6 +2,7 @@ package subcommands
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/config-source/cdb/internal/server"
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/settings"
+	"github.com/pseidemann/finish"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +52,20 @@ var serverCmd = &cobra.Command{
 		)
 		server = middleware.AccessLog(logger, server)
 
-		return http.ListenAndServe(settings.ListenAddr(), server)
+		httpServer := &http.Server{Addr: settings.ListenAddr(), Handler: server}
+
+		fin := finish.New()
+		fin.Add(httpServer)
+
+		go func() {
+			if err := httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) && err != nil {
+				logger.Err(err).Msg("error closing down http server")
+			}
+		}()
+
+		logger.Info().Str("address", settings.ListenAddr()).Msg("listening for connections")
+		fin.Wait()
+		return nil
 	},
 }
 
