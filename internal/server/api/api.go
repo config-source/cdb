@@ -59,6 +59,7 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 	// callers can set the status code before calling errorResponse but if they
 	// haven't we want to send a 500.
 	default:
+		a.log.Err(err).Msg("unhandled error")
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
