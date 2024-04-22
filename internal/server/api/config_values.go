@@ -13,13 +13,13 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	configKey := r.PathValue("key")
 	if environmentName == "" || configKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, errors.New("environment or key were empty"))
+		a.sendErr(w, errors.New("environment or key were empty"))
 		return
 	}
 
 	cv, err := a.repo.GetConfigurationValue(r.Context(), environmentName, configKey)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	configKey := r.PathValue("key")
 	if environmentName == "" || configKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, errors.New("environment or key were empty"))
+		a.sendErr(w, errors.New("environment or key were empty"))
 		return
 	}
 
@@ -42,7 +42,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 		newConfigValue,
 	)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -68,13 +68,13 @@ func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
 	newConfigValue, err = a.configValueService.CreateConfigValue(r.Context(), newConfigValue)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -86,13 +86,13 @@ func (a *API) GetConfiguration(w http.ResponseWriter, r *http.Request) {
 	environmentName := r.PathValue("environment")
 	if environmentName == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, errors.New("environment must not be blank"))
+		a.sendErr(w, errors.New("environment must not be blank"))
 		return
 	}
 
 	cv, err := a.repo.GetConfiguration(r.Context(), environmentName)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 

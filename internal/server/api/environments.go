@@ -13,13 +13,13 @@ func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, errors.New("name missing from url"))
+		a.sendErr(w, errors.New("name missing from url"))
 		return
 	}
 
 	env, err := a.repo.GetEnvironmentByName(r.Context(), name)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -30,13 +30,13 @@ func (a *API) GetEnvironmentByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
 	env, err := a.repo.GetEnvironment(r.Context(), id)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -51,13 +51,13 @@ func (a *API) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&env)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
 	env, err = a.repo.CreateEnvironment(r.Context(), env)
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func getChildren(parent cdb.Environment, environments []cdb.Environment) []cdb.E
 func (a *API) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
 	environs, err := a.repo.ListEnvironments(r.Context())
 	if err != nil {
-		a.errorResponse(w, err)
+		a.sendErr(w, err)
 		return
 	}
 

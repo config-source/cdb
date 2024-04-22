@@ -51,7 +51,7 @@ func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 	}
 }
 
-func (a *API) errorResponse(w http.ResponseWriter, err error) {
+func (a *API) sendErr(w http.ResponseWriter, err error) {
 	switch err {
 	case cdb.ErrEnvNotFound, cdb.ErrConfigKeyNotFound, cdb.ErrConfigValueNotFound:
 		w.WriteHeader(http.StatusNotFound)
