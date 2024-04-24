@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrConfigValueNotFound = errors.New("config value not found")
-	ErrConfigValueNotValid = errors.New("config value is not valid")
+	ErrConfigValueNotFound      = errors.New("config value not found")
+	ErrConfigValueNotValid      = errors.New("config value is not valid")
+	ErrConfigValueNotTakeANumer = errors.New("config value is not a TAKE_A_NUMBER")
 )
 
 type ConfigValue struct {
@@ -53,6 +54,12 @@ func NewIntConfigValue(environmentID int, configKeyID int, value int) *ConfigVal
 	return NewConfigValue(environmentID, configKeyID).SetIntValue(value)
 }
 
+func NewTakeANumberConfigValue(environmentID int, configKeyID int, value int) *ConfigValue {
+	cv := NewConfigValue(environmentID, configKeyID).SetIntValue(value)
+	cv.ValueType = TypeTakeANumber
+	return cv
+}
+
 func (cv *ConfigValue) Value() interface{} {
 	if err := cv.Valid(); err != nil {
 		return err
@@ -61,7 +68,7 @@ func (cv *ConfigValue) Value() interface{} {
 	switch cv.ValueType {
 	case TypeString:
 		return *cv.StrValue
-	case TypeInteger:
+	case TypeTakeANumber, TypeInteger:
 		return *cv.IntValue
 	case TypeFloat:
 		return *cv.FloatValue
@@ -139,6 +146,45 @@ func (cv *ConfigValue) SetBoolValue(val bool) *ConfigValue {
 	cv.BoolValue = &storage
 	cv.ValueType = TypeBoolean
 	return cv
+}
+
+func (cv *ConfigValue) Increment() error {
+	if cv.ValueType != TypeTakeANumber {
+		return fmt.Errorf(
+			"%w: value type is %s",
+			ErrConfigValueNotTakeANumer,
+			cv.ValueType,
+		)
+	}
+
+	*cv.IntValue += 1
+	return nil
+}
+
+func (cv *ConfigValue) Decrement() error {
+	if cv.ValueType != TypeTakeANumber {
+		return fmt.Errorf(
+			"%w: value type is %s",
+			ErrConfigValueNotTakeANumer,
+			cv.ValueType,
+		)
+	}
+
+	*cv.IntValue -= 1
+	return nil
+}
+
+func (cv *ConfigValue) Reset() error {
+	if cv.ValueType != TypeTakeANumber {
+		return fmt.Errorf(
+			"%w: value type is %s",
+			ErrConfigValueNotTakeANumer,
+			cv.ValueType,
+		)
+	}
+
+	*cv.IntValue = 0
+	return nil
 }
 
 func (cv *ConfigValue) Valid() error {

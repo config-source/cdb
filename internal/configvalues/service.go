@@ -90,3 +90,18 @@ func (s *Service) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cd
 
 	return *created, nil
 }
+
+func (s *Service) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
+	cv, err := s.repo.GetConfigurationValue(ctx, environmentName, key)
+	if err != nil {
+		return cv, err
+	}
+
+	if cv.ValueType == cdb.TypeTakeANumber {
+		// error ignored because we know the valuetype
+		cv.Increment()
+		cv, err = s.repo.UpdateConfigurationValue(ctx, cv)
+	}
+
+	return cv, err
+}

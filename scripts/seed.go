@@ -67,6 +67,9 @@ func main() {
 	minReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("minReplicas", cdb.TypeInteger))
 	fail(err)
 
+	nodeNumber, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("nodeNumber", cdb.TypeTakeANumber))
+	fail(err)
+
 	fmt.Println("Done seeding config keys.")
 
 	fmt.Println("Seeding config values...")
@@ -104,6 +107,13 @@ func main() {
 		dev1.ID,
 		maxReplicas.ID,
 		10,
+	))
+	fail(err)
+
+	_, err = repository.CreateConfigValue(ctx, cdb.NewTakeANumberConfigValue(
+		production.ID,
+		nodeNumber.ID,
+		0,
 	))
 	fail(err)
 

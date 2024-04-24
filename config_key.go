@@ -14,10 +14,11 @@ var (
 type ValueType int
 
 const (
-	TypeString  ValueType = 0
-	TypeInteger ValueType = 1
-	TypeFloat   ValueType = 2
-	TypeBoolean ValueType = 3
+	TypeString      ValueType = 0
+	TypeInteger     ValueType = 1
+	TypeFloat       ValueType = 2
+	TypeBoolean     ValueType = 3
+	TypeTakeANumber ValueType = 4
 )
 
 func (vt ValueType) String() string {
@@ -30,6 +31,8 @@ func (vt ValueType) String() string {
 		return "FLOAT"
 	case TypeBoolean:
 		return "BOOLEAN"
+	case TypeTakeANumber:
+		return "TAKE_A_NUMBER"
 	default:
 		return "UNKNOWN"
 	}

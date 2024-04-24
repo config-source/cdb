@@ -17,7 +17,7 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cv, err := a.repo.GetConfigurationValue(r.Context(), environmentName, configKey)
+	cv, err := a.configValueService.GetConfigurationValue(r.Context(), environmentName, configKey)
 	if err != nil {
 		a.sendErr(w, err)
 		return
