@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["server"]
   bin = "./tmp/cdbd"
-  cmd = "go build -o ./tmp/cdbd ./cmd/cdbd"
+  cmd = "go build -buildvcs=false -o ./tmp/cdbd ./cmd/cdbd"
   delay = 1000
   exclude_dir = [
     "assets",
