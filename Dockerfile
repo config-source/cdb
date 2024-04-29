@@ -9,7 +9,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
-COPY --exclude=frontend,charts . .
+COPY --exclude=frontend --exclude=charts . .
 
 RUN go build -o /app/cdbd ./cmd/cdbd
 
@@ -33,6 +33,7 @@ RUN adduser --home /app --no-create-home --uid 600 --disabled-password cdb
 
 ENV ENV=deployed
 COPY --chown=cdb --from=backend /app/cdbd /app/cdbd
+COPY --chown=cdb --from=backend /app/migrations /app/migrations
 COPY --chown=cdb --from=backend /app/docker/entrypoint.sh /app/entrypoint.sh
 COPY --chown=cdb --from=frontend /app/build /app/frontend/build
 

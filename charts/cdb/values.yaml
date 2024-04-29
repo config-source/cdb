@@ -5,10 +5,19 @@
 replicaCount: 1
 
 postgresql:
+  enabled: true
+
   auth:
     username: cdb
     password: cdb
     database: cdb
+
+config:
+  PGDATABASE: cdb
+
+secrets:
+  PGUSER: cdb
+  PGPASSWORD: cdb
 
 image:
   repository: docker.io/chasinglogic/cdb
