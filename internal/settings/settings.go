@@ -18,7 +18,12 @@ func DBUrl() string {
 // DynamicConfigKeys indicates that Config Keys should be created if they aren't
 // found when a new Config Value is created.
 func DynamicConfigKeys() bool {
-	return strings.ToLower(os.Getenv("DYNAMIC_CONFIG_KEYS")) == "true"
+	val := os.Getenv("DYNAMIC_CONFIG_KEYS")
+	if val == "" {
+		val = "true"
+	}
+
+	return strings.ToLower(val) == "true"
 }
 
 // HumanLogs indicates that structured logging should not be used and instead
