@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	_ "embed"
+	"errors"
 
 	"github.com/config-source/cdb"
+	"github.com/jackc/pgx/v5"
 )
 
 //go:embed queries/environments/create_environment.sql
@@ -25,7 +27,7 @@ func (r *Repository) CreateEnvironment(ctx context.Context, env cdb.Environment)
 
 func (r *Repository) GetEnvironment(ctx context.Context, id int) (cdb.Environment, error) {
 	env, err := getOne[cdb.Environment](r, ctx, getEnvironmentByIDSql, id)
-	if err != nil && err.Error() == "no rows in result set" {
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, cdb.ErrEnvNotFound
 	}
 
@@ -34,7 +36,7 @@ func (r *Repository) GetEnvironment(ctx context.Context, id int) (cdb.Environmen
 
 func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (cdb.Environment, error) {
 	env, err := getOne[cdb.Environment](r, ctx, getEnvironmentByNameSql, name)
-	if err != nil && err.Error() == "no rows in result set" {
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, cdb.ErrEnvNotFound
 	}
 

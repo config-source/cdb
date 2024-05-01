@@ -364,7 +364,7 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), "notFound", "notfound")
-	if err != cdb.ErrEnvNotFound {
+	if !errors.Is(err, cdb.ErrConfigValueNotFound) {
 		t.Fatalf("Expected: %s Got: %s", cdb.ErrEnvNotFound, err)
 	}
 }

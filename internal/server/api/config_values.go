@@ -38,7 +38,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var newConfigValue cdb.ConfigValue
+	var newConfigValue *cdb.ConfigValue
 	err := decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

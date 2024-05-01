@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrConfigValueNotFound = errors.New("config value not found")
-	ErrConfigValueNotValid = errors.New("config value is not valid")
+	ErrConfigValueNotFound   = errors.New("config value not found")
+	ErrConfigValueNotValid   = errors.New("config value is not valid")
+	ErrConfigValueAlreadySet = errors.New("config value is already set for this environment")
 )
 
 type ConfigValue struct {
@@ -241,6 +242,7 @@ type ConfigValueRepository interface {
 
 	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
 	GetConfigurationValue(ctx context.Context, environmentName, key string) (*ConfigValue, error)
+	GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*ConfigValue, error)
 
 	UpdateConfigurationValue(context.Context, *ConfigValue) (*ConfigValue, error)
 }

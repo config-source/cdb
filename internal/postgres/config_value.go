@@ -28,6 +28,10 @@ var getAllConfigValuesForEnvironmentSql string
 //go:embed queries/configValues/get_all_config_values_except_matching_keys.sql
 var getAllConfigValuesForEnvironmentExceptKeysSql string
 
+func isUniqueConstraint(err error) bool {
+	return strings.Contains(err.Error(), "unique constraint")
+}
+
 func (r *Repository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
 	rows, err := r.pool.Query(
 		ctx,
@@ -39,7 +43,9 @@ func (r *Repository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue)
 		cv.FloatValue,
 		cv.BoolValue,
 	)
-	if err != nil {
+	if err != nil && isUniqueConstraint(err) {
+		return nil, cdb.ErrConfigValueAlreadySet
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -84,26 +90,15 @@ func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *cdb.Confi
 	return &updated, err
 }
 
-func (r *Repository) GetConfigValue(ctx context.Context, environmentID int, key string) (*cdb.ConfigValue, error) {
+func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName string, key string) (*cdb.ConfigValue, error) {
 	cv, err := getOne[cdb.ConfigValue](
 		r,
 		ctx,
 		getConfigValueByEnvironmentAndKeySql,
-		environmentID,
+		environmentName,
 		key,
 	)
-	if err == nil {
-		return &cv, err
-	}
-
 	if errors.Is(err, pgx.ErrNoRows) {
-		promotesToID, _ := r.getPromotesToID(ctx, environmentID)
-		if promotesToID != nil {
-			cv, err := r.GetConfigValue(ctx, *promotesToID, key)
-			cv.Inherited = true
-			return cv, err
-		}
-
 		return &cv, cdb.ErrConfigValueNotFound
 	}
 
@@ -118,33 +113,33 @@ func getAllKeys(values []cdb.ConfigValue) []string {
 	return keys
 }
 
-func (r *Repository) getPromotesToID(ctx context.Context, envID int) (*int, error) {
-	var promotesToID *int
+func (r *Repository) getPromotesToName(ctx context.Context, envName string) (*string, error) {
+	var promotesToName *string
 	err := r.Raw().QueryRow(
 		ctx,
-		"SELECT promotes_to_id FROM environments WHERE id = $1",
-		envID,
-	).Scan(&promotesToID)
+		"SELECT name FROM environments WHERE id = (SELECT promotes_to_id FROM environments WHERE name = $1)",
+		envName,
+	).Scan(&promotesToName)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return promotesToID, err
+		return promotesToName, err
 	}
 
-	return promotesToID, nil
+	return promotesToName, nil
 }
 
-func getConfigurationRecursively(ctx context.Context, r *Repository, environmentID int, excludedKeys []string) ([]cdb.ConfigValue, error) {
-	immediateValues, err := getAll[cdb.ConfigValue](r, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentID, excludedKeys)
+func getConfigurationRecursively(ctx context.Context, r *Repository, environmentName string, excludedKeys []string) ([]cdb.ConfigValue, error) {
+	immediateValues, err := getAll[cdb.ConfigValue](r, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentName, excludedKeys)
 	if err != nil {
 		return immediateValues, err
 	}
 
-	promotesToID, err := r.getPromotesToID(ctx, environmentID)
+	promotesToName, err := r.getPromotesToName(ctx, environmentName)
 	if err != nil {
 		return immediateValues, err
 	}
 
-	if promotesToID != nil {
-		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToID, append(excludedKeys, getAllKeys(immediateValues)...))
+	if promotesToName != nil {
+		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, append(excludedKeys, getAllKeys(immediateValues)...))
 		return append(immediateValues, parentValues...), err
 	}
 
@@ -157,18 +152,9 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 		return immediateValues, err
 	}
 
-	var promotesToID *int
-	err = r.Raw().QueryRow(
-		ctx,
-		"SELECT promotes_to_id FROM environments WHERE name = $1",
-		environmentName,
-	).Scan(&promotesToID)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return immediateValues, err
-	}
-
-	if promotesToID != nil {
-		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToID, getAllKeys(immediateValues))
+	promotesToName, _ := r.getPromotesToName(ctx, environmentName)
+	if promotesToName != nil {
+		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, getAllKeys(immediateValues))
 		for idx := range parentValues {
 			parentValues[idx].Inherited = true
 		}
@@ -180,12 +166,19 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 }
 
 func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
-	env, err := r.GetEnvironmentByName(ctx, environmentName)
-	if err != nil {
-		return nil, err
+	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentName, key)
+	if errors.Is(err, cdb.ErrConfigValueNotFound) {
+		promotesToName, _ := r.getPromotesToName(ctx, environmentName)
+		if promotesToName != nil {
+			cv, err := r.GetConfigurationValue(ctx, *promotesToName, key)
+			cv.Inherited = true
+			return cv, err
+		}
+
+		return cv, cdb.ErrConfigValueNotFound
 	}
 
-	return r.GetConfigValue(ctx, env.ID, key)
+	return cv, err
 }
 
 func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (*cdb.ConfigValue, error) {

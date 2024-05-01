@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	_ "embed"
+	"errors"
 
 	"github.com/config-source/cdb"
+	"github.com/jackc/pgx/v5"
 )
 
 //go:embed queries/configKeys/create_config_key.sql
@@ -31,11 +33,22 @@ func (r *Repository) CreateConfigKey(ctx context.Context, ck cdb.ConfigKey) (cdb
 }
 
 func (r *Repository) GetConfigKey(ctx context.Context, id int) (cdb.ConfigKey, error) {
-	return getOne[cdb.ConfigKey](r, ctx, getConfigKeyByIDSql, id)
+	key, err := getOne[cdb.ConfigKey](r, ctx, getConfigKeyByIDSql, id)
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
+		return key, cdb.ErrConfigKeyNotFound
+	}
+
+	return key, err
 }
 
 func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (cdb.ConfigKey, error) {
-	return getOne[cdb.ConfigKey](r, ctx, getConfigKeyByNameSql, name)
+	key, err := getOne[cdb.ConfigKey](r, ctx, getConfigKeyByNameSql, name)
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
+		return key, cdb.ErrConfigKeyNotFound
+	}
+
+	return key, err
+
 }
 
 func (r *Repository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, error) {

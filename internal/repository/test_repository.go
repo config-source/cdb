@@ -223,6 +223,15 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 	return values, nil
 }
 
+func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
+	cv, err := tr.GetConfigurationValue(ctx, environmentName, key)
+	if cv != nil && cv.Inherited {
+		return nil, cdb.ErrConfigValueNotFound
+	}
+
+	return cv, err
+}
+
 func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
 	configValues, err := tr.GetConfiguration(ctx, environmentName)
 	if err != nil {

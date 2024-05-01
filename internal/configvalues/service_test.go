@@ -44,7 +44,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 		context.Background(),
 		"staging",
 		"minReplicas",
-		cdb.ConfigValue{
+		&cdb.ConfigValue{
 			ValueType: cdb.TypeInteger,
 			IntValue:  &val,
 		},
@@ -59,11 +59,11 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	}
 
 	if cv.ConfigKeyID != newKey.ID {
-		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, &cv)
+		t.Fatalf("Expected config value to have the same key ID as the new key: %s %s", newKey, cv)
 	}
 
 	if cv.IntValue == nil {
-		t.Fatalf("Expected non-nil IntValue: %s", &cv)
+		t.Fatalf("Expected non-nil IntValue: %s", cv)
 	}
 }
 
@@ -101,12 +101,12 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 		context.Background(),
 		"staging",
 		"minReplicas",
-		cdb.ConfigValue{
+		&cdb.ConfigValue{
 			ValueType: cdb.TypeInteger,
 			IntValue:  &val,
 		},
 	)
-	if err != cdb.ErrConfigKeyNotFound {
+	if !errors.Is(err, cdb.ErrConfigKeyNotFound) {
 		t.Fatalf("Expected %s got: %s", cdb.ErrConfigKeyNotFound, err)
 	}
 }
@@ -145,7 +145,7 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 		context.Background(),
 		"staging",
 		"maxReplicas",
-		cdb.ConfigValue{
+		&cdb.ConfigValue{
 			ValueType: cdb.TypeString,
 			StrValue:  &val,
 		},
