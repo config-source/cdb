@@ -2,19 +2,18 @@ package server
 
 import (
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/api"
+	"github.com/config-source/cdb/internal/server/ui"
 	"github.com/rs/zerolog"
 )
 
 type Server struct {
 	mux *http.ServeMux
 	api *api.API
-	ui  http.Handler
+	ui  *ui.UI
 }
 
 func New(
@@ -23,23 +22,20 @@ func New(
 	log zerolog.Logger,
 	frontendLocation string,
 ) *Server {
-	mux := http.NewServeMux()
-	apiServer := api.New(repo, configValueService, log, mux)
+	apiMux := http.NewServeMux()
+	apiServer := api.New(repo, configValueService, log, apiMux)
 
-	var frontendHandler http.Handler
-	if upstream, err := url.Parse(frontendLocation); err == nil && upstream.Scheme != "" {
-		log.Info().Str("upstream", upstream.String()).Msg("Serving frontend from")
-		frontendHandler = httputil.NewSingleHostReverseProxy(upstream)
-	} else {
-		log.Info().Str("location", frontendLocation).Msg("Serving frontend from")
-		frontendHandler = http.FileServer(http.Dir(frontendLocation))
-	}
-	mux.Handle("GET /", frontendHandler)
+	uiMux := http.NewServeMux()
+	uiServer := ui.New(uiMux)
+
+	mux := http.NewServeMux()
+	mux.Handle("/api", apiMux)
+	mux.Handle("/", uiMux)
 
 	return &Server{
 		mux: mux,
 		api: apiServer,
-		ui:  frontendHandler,
+		ui:  uiServer,
 	}
 }
 
