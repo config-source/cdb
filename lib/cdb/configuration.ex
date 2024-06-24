@@ -236,28 +236,22 @@ defmodule Cdb.Configuration do
     [%{key: "somekey", value: "somevalue"}]
   """
   def get_configuration(%Cdb.Environments.Environment{} = environment, child_values \\ []) do
-    existing_keys = Enum.map(child_values, & &1[:key])
+    existing_keys = Enum.map(child_values, & &1[:config_key_id])
 
     values =
       Repo.all(
         from cv in ConfigValue,
           join: key in ConfigKey,
           on: cv.config_key_id == key.id,
-          where: cv.environment_id == ^environment.id and key.name not in ^existing_keys,
+          where: cv.environment_id == ^environment.id and key.id not in ^existing_keys,
           preload: [:config_key]
       )
 
-    converted =
-      Enum.map(values, fn cv ->
-        %{
-          key: cv.config_key.name,
-          value: get_value(cv)
-        }
-      end) ++ child_values
+    values = values ++ child_values
 
     case Cdb.Environments.get_promotes_to(environment) do
-      nil -> converted
-      promotes_to -> get_configuration(promotes_to, converted)
+      nil -> values
+      promotes_to -> get_configuration(promotes_to, values)
     end
   end
 end

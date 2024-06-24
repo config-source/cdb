@@ -135,5 +135,64 @@ defmodule Cdb.ConfigurationTest do
       config_value = config_value_fixture()
       assert %Ecto.Changeset{} = Configuration.change_config_value(config_value)
     end
+
+    test "get_configuration/1 handles inheritance" do
+      production = environment_fixture(%{name: "production"})
+      staging = environment_fixture(%{name: "staging", promotes_to: production})
+      dev = environment_fixture(%{name: "dev", promotes_to: staging})
+
+      owner = config_key_fixture(%{name: "owner"})
+      max_replicas = config_key_fixture(%{name: "max_replicas", value_type: :integer})
+      min_replicas = config_key_fixture(%{name: "min_replicas", value_type: :integer})
+
+      owner_value = config_value_fixture(%{
+        environment_id: production.id,
+        config_key_id: owner.id,
+        str_value: "SRE"
+      })
+
+      min_replicas_value_prod = config_value_fixture(%{
+        environment_id: production.id,
+        config_key_id: min_replicas.id,
+        str_value: nil,
+        int_value: 10,
+      })
+      max_replicas_value_prod = config_value_fixture(%{
+        environment_id: production.id,
+        config_key_id: max_replicas.id,
+        str_value: nil,
+        int_value: 100,
+      })
+
+      min_replicas_value_staging = config_value_fixture(%{
+        environment_id: staging.id,
+        config_key_id: min_replicas.id,
+        str_value: nil,
+        int_value: 5,
+      })
+      max_replicas_value_staging = config_value_fixture(%{
+        environment_id: staging.id,
+        config_key_id: max_replicas.id,
+        str_value: nil,
+        int_value: 50,
+      })
+
+      min_replicas_value_dev = config_value_fixture(%{
+        environment_id: dev.id,
+        config_key_id: min_replicas.id,
+        str_value: nil,
+        int_value: 1,
+      })
+      max_replicas_value_dev = config_value_fixture(%{
+        environment_id: dev.id,
+        config_key_id: max_replicas.id,
+        str_value: nil,
+        int_value: 5,
+      })
+
+      configs = Configuration.get_configuration(dev)
+      expected = Enum.sort(Enum.map([owner_value, min_replicas_value_dev, max_replicas_value_dev], fn cv -> cv |> Repo.preload(:config_key) end))
+      assert Enum.sort(configs) == expected
+    end
   end
 end
