@@ -7,9 +7,7 @@
 	const thisEnvironment = envTree.Env;
 
 	let active = $selectedEnvTreeNode === thisEnvironment.Name;
-	selectedEnvTreeNode.subscribe(
-		(name) => (active = name === thisEnvironment.Name)
-	);
+	selectedEnvTreeNode.subscribe((name) => (active = name === thisEnvironment.Name));
 
 	const dispatch = createEventDispatcher();
 	const onSelect = () => {

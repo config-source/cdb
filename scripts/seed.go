@@ -65,6 +65,9 @@ func main() {
 	minReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("minReplicas", cdb.TypeInteger))
 	fail(err)
 
+	sslEnabled, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("sslEnabled", cdb.TypeBoolean))
+	fail(err)
+
 	fmt.Println("Done seeding config keys.")
 
 	fmt.Println("Seeding config values...")
@@ -91,6 +94,13 @@ func main() {
 	))
 	fail(err)
 
+	_, err = repository.CreateConfigValue(ctx, cdb.NewBoolConfigValue(
+		production.ID,
+		sslEnabled.ID,
+		true,
+	))
+	fail(err)
+
 	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
 		staging.ID,
 		minReplicas.ID,
@@ -111,6 +121,13 @@ func main() {
 
 	for i := range 100 {
 		fe, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
+		fail(err)
+
+		_, err = repository.CreateConfigValue(ctx, cdb.NewBoolConfigValue(
+			fe.ID,
+			sslEnabled.ID,
+			false,
+		))
 		fail(err)
 
 		switch rand.Intn(3) {

@@ -58,7 +58,7 @@ func LogLevel() zerolog.Level {
 func ListenAddr() string {
 	addr := os.Getenv("LISTEN_ADDRESS")
 	if addr == "" {
-		return ":8080"
+		return "0.0.0.0:8080"
 	}
 
 	return addr
