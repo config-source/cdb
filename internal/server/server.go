@@ -26,7 +26,7 @@ func New(
 	apiServer := api.New(repo, configValueService, log, apiMux)
 
 	uiMux := http.NewServeMux()
-	uiServer := ui.New(uiMux)
+	uiServer := ui.New(repo, configValueService, log, uiMux)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api", apiMux)

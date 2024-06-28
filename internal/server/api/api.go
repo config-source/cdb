@@ -17,7 +17,12 @@ type API struct {
 	log                zerolog.Logger
 }
 
-func New(repo repository.ModelRepository, configValueService *configvalues.Service, log zerolog.Logger, mux *http.ServeMux) *API {
+func New(
+	repo repository.ModelRepository,
+	configValueService *configvalues.Service,
+	log zerolog.Logger,
+	mux *http.ServeMux,
+) *API {
 	api := &API{
 		repo:               repo,
 		log:                log,
