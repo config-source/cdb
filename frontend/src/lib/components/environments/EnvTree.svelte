@@ -4,24 +4,27 @@
 
 	export let envTree;
 	export let depth = 0;
+	const thisEnvironment = envTree.Env;
 
-	let active = false;
-	selectedEnvTreeNode.subscribe((id) => (active = id === envTree.env.ID));
+	let active = $selectedEnvTreeNode === thisEnvironment.Name;
+	selectedEnvTreeNode.subscribe(
+		(name) => (active = name === thisEnvironment.Name)
+	);
 
 	const dispatch = createEventDispatcher();
 	const onSelect = () => {
 		dispatch('envSelected', {
-			...envTree.env
+			...envTree.Env
 		});
-		selectedEnvTreeNode.set(envTree.env.ID);
+		selectedEnvTreeNode.set(envTree.Env.Name);
 	};
 
-	if ($selectedEnvTreeNode === 0 && depth === 0) {
+	if ($selectedEnvTreeNode === '' && depth === 0) {
 		onSelect();
 	}
 </script>
 
-<div class="level" style:margin-bottom="0">
+<div class="level" style:margin-bottom="0.3rem">
 	<div class="level-left">
 		{#if depth > 0}
 			<div style:margin-left={`${depth * 2}rem`} class="level-item">┗</div>
@@ -32,11 +35,11 @@
 			class={`level-item button ${active ? 'is-primary' : 'is-outline'}`}
 			on:click={onSelect}
 		>
-			{envTree.env.Name}
+			{envTree.Env.Name}
 		</button>
 	</div>
 </div>
 
-{#each envTree.children as child}
+{#each envTree.Children as child}
 	<svelte:self envTree={child} depth={depth + 1} on:envSelected />
 {/each}

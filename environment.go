@@ -44,6 +44,6 @@ type EnvironmentRepository interface {
 }
 
 type EnvTree struct {
-	Env      Environment `json:"env"`
-	Children []EnvTree   `json:"children"`
+	Env      Environment
+	Children []EnvTree
 }

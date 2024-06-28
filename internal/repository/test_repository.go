@@ -215,6 +215,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 		for _, cv := range parentValues {
 			if !keyAlreadyInSet(values, cv) {
 				cv.Inherited = true
+				cv.InheritedFrom = parent.Name
 				values = append(values, cv)
 			}
 		}

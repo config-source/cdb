@@ -157,6 +157,7 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, getAllKeys(immediateValues))
 		for idx := range parentValues {
 			parentValues[idx].Inherited = true
+			parentValues[idx].InheritedFrom = *promotesToName
 		}
 
 		return append(immediateValues, parentValues...), err
@@ -172,6 +173,7 @@ func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName,
 		if promotesToName != nil {
 			cv, err := r.GetConfigurationValue(ctx, *promotesToName, key)
 			cv.Inherited = true
+			cv.InheritedFrom = *promotesToName
 			return cv, err
 		}
 
