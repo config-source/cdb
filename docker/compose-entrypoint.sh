@@ -18,24 +18,25 @@ function backend() {
 }
 
 function frontend() {
-  if [[ ! -d node_modules ]]; then
+  echo "Checking for node_modules"
+  if [[ ! -f node_modules/.package-lock.json ]]; then
+    echo "node_modules not found, installing deps."
     npm ci
   fi
 
   npm run dev -- --host
 }
 
-
 case $1 in
-  frontend)
-    frontend
-    ;;
+frontend)
+  frontend
+  ;;
 
-  backend)
-    backend
-    ;;
+backend)
+  backend
+  ;;
 
-  *)
-    backend
-    ;;
+*)
+  backend
+  ;;
 esac

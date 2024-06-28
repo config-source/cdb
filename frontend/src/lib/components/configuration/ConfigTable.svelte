@@ -5,7 +5,7 @@
 
 	let configuration = [];
 
-	const selectEnv = (envName) => () => selectedEnvTreeNode.set(envName)
+	const selectEnv = (envName) => () => selectedEnvTreeNode.set(envName);
 
 	const fetchConfig = async (name) => {
 		if (name === '') return;

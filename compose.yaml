@@ -26,6 +26,7 @@ services:
     volumes:
       - ./frontend:/app
       - ./docker:/app/docker
+      - cdb-node-modules:/app/node_modules
     ports:
       - "5173:5173"
 
@@ -41,3 +42,6 @@ services:
       interval: 0s
       timeout: 5s
       retries: 5
+
+volumes:
+  cdb-node-modules:
