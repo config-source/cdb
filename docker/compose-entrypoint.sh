@@ -13,7 +13,7 @@ function backend() {
 
   go run /app/cmd/cdbd migrate
 
-  go install github.com/cosmtrek/air@latest
+  go install github.com/air-verse/air@latest
   air
 }
 
