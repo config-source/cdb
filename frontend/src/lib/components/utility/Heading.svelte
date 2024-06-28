@@ -1,7 +1,7 @@
 <script>
-    export let size = 1;
+	export let size = 1;
 </script>
 
 <h1 class={`is-size-${size}`}>
-    <slot />
+	<slot />
 </h1>

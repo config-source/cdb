@@ -100,3 +100,13 @@ func (a *API) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
 
 	a.sendJson(w, trees)
 }
+
+func (a *API) ListEnvironments(w http.ResponseWriter, r *http.Request) {
+	environs, err := a.repo.ListEnvironments(r.Context())
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	a.sendJson(w, environs)
+}
