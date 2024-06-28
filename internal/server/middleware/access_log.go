@@ -1,9 +1,6 @@
 package middleware
 
 import (
-	"bufio"
-	"errors"
-	"net"
 	"net/http"
 	"time"
 
@@ -20,13 +17,8 @@ func (r *StatusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
-func (r *StatusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	h, ok := r.ResponseWriter.(http.Hijacker)
-	if !ok {
-		return nil, nil, errors.New("http: proxy error: can't switch protocols using non-Hijacker ResponseWriter type")
-	}
-
-	return h.Hijack()
+func (r *StatusRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
 }
 
 func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
