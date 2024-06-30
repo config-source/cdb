@@ -78,6 +78,7 @@
 				<td>
 					{configValue.InheritedFrom}
 				</td>
+				<td></td>
 			</tr>
 		{/each}
 
@@ -124,7 +125,11 @@
 			<td></td>
 			<td></td>
 			<td>
-				<button on:click={addNewConfigValue}> + </button>
+				<button class="button is-success" on:click={addNewConfigValue}>
+					<span class="icon">
+						<i class="fab fa-plus"></i>
+					</span>
+				</button>
 			</td>
 		</tr>
 	</tbody>
