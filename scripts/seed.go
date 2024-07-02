@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -47,10 +48,7 @@ func main() {
 	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID})
 	fail(err)
 
-	dev1, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev1", PromotesToID: &staging.ID})
-	fail(err)
-
-	_, err = repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev2", PromotesToID: &staging.ID})
+	dev, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev", PromotesToID: &staging.ID})
 	fail(err)
 
 	fmt.Println("Done seeding environments.")
@@ -101,11 +99,44 @@ func main() {
 	fail(err)
 
 	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
-		dev1.ID,
+		dev.ID,
 		maxReplicas.ID,
 		10,
 	))
 	fail(err)
 
 	fmt.Println("Done seeding config values.")
+
+	fmt.Println("Seeding feature environments")
+
+	for i := range 100 {
+		fe, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
+		fail(err)
+
+		switch rand.Intn(3) {
+		case 0:
+			_, err = repository.CreateConfigValue(ctx, cdb.NewStringConfigValue(
+				fe.ID,
+				owner.ID,
+				fmt.Sprintf("dev-team-%d", rand.Intn(10)),
+			))
+			fail(err)
+		case 1:
+			_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+				fe.ID,
+				maxReplicas.ID,
+				rand.Intn(30),
+			))
+			fail(err)
+		case 2:
+			_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+				fe.ID,
+				minReplicas.ID,
+				rand.Intn(9)+1,
+			))
+			fail(err)
+		}
+	}
+
+	fmt.Println("Done seeding feature environments.")
 }
