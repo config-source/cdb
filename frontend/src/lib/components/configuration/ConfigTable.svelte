@@ -1,6 +1,7 @@
 <script>
-	import { ValueTypes } from '$lib/config-values';
+	import { ValueTypes, getValue } from '$lib/config-values';
 	import ConfigValueInput from './ConfigValueInput.svelte';
+	import ConfigKeySelector from './ConfigKeySelector.svelte';
 
 	export let environmentName;
 
@@ -16,6 +17,28 @@
 			}
 		];
 	};
+
+	const removeNewConfigValue = (idx) => () => {
+		newValues.splice(idx, 1);
+		newValues = newValues;
+	};
+
+	const updateValueWithNewKey =
+		(configValue) =>
+		({ detail }) => {
+			const newKey = detail.value;
+			if (!newKey) return;
+
+			configValue.Name = newKey.Name;
+			configValue.ValueType = newKey.ValueType;
+			configValue.ConfigKeyID = newKey.ID;
+
+			for (const key of Object.keys(configValue).filter((k) => k.endsWith('Value'))) {
+				configValue[key] = undefined;
+			}
+
+			newValues = [...newValues];
+		};
 
 	const fetchConfig = async (name) => {
 		if (name === '') return;
@@ -48,17 +71,16 @@
 		configuration = data;
 	};
 
-	const getValue = (configValue) => {
-		const valueKeys = ['StrValue', 'IntValue', 'BoolValue', 'FloatValue'];
-		for (const key of valueKeys) {
-			const value = configValue[key];
-			if (value) {
-				return value;
-			}
-		}
-
-		return 'UNRECOGNISED';
-	};
+	let excludedConfigKeys = [];
+	$: {
+		// Exclude keys which are already configured for this environment.
+		const directlyConfiguredKeys = configuration.filter((cv) => !cv.Inherited).map((cv) => cv.Name);
+		// Exclude keys which are already in the newValues list so we don't have
+		// duplicates.
+		const currentlyConfiguringKeys = newValues.filter((cv) => cv.Name);
+		excludedConfigKeys = [...directlyConfiguredKeys, ...currentlyConfiguringKeys];
+		console.log(excludedConfigKeys);
+	}
 
 	$: fetchConfig(environmentName);
 </script>
@@ -82,41 +104,31 @@
 			</tr>
 		{/each}
 
-		{#each newValues as newValue}
+		{#each newValues as newValue, i}
 			<tr>
 				<td>
-					<!-- <ConfigKeySelector -->
-					<!-- 	on:keySelected={(key) => { -->
-					<!-- 		newValue.Name = key.Name; -->
-					<!-- 		newValue.ValueType = key.ValueType; -->
-					<!-- 	}} -->
-					<!-- /> -->
+					<!-- Exclude config keys that are already configured directly on this environment. -->
+					<ConfigKeySelector
+						excludedKeys={excludedConfigKeys}
+						preSelectedName={newValue.Name}
+						on:updated={updateValueWithNewKey(newValue)}
+					/>
 				</td>
 				<td>
 					<ConfigValueInput
 						valueType={newValue.ValueType}
-						on:change={(newValue) => {
-							switch (newValue.ValueType) {
-								case ValueTypes.STRING:
-									newValue.StrValue = newValue;
-									break;
-								case ValueTypes.INTEGER:
-									newValue.IntValue = newValue;
-									break;
-								case ValueTypes.FLOAT:
-									newValue.FloatValue = newValue;
-									break;
-								case ValueTypes.BOOLEAN:
-									newValue.FloatValue = newValue;
-									break;
-								default:
-									throw new Error('Somehow reached unreachable code!');
-							}
-						}}
+						value={getValue(newValue)}
+						on:updated={(rawVal) => updateValue(newValue, rawVal)}
 					/>
 				</td>
 				<td></td>
-				<td>DELETE ME</td>
+				<td>
+					<button class="button is-error" on:click={removeNewConfigValue(i)}>
+						<span class="icon">
+							<i class="fab fa-trash"></i>
+						</span>
+					</button>
+				</td>
 			</tr>
 		{/each}
 
