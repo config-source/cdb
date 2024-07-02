@@ -13,6 +13,7 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - cdb-go-path:/go
     ports:
       - "8080:8080"
     depends_on:
@@ -45,3 +46,4 @@ services:
 
 volumes:
   cdb-node-modules:
+  cdb-go-path:
