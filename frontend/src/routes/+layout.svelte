@@ -1,42 +1,11 @@
 <script>
+	import Navbar from '$lib/components/Navbar.svelte';
 	import '../app.scss';
 	import { config } from '@fortawesome/fontawesome-svg-core';
 	import '@fortawesome/fontawesome-svg-core/styles.css';
 	config.autoAddCss = false;
 </script>
 
-<nav class="navbar" role="navigation" aria-label="main navigation">
-	<div class="navbar-brand">
-		<a class="navbar-item" href="/"> CDB </a>
-
-		<a
-			role="button"
-			class="navbar-burger"
-			aria-label="menu"
-			aria-expanded="false"
-			data-target="navbarMenu"
-		>
-			<span aria-hidden="true"></span>
-			<span aria-hidden="true"></span>
-			<span aria-hidden="true"></span>
-			<span aria-hidden="true"></span>
-		</a>
-	</div>
-
-	<div id="navbarMenu" class="navbar-menu">
-		<div class="navbar-start">
-			<a class="navbar-item"> Documentation </a>
-			<a class="navbar-item" href="https://github.com/config-source/cdb"> Source Code </a>
-		</div>
-
-		<div class="navbar-end"></div>
-	</div>
-</nav>
+<Navbar />
 
 <slot />
-
-<style>
-	.navbar {
-		border-bottom: 1px solid lightgrey;
-	}
-</style>
