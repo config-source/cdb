@@ -68,6 +68,10 @@ func main() {
 	sslEnabled, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("sslEnabled", cdb.TypeBoolean))
 	fail(err)
 
+	// Add an unconfigured config key for testing those features which require it.
+	_, err = repository.CreateConfigKey(ctx, cdb.NewConfigKey("readyForReaping", cdb.TypeBoolean))
+	fail(err)
+
 	fmt.Println("Done seeding config keys.")
 
 	fmt.Println("Seeding config values...")

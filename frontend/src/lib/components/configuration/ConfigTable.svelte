@@ -1,9 +1,12 @@
 <script>
+	// TODO: while functional, this component could use a refactor. Should
+	// probably use a store.
+
 	import { ValueType, getValue, updateValue } from '$lib/config-values';
 	import ConfigValueInput from './ConfigValueInput.svelte';
 	import ConfigKeySelector from './ConfigKeySelector.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+	import { faCheck, faPencil, faPlus, faTrash, faX } from '@fortawesome/free-solid-svg-icons';
 
 	export let environmentName;
 
@@ -38,9 +41,22 @@
 		});
 		configuration = data;
 	};
+	$: fetchConfig(environmentName);
 
+	// Stores all the fetched configuration values for this environment.
 	let configuration = [];
+	// Stores all the new configuration values that are being added by the user.
 	let newValues = [];
+	// Used to determine if any configuration value is being edited. Simply maps
+	// configvalue names to a boolean indicating their editing status.
+	/** @type Map<string, boolean> */
+	let editing = new Map();
+
+	const setEditing = (configValue, value) => () => {
+		console.log('set edit', configValue.Name, value);
+		editing.set(configValue.Name, value);
+		editing = editing;
+	};
 
 	const addNewConfigValue = () => {
 		newValues = [
@@ -58,19 +74,33 @@
 	};
 
 	const saveNewConfigValue = (idx) => async () => {
-		console.log(newValues);
+		const successful = await setConfigValue(newValues[idx]);
+		if (!successful) {
+			return;
+		}
 
-		// Remove and retrieve the value from the list.
-		const [newConfigValue] = newValues.splice(idx, 1);
+		// Remove the config value from the list.
+		newValues.splice(idx, 1);
+		newValues = newValues;
+	};
 
-		const res = await fetch(`/api/v1/config-values/${environmentName}/${newConfigValue.Name}`, {
+	const saveEdit = (configValue) => async () => {
+		const successful = await setConfigValue(configValue);
+		if (successful) {
+			setEditing(configValue, false)();
+		}
+	};
+
+	/** @type (configValue: any) => Promise<boolean> */
+	const setConfigValue = async (configValue) => {
+		const res = await fetch(`/api/v1/config-values/${environmentName}/${configValue.Name}`, {
 			method: 'POST',
-			body: JSON.stringify(newConfigValue)
+			body: JSON.stringify(configValue)
 		});
 
-		if (!res.ok) return;
-		newValues = newValues;
-		fetchConfig(environmentName);
+		if (!res.ok) return false;
+		await fetchConfig(environmentName);
+		return true;
 	};
 
 	const updateValueWithNewKey =
@@ -91,10 +121,10 @@
 		};
 
 	const getExcludedConfigKeys = () => {
-		// Exclude keys which are already configured for this environment.
-		const directlyConfiguredKeys = configuration.reduce((collector, cv) => {
-			return cv.Inherited ? collector : [cv.Name, ...collector];
-		}, []);
+		// Exclude keys which are already configured for this environment. Note:
+		// this includes inherited keys because the proper way to change an
+		// inherited key is by "editing" it.
+		const directlyConfiguredKeys = configuration.map((cv) => cv.Name);
 		// Exclude keys which are already in the newValues list so we don't have
 		// duplicates.
 		const currentlyConfiguringKeys = newValues.reduce(
@@ -104,10 +134,17 @@
 		return [...directlyConfiguredKeys, ...currentlyConfiguringKeys];
 	};
 
-	$: fetchConfig(environmentName);
+	let configKeys = [];
+	const fetchConfigKeys = async () => {
+		const res = await fetch('/api/v1/config-keys');
+		if (!res.ok) return; // TODO: error handling.
+		const data = await res.json();
+		configKeys = data;
+	};
+	fetchConfigKeys();
 
 	let canAddValues = true;
-	$: canAddValues = newValues.length !== configuration.filter((cv) => cv.Inherited).length;
+	$: canAddValues = configKeys.length !== configuration.length + newValues.length;
 
 	let buttonTitle = '';
 	$: {
@@ -125,14 +162,46 @@
 		<th></th>
 	</thead>
 	<tbody>
-		{#each configuration as configValue}
+		{#each configuration as configValue, i}
 			<tr>
 				<td>{configValue.Name}</td>
-				<td>{getValue(configValue)}</td>
 				<td>
-					{configValue.InheritedFrom}
+					{#if editing.get(configValue.Name)}
+						<ConfigValueInput
+							valueType={configValue.ValueType}
+							value={getValue(configValue)}
+							on:updated={(event) => updateValue(configuration[i], event.detail.value)}
+						/>
+					{:else}
+						{getValue(configValue)}
+					{/if}
 				</td>
-				<td></td>
+				<td>
+					{#if !editing.get(configValue.Name)}
+						{configValue.InheritedFrom}
+					{/if}
+				</td>
+				<td class="buttons is-centered">
+					{#if editing.get(configValue.Name)}
+						<button class="button is-success" on:click={saveEdit(configuration[i])}>
+							<span class="icon">
+								<FontAwesomeIcon icon={faCheck} />
+							</span>
+						</button>
+
+						<button class="button is-danger" on:click={setEditing(configValue, false)}>
+							<span class="icon">
+								<FontAwesomeIcon icon={faX} />
+							</span>
+						</button>
+					{:else}
+						<button class="button" on:click={setEditing(configValue, true)}>
+							<span class="icon">
+								<FontAwesomeIcon icon={faPencil} />
+							</span>
+						</button>
+					{/if}
+				</td>
 			</tr>
 		{/each}
 
@@ -156,7 +225,7 @@
 					/>
 				</td>
 				<td></td>
-				<td style="text-align: center;">
+				<td class="buttons is-centered">
 					<button class="button is-success" on:click={saveNewConfigValue(i)}>
 						<span class="icon">
 							<FontAwesomeIcon icon={faCheck} />
@@ -175,7 +244,7 @@
 			<td></td>
 			<td></td>
 			<td></td>
-			<td style="text-align: center;">
+			<td class="buttons is-centered">
 				<button
 					class="button is-success"
 					title={buttonTitle}
