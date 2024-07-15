@@ -6,13 +6,24 @@
 	export let value;
 
 	const dispatch = createEventDispatcher();
-	const onUpdate = ({ target }) => dispatch('updated', { value: target?.value });
+	const onUpdate = ({ target }) => {
+		let castedValue = target?.value;
+		if (valueType === ValueType.BOOLEAN) {
+			castedValue = target?.checked;
+		} else if (valueType === ValueType.INTEGER) {
+			castedValue = parseInt(castedValue, 10);
+		} else if (valueType === ValueType.FLOAT) {
+			castedValue = parseFloat(castedValue);
+		}
+
+		dispatch('updated', { value: castedValue });
+	};
 </script>
 
 {#if valueType === ValueType.STRING}
 	<input class="input" type="text" {value} on:change={onUpdate} />
 {:else if valueType === ValueType.BOOLEAN}
-	<input class="input" type="checkbox" {value} on:change={onUpdate} />
+	<input type="checkbox" checked={value} on:change={onUpdate} />
 {:else if valueType === ValueType.INTEGER}
 	<input class="input" type="number" {value} step="1" pattern="\d+" on:change={onUpdate} />
 {:else if valueType === ValueType.FLOAT}
