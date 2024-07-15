@@ -1,55 +1,41 @@
 <script>
-	/** @type string | undefined */
-	export let environmentName = undefined;
-	/** @type number | undefined */
-	export let environmentID = undefined;
+	/** @type any */
+	export let environment = undefined;
+
+	/** @type string */
+	export let environmentName = environment?.Name;
 
 	/** @type number */
 	export let size = 5;
 
-	/** @type number */
-	let parentID;
-
-	/** @type (envID?: number) => Promise<void> */
-	const getName = async (envID) => {
-		if (!envID) return;
-
-		const res = await fetch(`/api/v1/environments/by-id/${envID}`);
-		if (!res.ok) return;
-
-		const env = await res.json();
-		environmentName = env.Name;
-	};
+	/** @type any */
+	let parent;
 
 	/** @type (envName?: string) => Promise<void> */
-	const getParentByName = async (envName) => {
+	const getParent = async (envName) => {
 		if (!envName || envName === '') return;
 
-		const res = await fetch(`/api/v1/environments/by-name/${envName}`);
-		if (!res.ok) return;
+		if (!environment) {
+			const selfRes = await fetch(`/api/v1/environments/by-name/${envName}`);
+			if (!selfRes.ok) return;
 
-		const env = await res.json();
-		parentID = env.PromotesToID;
+			environment = await selfRes.json();
+		}
+
+		const parentID = environment.PromotesToID;
+		if (!parentID) return;
+
+		const parentRes = await fetch(`/api/v1/environments/by-id/${parentID}`);
+		if (!parentRes.ok) return;
+
+		parent = await parentRes.json();
 	};
 
-	/** @type (envID?: number) => Promise<void> */
-	const getParentByID = async (envName) => {
-		if (!envName || envName === 0) return;
-
-		const res = await fetch(`/api/v1/environments/by-name/${envName}`);
-		if (!res.ok) return;
-
-		const env = await res.json();
-		parentID = env.PromotesToID;
-	};
-
-	$: getParentByName(environmentName);
-	$: getParentByID(environmentID);
-	$: getName(environmentID);
+	$: getParent(environmentName);
 </script>
 
-{#if parentID}
-	<svelte:self environmentID={parentID} />
+{#if parent}
+	<svelte:self environment={parent} />
 	<span class={`is-size-${size} p-1`}> / </span>
 {/if}
 
