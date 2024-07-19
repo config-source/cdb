@@ -12,7 +12,7 @@ import (
 )
 
 func TestCreateConfigValue(t *testing.T) {
-	repo, tr := initTestDB(t, "TestCreateConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -59,7 +59,7 @@ func TestCreateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValue(t *testing.T) {
-	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -109,7 +109,7 @@ func TestUpdateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -130,7 +130,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -151,7 +151,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestUpdateConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -172,7 +172,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 }
 
 func TestCreateIntConfigValue(t *testing.T) {
-	repo, tr := initTestDB(t, "TestCreateIntConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -219,7 +219,7 @@ func TestCreateIntConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValue(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigValue")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env := envFixture(t, repo, "cdb", nil)
@@ -258,7 +258,7 @@ func TestGetConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValueInheritsValues(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigurationMarksInheritedValuesAsSuch")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -316,7 +316,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigValueReturnsCorrectErrorForValueNotFound")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -343,7 +343,7 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigValueReturnsCorrectErrorForEnvNotFound")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -393,7 +393,7 @@ func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, parentN
 }
 
 func TestGetConfiguration(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfiguration")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -427,7 +427,7 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigurationDoesntPropagateKeysWhichDoNot")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -463,7 +463,7 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 }
 
 func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)
@@ -500,7 +500,7 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 }
 
 func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigurationMarksInheritedValuesAsSuch")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	production := envFixture(t, repo, "production", nil)

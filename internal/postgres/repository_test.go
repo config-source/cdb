@@ -134,9 +134,9 @@ func (tr *testRepository) Cleanup() {
 	}
 }
 
-func initTestDB(t *testing.T, testName string) (*pg.Repository, *testRepository) {
+func initTestDB(t *testing.T) (*pg.Repository, *testRepository) {
 	tr := testRepository{}
-	err := tr.Start(testName)
+	err := tr.Start(t.Name())
 	if err != nil {
 		t.Fatal(err)
 	}

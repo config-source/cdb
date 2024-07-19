@@ -24,7 +24,7 @@ func configKeyFixture(t *testing.T, repo *postgres.Repository, name string, valu
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo, tr := initTestDB(t, "TestCreateConfigKey")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	ck, err := repo.CreateConfigKey(context.Background(), cdb.ConfigKey{
@@ -74,7 +74,7 @@ func TestCreateConfigKey(t *testing.T) {
 }
 
 func TestGetConfigKey(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetConfigKey")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	configKey1 := configKeyFixture(t, repo, "getConfigKey1", cdb.TypeInteger, true)
@@ -91,7 +91,7 @@ func TestGetConfigKey(t *testing.T) {
 }
 
 func TestListConfigKeys(t *testing.T) {
-	repo, tr := initTestDB(t, "TestListConfigKey")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	configKeys := []cdb.ConfigKey{

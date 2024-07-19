@@ -22,7 +22,7 @@ func envFixture(t *testing.T, repo *postgres.Repository, name string, promotesTo
 }
 
 func TestCreateEnvironment(t *testing.T) {
-	repo, tr := initTestDB(t, "TestCreateEnvironment")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env, err := repo.CreateEnvironment(context.Background(), cdb.Environment{
@@ -46,7 +46,7 @@ func TestCreateEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetEnvironment")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	envFixture(t, repo, "env1", nil)
@@ -63,7 +63,7 @@ func TestGetEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetEnvironment")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	_, err := repo.GetEnvironment(context.Background(), 1)
@@ -77,7 +77,7 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByName(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetEnvironmentByName")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	env1 := envFixture(t, repo, "env1", nil)
@@ -94,7 +94,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
-	repo, tr := initTestDB(t, "TestGetEnvironment")
+	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	_, err := repo.GetEnvironmentByName(context.Background(), "dev")
