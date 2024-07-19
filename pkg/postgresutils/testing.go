@@ -24,7 +24,7 @@ import (
 
 type TestRepository struct {
 	conn      *pgx.Conn
-	pool      *pgxpool.Pool
+	Pool      *pgxpool.Pool
 	testName  string
 	TestDBURL string
 }
@@ -132,8 +132,8 @@ func (tr *TestRepository) Cleanup() {
 		panic(err)
 	}
 
-	if tr.pool != nil {
-		tr.pool.Close()
+	if tr.Pool != nil {
+		tr.Pool.Close()
 	}
 }
 
@@ -147,10 +147,10 @@ func InitTestDB(t *testing.T) (*TestRepository, *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	tr.pool, err = pgxpool.New(context.Background(), tr.TestDBURL)
+	tr.Pool, err = pgxpool.New(context.Background(), tr.TestDBURL)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return &tr, tr.pool
+	return &tr, tr.Pool
 }

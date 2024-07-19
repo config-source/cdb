@@ -14,9 +14,20 @@ import (
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
 	"github.com/config-source/cdb/pkg/services"
+	"github.com/config-source/cdb/pkg/webhooks"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
+
+const webhookTemplate = `{
+	"environmentName": "{{ .Environment.Name }}",
+	"environmentID": {{ .Environment.ID }},
+	"configValues": {
+		{{- range .Configuration }}
+		"{{ .Name }}": "{{ .Value }}",
+		{{- end }}
+	}
+}`
 
 func fail(err error) {
 	if err != nil {
@@ -53,6 +64,7 @@ func main() {
 	keyRepo := configkeys.NewRepository(logger, pool)
 	svcRepo := services.NewRepository(logger, pool)
 	valueRepo := configvalues.NewRepository(logger, pool)
+	webhookRepo := webhooks.NewRepository(logger, pool)
 
 	ctx := context.Background()
 
@@ -77,6 +89,8 @@ func main() {
 	clearTable(pool, "environments")
 	clearTable(pool, "config_values")
 	clearTable(pool, "config_keys")
+	clearTable(pool, "webhook_definitions_to_environments")
+	clearTable(pool, "webhook_definitions")
 
 	for _, svc := range services {
 		fmt.Printf("Seeding config keys for %s...\n", svc.Name)
@@ -227,6 +241,16 @@ func main() {
 		}
 
 		fmt.Println("Done seeding feature environments.")
+
+		fmt.Printf("Seeding webhook for %s...\n", svc.Name)
+
+		wh, err := webhookRepo.CreateWebhookDefinition(ctx, webhooks.Definition{Template: webhookTemplate, URL: "http://localhost:8081/webhooks"})
+		fail(err)
+
+		err = webhookRepo.AssociateWebhookToEnvironments(ctx, wh.ID, []int{dev.ID, staging.ID, production.ID})
+		fail(err)
+
+		fmt.Println("Done seeding webhooks")
 	}
 
 	fmt.Println("Seeding users")
