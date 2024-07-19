@@ -133,6 +133,11 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 		return immediateValues, err
 	}
 
+	for idx := range immediateValues {
+		immediateValues[idx].Inherited = true
+		immediateValues[idx].InheritedFrom = environmentName
+	}
+
 	promotesToName, err := r.getPromotesToName(ctx, environmentName)
 	if err != nil {
 		return immediateValues, err
@@ -155,11 +160,6 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 	promotesToName, _ := r.getPromotesToName(ctx, environmentName)
 	if promotesToName != nil {
 		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, getAllKeys(immediateValues))
-		for idx := range parentValues {
-			parentValues[idx].Inherited = true
-			parentValues[idx].InheritedFrom = *promotesToName
-		}
-
 		return append(immediateValues, parentValues...), err
 	}
 

@@ -36,15 +36,15 @@ func TestCreateConfigValue(t *testing.T) {
 	}
 
 	if cv.IntValue != nil {
-		t.Fatalf("Expected IntValue to be nil got: %v", cv.IntValue)
+		t.Fatalf("Expected IntValue to be nil got: %+v", cv.IntValue)
 	}
 
 	if cv.FloatValue != nil {
-		t.Fatalf("Expected FloatValue to be nil got: %v", cv.FloatValue)
+		t.Fatalf("Expected FloatValue to be nil got: %+v", cv.FloatValue)
 	}
 
 	if cv.BoolValue != nil {
-		t.Fatalf("Expected BoolValue to be nil got: %v", cv.BoolValue)
+		t.Fatalf("Expected BoolValue to be nil got: %+v", cv.BoolValue)
 	}
 
 	retrieved := cv.Value()
@@ -54,7 +54,7 @@ func TestCreateConfigValue(t *testing.T) {
 			t.Fatalf("Expected %s got %s", val, retrieved)
 		}
 	default:
-		t.Fatalf("Expected a string got %v", retrieved)
+		t.Fatalf("Expected a string got %+v", retrieved)
 	}
 }
 
@@ -86,15 +86,15 @@ func TestUpdateConfigValue(t *testing.T) {
 	}
 
 	if cv.IntValue != nil {
-		t.Fatalf("Expected IntValue to be nil got: %v", cv.IntValue)
+		t.Fatalf("Expected IntValue to be nil got: %+v", cv.IntValue)
 	}
 
 	if cv.FloatValue != nil {
-		t.Fatalf("Expected FloatValue to be nil got: %v", cv.FloatValue)
+		t.Fatalf("Expected FloatValue to be nil got: %+v", cv.FloatValue)
 	}
 
 	if cv.BoolValue != nil {
-		t.Fatalf("Expected BoolValue to be nil got: %v", cv.BoolValue)
+		t.Fatalf("Expected BoolValue to be nil got: %+v", cv.BoolValue)
 	}
 
 	retrieved := cv.Value()
@@ -104,7 +104,7 @@ func TestUpdateConfigValue(t *testing.T) {
 			t.Fatalf("Expected %s got %s", "updated", retrieved)
 		}
 	default:
-		t.Fatalf("Expected a string got %v", retrieved)
+		t.Fatalf("Expected a string got %+v", retrieved)
 	}
 }
 
@@ -196,15 +196,15 @@ func TestCreateIntConfigValue(t *testing.T) {
 	}
 
 	if cv.IntValue != nil {
-		t.Fatalf("Expected IntValue to be nil got: %v", cv.IntValue)
+		t.Fatalf("Expected IntValue to be nil got: %+v", cv.IntValue)
 	}
 
 	if cv.FloatValue != nil {
-		t.Fatalf("Expected FloatValue to be nil got: %v", cv.FloatValue)
+		t.Fatalf("Expected FloatValue to be nil got: %+v", cv.FloatValue)
 	}
 
 	if cv.BoolValue != nil {
-		t.Fatalf("Expected BoolValue to be nil got: %v", cv.BoolValue)
+		t.Fatalf("Expected BoolValue to be nil got: %+v", cv.BoolValue)
 	}
 
 	retrieved := cv.Value()
@@ -214,7 +214,7 @@ func TestCreateIntConfigValue(t *testing.T) {
 			t.Fatalf("Expected %s got %s", val, retrieved)
 		}
 	default:
-		t.Fatalf("Expected a string got %v", retrieved)
+		t.Fatalf("Expected a string got %+v", retrieved)
 	}
 }
 
@@ -253,7 +253,7 @@ func TestGetConfigValue(t *testing.T) {
 	cv.ValueType = key.ValueType
 
 	if !reflect.DeepEqual(retrieved, cv) {
-		t.Fatalf("Got wrong configValueironment expected %v got %v", cv, retrieved)
+		t.Fatalf("Got wrong configValueironment expected %+v got %+v", cv, retrieved)
 	}
 }
 
@@ -276,8 +276,8 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
 
 	setDirectly := createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	stagingInherited := createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	productionInherited := createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	stagingInherited := createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
+	productionInherited := createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	setDirectlyValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, setDirectly.Name)
 	if err != nil {
@@ -285,7 +285,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	}
 
 	if setDirectly.ID != setDirectlyValue.ID {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", setDirectly, setDirectlyValue)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", setDirectly, setDirectlyValue)
 	}
 
 	stagingValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, stagingInherited.Name)
@@ -294,7 +294,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	}
 
 	if stagingInherited.ID != stagingValue.ID {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", stagingInherited, stagingValue)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", stagingInherited, stagingValue)
 	}
 
 	if !stagingValue.Inherited {
@@ -307,7 +307,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	}
 
 	if productionInherited.ID != productionValue.ID {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", productionInherited, productionValue)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", productionInherited, productionValue)
 	}
 
 	if !productionValue.Inherited {
@@ -333,8 +333,8 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
+	createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), dev.Name, "notfound")
 	if err != cdb.ErrConfigValueNotFound {
@@ -360,8 +360,8 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, minReplicas.ID, 10))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(production.ID, maxReplicas.ID, 100))
 	createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
+	createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), "notFound", "notfound")
 	if !errors.Is(err, cdb.ErrConfigValueNotFound) {
@@ -385,9 +385,10 @@ func createConfigValue(t *testing.T, repo *postgres.Repository, cv *cdb.ConfigVa
 	return retrieved
 }
 
-func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, cv *cdb.ConfigValue) *cdb.ConfigValue {
+func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, parentName string, cv *cdb.ConfigValue) *cdb.ConfigValue {
 	created := createConfigValue(t, repo, cv)
 	created.Inherited = true
+	created.InheritedFrom = parentName
 	return created
 }
 
@@ -411,8 +412,8 @@ func TestGetConfiguration(t *testing.T) {
 
 	expectedValues := []cdb.ConfigValue{
 		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -421,7 +422,7 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expectedValues, retrieved) {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", expectedValues, retrieved)
 	}
 }
 
@@ -447,8 +448,8 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 
 	expectedValues := []cdb.ConfigValue{
 		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -457,7 +458,7 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expectedValues, retrieved) {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", expectedValues, retrieved)
 	}
 }
 
@@ -484,8 +485,8 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 	expectedValues := []cdb.ConfigValue{
 		*createConfigValue(t, repo, cdb.NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
 		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -494,7 +495,7 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 	}
 
 	if !reflect.DeepEqual(expectedValues, retrieved) {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", expectedValues, retrieved)
 	}
 }
 
@@ -518,8 +519,8 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 
 	expectedValues := []cdb.ConfigValue{
 		*createConfigValue(t, repo, cdb.NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createInheritedConfigValue(t, repo, staging.Name, cdb.NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, cdb.NewStringConfigValue(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -528,6 +529,6 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expectedValues, retrieved) {
-		t.Fatalf("\n\tExpected\n\t\t%v\n\tGot\n\t\t%v", expectedValues, retrieved)
+		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", expectedValues, retrieved)
 	}
 }
