@@ -1,0 +1,1 @@
+SELECT * FROM webhook_definitions WHERE id = $1;

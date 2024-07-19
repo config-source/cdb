@@ -160,4 +160,13 @@ func main() {
 	}
 
 	fmt.Println("Done seeding feature environments.")
+
+	fmt.Println("Seeding webhooks")
+	clearTable(repository, "webhook_definitions_to_environments")
+	clearTable(repository, "webhook_definitions")
+
+	_, err = repository.CreateWebhookDefinition(ctx, cdb.WebhookDefinition{Template: "Smile", URL: "http://localhost:8081/webhooks"})
+	fail(err)
+
+	fmt.Println("Done seeding webhooks")
 }
