@@ -1,0 +1,43 @@
+site_name: CDB Documentation
+site_description: Configuration Database for a DevOps workflow
+site_url: http://localhost:9000
+
+repo_name: config-source/cdb
+repo_url: https://github.com/config-source/cdb/
+edit_uri: ""
+
+theme:
+  name: material
+  features:
+    - content.code.annotation
+    - content.code.copy
+    - content.tabs.link
+    # Allow folders to have an index.md as their own page
+    - navigation.indexes
+    # Turn the docs directory tree into the navigation tree.
+    - navigation.sections
+    # Back-to-top button
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+plugins:
+  - search
