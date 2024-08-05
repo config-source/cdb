@@ -122,7 +122,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 	cv.ID = cv.ID + 1
 
 	var err error
-	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
 	expectedError := cdb.ErrConfigValueNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
@@ -143,7 +143,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 	cv.ConfigKeyID = cv.ConfigKeyID + 1
 
 	var err error
-	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
 	expectedError := cdb.ErrConfigKeyNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
@@ -164,7 +164,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 	cv.EnvironmentID = cv.EnvironmentID + 1
 
 	var err error
-	cv, err = repo.UpdateConfigurationValue(context.Background(), cv)
+	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
 	expectedError := cdb.ErrEnvNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
