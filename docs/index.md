@@ -1,3 +1,7 @@
+---
+title: Introduction
+---
+
 # <b>C</b>onfiguration <b>D</b>ata<b>B</b>ase (CDB)
 
 The user friendly configuration management database that integrates with your
@@ -15,8 +19,8 @@ CDB maintains primarily three objects that are all related:
    to your deployed environments and in CDB they will know their promotion
    relationship with each other.
 2. Config Keys - These are the available keys to configure on environments,
-   these are managed by a SysAdmin typically but you can change this with
-   a setting so they are dynamically created.
+   these are created dynamically typically but you can change this
+   with a setting so they are managed by system administrators.
 3. Config Values - Instances of values for a config key and environment.
 
 Since environments know who they promote to they will inherit configuration from
@@ -25,7 +29,7 @@ order of precedence is such that the nearest parent wins.
 
 Consider a simple Dev -> Staging -> Production example:
 
-![Environment Inheritance Diagram](/docs/images/environment-inheritance-diagram.png)
+![Environment Inheritance Diagram](images/environment-inheritance-diagram.png)
 
 In this example the Production environment has three config values set on it:
 `owner=SRE`, `minReplicas=10`, `maxReplicas=100`. Since Production is the

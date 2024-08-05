@@ -1,7 +1,6 @@
 scripts/*
 tmp/*
 .github/*
-docs/*
 */node_modules/*
 compose.yaml
 .air.toml
