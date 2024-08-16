@@ -12,6 +12,8 @@ import (
 )
 
 func TestCreateConfigValue(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -59,6 +61,8 @@ func TestCreateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValue(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -109,6 +113,8 @@ func TestUpdateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -130,6 +136,8 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -151,6 +159,8 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -172,6 +182,8 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 }
 
 func TestCreateIntConfigValue(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -219,6 +231,8 @@ func TestCreateIntConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValue(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -258,6 +272,8 @@ func TestGetConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValueInheritsValues(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -316,6 +332,8 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -343,6 +361,8 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -393,6 +413,8 @@ func createInheritedConfigValue(t *testing.T, repo *postgres.Repository, parentN
 }
 
 func TestGetConfiguration(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -427,6 +449,8 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -463,6 +487,8 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 }
 
 func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -500,6 +526,8 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 }
 
 func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
+	t.Parallel()
+
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
