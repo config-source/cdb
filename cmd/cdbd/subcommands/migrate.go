@@ -17,6 +17,7 @@ import (
 
 var rollback bool
 var steps int
+var force bool
 
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
@@ -68,6 +69,7 @@ var migrateCmd = &cobra.Command{
 
 func init() {
 	migrateCmd.Flags().BoolVarP(&rollback, "rollback", "r", false, "If provided rollback database migrations")
+	migrateCmd.Flags().BoolVarP(&force, "force", "f", false, "If provided force database migrations")
 	migrateCmd.Flags().IntVarP(&steps, "steps", "s", -1, "Number of steps to migrate or rollback")
 
 	rootCmd.AddCommand(migrateCmd)

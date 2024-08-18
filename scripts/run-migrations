@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-
 set -o errexit
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
-cd "${ROOT_DIR}" || exit 1
-go run "${ROOT_DIR}/cmd/cdbd" migrate "$@"
+docker compose exec -it server go run ./cmd/cdbd migrate "$@"
