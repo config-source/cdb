@@ -1,46 +1,20 @@
 <script>
 	import EditableConfigRow from './ConfigTable/EditableConfigRow.svelte';
 	import NewValues from './ConfigTable/NewValues.svelte';
-
-	export let environmentName;
+	import { fetchConfig } from '$lib/client/config-values';
 
 	// Stores all the fetched configuration values for this environment.
 	/** @type any[] */
-	let configuration = [];
+	export let configuration = [];
+	/** @type string */
+	export let environmentName;
 
 	/** @type (envName: string) => Promise<void> */
-	const fetchConfig = async (envName) => {
-		if (envName === '') return;
-
-		const res = await fetch(`/api/v1/config-values/${envName}`);
-		if (!res.ok) return;
-
-		/** @type any[] */
-		const data = await res.json();
-		data.sort((a, b) => {
-			if (a.Inherited && !b.Inherited) {
-				return 1;
-			}
-
-			if (!a.Inherited && b.Inherited) {
-				return -1;
-			}
-
-			const nameA = a.Name.toUpperCase();
-			const nameB = b.Name.toUpperCase();
-			if (nameA < nameB) {
-				return -1;
-			}
-
-			if (nameA > nameB) {
-				return 1;
-			}
-
-			return 1;
-		});
-		configuration = data;
+	const updateConfiguration = async (envName) => {
+		configuration = await fetchConfig(envName);
 	};
-	$: fetchConfig(environmentName);
+
+	$: updateConfiguration(environmentName);
 </script>
 
 <table class="table is-fullwidth is-hoverable">
@@ -55,14 +29,14 @@
 			<EditableConfigRow
 				{configValue}
 				{environmentName}
-				on:updated={() => fetchConfig(environmentName)}
+				on:updated={() => updateConfiguration(environmentName)}
 			/>
 		{/each}
 
 		<NewValues
 			{environmentName}
 			existingKeys={configuration.map((cv) => cv.Name)}
-			on:updated={() => fetchConfig(environmentName)}
+			on:updated={() => updateConfiguration(environmentName)}
 		/>
 	</tbody>
 </table>

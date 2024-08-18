@@ -16,6 +16,7 @@ type Environment struct {
 
 	Name         string `db:"name"`
 	PromotesToID *int   `db:"promotes_to_id"`
+	Sensitive    bool   `db:"sensitive"`
 
 	CreatedAt time.Time `db:"created_at"`
 }
@@ -40,7 +41,7 @@ type EnvironmentRepository interface {
 	GetEnvironment(ctx context.Context, id int) (Environment, error)
 	GetEnvironmentByName(ctx context.Context, name string) (Environment, error)
 
-	ListEnvironments(ctx context.Context) ([]Environment, error)
+	ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error)
 }
 
 type EnvTree struct {

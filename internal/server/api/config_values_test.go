@@ -52,7 +52,7 @@ func TestGetConfiguration(t *testing.T) {
 		}
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-values/staging", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -108,7 +108,7 @@ func TestCreateConfigValue(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 
 	val := "test"
 	env := cdb.ConfigValue{
@@ -194,7 +194,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 		}
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-values/staging/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -260,7 +260,7 @@ func TestSetConfigurationByKey(t *testing.T) {
 		}
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 
 	val := 10
 	env := cdb.ConfigValue{

@@ -31,7 +31,7 @@ func TestListConfigKeys(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -63,7 +63,7 @@ func TestGetConfigKeyByID(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -86,7 +86,7 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -101,14 +101,14 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 func TestCreateConfigKey(t *testing.T) {
 	repo := &repository.TestRepository{}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 
-	env := cdb.ConfigKey{
+	configKey := cdb.ConfigKey{
 		Name:      "owner",
 		ValueType: cdb.TypeString,
 	}
 
-	marshalled, err := json.Marshal(env)
+	marshalled, err := json.Marshal(configKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,8 +129,8 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if created.Name != env.Name {
-		t.Fatalf("Expected name to be %s got: %s", env.Name, created.Name)
+	if created.Name != configKey.Name {
+		t.Fatalf("Expected name to be %s got: %s", configKey.Name, created.Name)
 	}
 
 	if created.CreatedAt.IsZero() {
@@ -153,7 +153,7 @@ func TestGetConfigKeyByName(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -176,7 +176,7 @@ func TestGetConfigKeyByNameNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/minReplicas", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})

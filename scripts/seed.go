@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/auth"
+	authpg "github.com/config-source/cdb/internal/auth/postgres"
+	"github.com/config-source/cdb/internal/repository/postgres"
 	"github.com/rs/zerolog"
 )
 
@@ -37,15 +39,18 @@ func main() {
 	repository, err := postgres.NewRepository(context.Background(), logger, "")
 	fail(err)
 
+	authGw, err := authpg.NewGateway(context.Background(), logger, "")
+	fail(err)
+
 	ctx := context.Background()
 
 	fmt.Println("Seeding environments...")
 	clearTable(repository, "environments")
 
-	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production"})
+	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production", Sensitive: true})
 	fail(err)
 
-	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID})
+	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID, Sensitive: true})
 	fail(err)
 
 	dev, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev", PromotesToID: &staging.ID})
@@ -160,4 +165,24 @@ func main() {
 	}
 
 	fmt.Println("Done seeding feature environments.")
+
+	fmt.Println("Seeding users")
+	clearTable(repository, "users")
+	clearTable(repository, "users_to_roles")
+
+	adminUser, err := authGw.CreateUser(ctx, auth.User{
+		Email:    "admin@example.com",
+		Password: "password",
+	})
+	fail(err)
+	fail(authGw.AssignRoleToUserNoAuth(ctx, adminUser, "Administrator"))
+
+	operatorUser, err := authGw.CreateUser(ctx, auth.User{
+		Email:    "operator@example.com",
+		Password: "password",
+	})
+	fail(err)
+	fail(authGw.AssignRoleToUserNoAuth(ctx, operatorUser, "Operator"))
+
+	fmt.Println("Done seeding users")
 }

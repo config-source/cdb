@@ -1,6 +1,22 @@
 <script>
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
+	import { user } from '$lib/stores/user';
+	import { goto } from '$app/navigation';
+
+	const logout = async () => {
+		const res = await fetch('/api/v1/logout', {
+			method: 'DELETE'
+		});
+		if (res.ok) {
+			user.set({
+				fetched: false,
+				data: {}
+			});
+
+			return goto('/auth/login');
+		}
+	};
 </script>
 
 <nav class="navbar" aria-label="main navigation">
@@ -19,7 +35,15 @@
 			</a>
 		</div>
 
-		<div class="navbar-end"></div>
+		<div class="navbar-end">
+			<div class="navbar-item has-dropdown is-hoverable">
+				<a class="navbar-link"> {$user.data.Email} </a>
+
+				<div class="navbar-dropdown">
+					<a class="navbar-item" on:click={logout}> Log Out </a>
+				</div>
+			</div>
+		</div>
 	</div>
 </nav>
 

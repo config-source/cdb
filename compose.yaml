@@ -8,6 +8,7 @@ services:
       PGPASSWORD: postgres
       PGDATABASE: cdb
       FRONTEND_LOCATION: http://frontend:5173
+      JWT_SIGNING_KEY: insecure
     image: golang:1.22
     entrypoint: /app/docker/compose-entrypoint.sh
     working_dir: /app

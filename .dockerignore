@@ -5,3 +5,4 @@ tmp/*
 compose.yaml
 .air.toml
 README.md
+Dockerfile

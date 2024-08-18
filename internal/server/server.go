@@ -5,9 +5,10 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/config-source/cdb/internal/configvalues"
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/api"
+	"github.com/config-source/cdb/internal/services"
 	"github.com/rs/zerolog"
 )
 
@@ -19,22 +20,49 @@ type Server struct {
 
 func New(
 	repo repository.ModelRepository,
-	configValueService *configvalues.Service,
 	log zerolog.Logger,
+	tokenSigningKey []byte,
+	userService *auth.UserService,
+	configValueService *services.ConfigValues,
+	envService *services.Environments,
+	configKeysService *services.ConfigKeys,
 	frontendLocation string,
 ) *Server {
-	mux := http.NewServeMux()
-	apiServer := api.New(repo, configValueService, log, mux)
-
 	var frontendHandler http.Handler
+	frontendServingLog := log.Info()
+	defer frontendServingLog.Msg("Serving frontend from")
+
 	if upstream, err := url.Parse(frontendLocation); err == nil && upstream.Scheme != "" {
-		log.Info().Str("upstream", upstream.String()).Msg("Serving frontend from")
+		frontendServingLog.Str("upstream", upstream.String())
 		frontendHandler = httputil.NewSingleHostReverseProxy(upstream)
 	} else {
-		log.Info().Str("location", frontendLocation).Msg("Serving frontend from")
+		frontendServingLog.Str("location", frontendLocation)
 		frontendHandler = http.FileServer(http.Dir(frontendLocation))
 	}
-	mux.Handle("GET /", frontendHandler)
+
+	apiServer, apiMux := api.New(
+		log,
+		tokenSigningKey,
+		userService,
+		configValueService,
+		envService,
+		configKeysService,
+	)
+
+	mux := http.NewServeMux()
+	mux.Handle("/api/", apiMux)
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		if !repo.Healthy(r.Context()) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		if !userService.Healthy(r.Context()) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		w.Write([]byte{}) // nolint:errcheck
+	})
+	mux.Handle("/", frontendHandler)
 
 	return &Server{
 		mux: mux,

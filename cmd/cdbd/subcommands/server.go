@@ -1,19 +1,16 @@
 package subcommands
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/config-source/cdb/internal/configvalues"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/auth"
+	"github.com/config-source/cdb/internal/repository/postgres"
 	"github.com/config-source/cdb/internal/server"
 	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/services"
 	"github.com/config-source/cdb/internal/settings"
 	"github.com/pseidemann/finish"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
@@ -21,22 +18,10 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run database migrations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := zerolog.New(os.Stdout).
-			Level(settings.LogLevel()).
-			With().
-			Timestamp().
-			Logger()
-		if settings.HumanLogs() {
-			logger = logger.Output(zerolog.ConsoleWriter{
-				Out:        os.Stdout,
-				TimeFormat: time.RFC3339,
-			})
-		}
-		// Set durations to render as Milliseconds
-		zerolog.DurationFieldUnit = time.Millisecond
+		logger := settings.GetLogger()
 
 		repo, err := postgres.NewRepository(
-			context.Background(),
+			cmd.Context(),
 			logger,
 			settings.DBUrl(),
 		)
@@ -44,10 +29,26 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
+		authenticationGateway := settings.GetAuthenticationGateway(cmd.Context(), logger)
+		authorizationGateway := settings.GetAuthorizationGateway(cmd.Context(), logger)
+
 		var server http.Handler = server.New(
 			repo,
-			configvalues.NewService(repo, settings.DynamicConfigKeys()),
 			logger,
+			settings.JWTSigningKey(),
+			auth.NewUserService(
+				authenticationGateway,
+				authorizationGateway,
+				settings.AllowPublicRegistration(),
+				settings.DefaultRegisterRole(),
+			),
+			services.NewConfigValuesService(
+				repo,
+				authorizationGateway,
+				settings.DynamicConfigKeys(),
+			),
+			services.NewEnvironmentsService(repo, authorizationGateway),
+			services.NewConfigKeysService(repo, authorizationGateway),
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-set -o errexit
-docker compose exec -it server go run "/app/scripts/seed.go"

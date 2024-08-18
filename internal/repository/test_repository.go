@@ -22,14 +22,20 @@ func (tr *TestRepository) Healthy(ctx context.Context) bool {
 	return tr.IsHealthy
 }
 
-func (tr *TestRepository) ListEnvironments(ctx context.Context) ([]cdb.Environment, error) {
+func (tr *TestRepository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]cdb.Environment, error) {
 	if tr.Error != nil {
 		return nil, tr.Error
 	}
 
 	envs := make([]cdb.Environment, len(tr.Environments))
 	for id, env := range tr.Environments {
-		envs[id-1] = env
+		if includeSensitive && env.Sensitive {
+			envs[id-1] = env
+		} else if env.Sensitive {
+			continue
+		} else {
+			envs[id-1] = env
+		}
 	}
 
 	return envs, nil
