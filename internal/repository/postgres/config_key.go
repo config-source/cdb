@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/postgresutils"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -29,11 +30,11 @@ func (r *Repository) CreateConfigKey(ctx context.Context, ck cdb.ConfigKey) (cdb
 		canPropagate = *ck.CanPropagate
 	}
 
-	return getOne[cdb.ConfigKey](r, ctx, createConfigKeySql, ck.Name, ck.ValueType, canPropagate)
+	return postgresutils.GetOne[cdb.ConfigKey](r.pool, ctx, createConfigKeySql, ck.Name, ck.ValueType, canPropagate)
 }
 
 func (r *Repository) GetConfigKey(ctx context.Context, id int) (cdb.ConfigKey, error) {
-	key, err := getOne[cdb.ConfigKey](r, ctx, getConfigKeyByIDSql, id)
+	key, err := postgresutils.GetOne[cdb.ConfigKey](r.pool, ctx, getConfigKeyByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, cdb.ErrConfigKeyNotFound
 	}
@@ -42,7 +43,7 @@ func (r *Repository) GetConfigKey(ctx context.Context, id int) (cdb.ConfigKey, e
 }
 
 func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (cdb.ConfigKey, error) {
-	key, err := getOne[cdb.ConfigKey](r, ctx, getConfigKeyByNameSql, name)
+	key, err := postgresutils.GetOne[cdb.ConfigKey](r.pool, ctx, getConfigKeyByNameSql, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, cdb.ErrConfigKeyNotFound
 	}
@@ -52,5 +53,5 @@ func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (cdb.C
 }
 
 func (r *Repository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, error) {
-	return getAll[cdb.ConfigKey](r, ctx, getAllConfigKeys)
+	return postgresutils.GetAll[cdb.ConfigKey](r.pool, ctx, getAllConfigKeys)
 }

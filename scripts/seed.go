@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/repository/postgres"
 	"github.com/rs/zerolog"
 )
 

@@ -1,4 +1,8 @@
-package postgres_test
+package postgresutils
+
+// It would be nice to put this behind a build tag but it breaks so much auto
+// completion and helpfulness that I've decided to leave this dead code in the
+// binary.
 
 import (
 	"context"
@@ -10,18 +14,21 @@ import (
 	"strings"
 	"testing"
 
-	pg "github.com/config-source/cdb/internal/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/jackc/pgx/v5"
-	"github.com/rs/zerolog"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-type testRepository struct {
+type PostgresPooler interface {
+	Raw() *pgxpool.Pool
+}
+
+type TestRepository struct {
 	conn      *pgx.Conn
-	repo      *pg.Repository
+	Repo      PostgresPooler
 	testName  string
 	TestDBURL string
 }
@@ -67,10 +74,10 @@ func findMigrationPath() string {
 var migrationPath = findMigrationPath()
 
 // Start creates a test database, migrates it. Make sure to defer
-// testRepository.Cleanup() after calling Start.
+// TestRepository.Cleanup() after calling Start.
 //
-// Use testRepository.TestDBURL to connect to this new database.
-func (tr *testRepository) Start(testName string) error {
+// Use TestRepository.TestDBURL to connect to this new database.
+func (tr *TestRepository) Start(testName string) error {
 	port := os.Getenv("PGPORT")
 	if port == "" {
 		port = "5432"
@@ -123,9 +130,9 @@ func (tr *testRepository) Start(testName string) error {
 }
 
 // Cleanup deletes the test database.
-func (tr *testRepository) Cleanup() {
-	if tr.repo != nil {
-		tr.repo.Raw().Close()
+func (tr *TestRepository) Cleanup() {
+	if tr.Repo != nil {
+		tr.Repo.Raw().Close()
 	}
 
 	_, err := tr.conn.Exec(context.Background(), fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", tr.testName))
@@ -134,22 +141,15 @@ func (tr *testRepository) Cleanup() {
 	}
 }
 
-func initTestDB(t *testing.T) (*pg.Repository, *testRepository) {
-	tr := testRepository{}
+func InitTestDB(t *testing.T) *TestRepository {
+	t.Parallel()
+	t.Helper()
+
+	tr := TestRepository{}
 	err := tr.Start(t.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	repo, err := pg.NewRepository(
-		context.Background(),
-		zerolog.New(nil).Level(zerolog.Disabled),
-		tr.TestDBURL,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	tr.repo = repo
-
-	return repo, &tr
+	return &tr
 }

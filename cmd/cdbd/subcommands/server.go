@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/config-source/cdb/internal/configvalues"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/repository/postgres"
 	"github.com/config-source/cdb/internal/server"
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/settings"

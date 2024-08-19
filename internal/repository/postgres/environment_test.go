@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/repository/postgres"
 )
 
 func envFixture(t *testing.T, repo *postgres.Repository, name string, promotesToID *int) cdb.Environment {
@@ -22,8 +22,6 @@ func envFixture(t *testing.T, repo *postgres.Repository, name string, promotesTo
 }
 
 func TestCreateEnvironment(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -48,8 +46,6 @@ func TestCreateEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -67,8 +63,6 @@ func TestGetEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -83,8 +77,6 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByName(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -102,8 +94,6 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 

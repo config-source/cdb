@@ -6,12 +6,10 @@ if [[ -z "$(docker compose ps --format json)" ]]; then
     docker compose up -d
 fi
 
-
 if [[ $# -ne 0 ]]; then
-    docker compose exec -it server go test "$@"
+    docker compose exec -it server go test -tags testing "$@"
 else
     # This monstrosity avoids go test ./... from trying to scan all of node_modules
     # and hitting ulimits.
-    docker compose exec -it server bash -c 'go test $(find . -path "./frontend/*" -prune -o -path "./.git/*" -prune -o -name "*.go" -printf "%h\n" | sort -u)'
+    docker compose exec -it server bash -c 'go test -tags testing $(find . -path "./frontend/*" -prune -o -path "./.git/*" -prune -o -name "*.go" -printf "%h\n" | sort -u)'
 fi
-

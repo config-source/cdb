@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/internal/postgres"
+	"github.com/config-source/cdb/internal/repository/postgres"
 )
 
 func configKeyFixture(t *testing.T, repo *postgres.Repository, name string, valueType cdb.ValueType, canPropagate bool) cdb.ConfigKey {
@@ -24,8 +24,6 @@ func configKeyFixture(t *testing.T, repo *postgres.Repository, name string, valu
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -76,8 +74,6 @@ func TestCreateConfigKey(t *testing.T) {
 }
 
 func TestGetConfigKey(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
@@ -95,8 +91,6 @@ func TestGetConfigKey(t *testing.T) {
 }
 
 func TestListConfigKeys(t *testing.T) {
-	t.Parallel()
-
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 

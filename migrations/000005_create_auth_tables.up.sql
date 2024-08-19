@@ -20,6 +20,12 @@ CREATE TABLE permissions_to_roles (
     UNIQUE (permission_id, role_id)
 );
 
+CREATE TABLE users_to_roles (
+    user_id integer REFERENCES users,
+    role_id integer REFERENCES roles,
+    UNIQUE (user_id, role_id)
+);
+
 -- Insert the permissions
 INSERT INTO permissions (name) VALUES
     ('CAN_CONFIGURE_ENVIRONMENTS'),
@@ -35,7 +41,7 @@ INSERT INTO roles (name) VALUES
 
 -- Add permissions to the roles
 INSERT INTO permissions_to_roles (permission_id, role_id)
-SELECT permission.id, roles.id
+SELECT permissions.id, roles.id
 FROM roles
 JOIN permissions
 -- Administrator gets all permissions so don't filter them.
