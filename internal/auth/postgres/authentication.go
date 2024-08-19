@@ -42,3 +42,23 @@ func (g *Gateway) Login(ctx context.Context, email, password string) (auth.User,
 
 	return user, nil
 }
+
+func (g *Gateway) CreateUser(ctx context.Context, actor auth.User, newUser auth.User) (auth.User, error) {
+	// TODO: need to implement permissions first.
+	return auth.User{}, nil
+}
+
+func (g *Gateway) GetUser(ctx context.Context, actor auth.User, userID auth.UserID) (auth.User, error) {
+	// TODO: need to implement permissions first.
+	return auth.User{}, nil
+}
+
+func (g *Gateway) DeleteUser(ctx context.Context, actor auth.User, userID auth.UserID) error {
+	// TODO: need to implement permissions first.
+	return nil
+}
+
+func (g *Gateway) ListUsers(ctx context.Context, actor auth.User) ([]auth.User, error) {
+	// TODO: need to implement permissions first.
+	return []auth.User{}, nil
+}
