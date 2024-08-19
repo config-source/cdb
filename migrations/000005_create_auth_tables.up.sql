@@ -32,6 +32,7 @@ INSERT INTO permissions (name) VALUES
     ('CAN_CONFIGURE_SENSITIVE_ENVIRONMENTS'),
     ('CAN_MANAGE_ENVIRONMENTS'),
     ('CAN_MANAGE_USERS'),
+    ('CAN_MANAGE_ROLES'),
     ('CAN_MANAGE_CONFIG_KEYS');
 
 -- Insert the default roles

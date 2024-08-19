@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 var (
@@ -27,6 +28,10 @@ type User struct {
 	Password string `db:"password" json:"-"`
 }
 
+func (u User) String() string {
+	return fmt.Sprintf("User(email=%s)", u.Email)
+}
+
 // TokenSet is a set of JWT tokens for use as Authentication and Authorisation.
 type TokenSet struct {
 	IDToken      string
@@ -44,10 +49,10 @@ type AuthenticationGateway interface {
 	Register(ctx context.Context, email, password string) (User, error)
 	Login(ctx context.Context, email, password string) (User, error)
 
-	CreateUser(ctx context.Context, actor User, newUser User) (User, error)
-	GetUser(ctx context.Context, actor User, userID UserID) (User, error)
-	DeleteUser(ctx context.Context, actor User, userID UserID) error
-	ListUsers(ctx context.Context, actor User) ([]User, error)
+	CreateUser(ctx context.Context, newUser User) (User, error)
+	GetUser(ctx context.Context, userID UserID) (User, error)
+	DeleteUser(ctx context.Context, userID UserID) error
+	ListUsers(ctx context.Context) ([]User, error)
 
 	Healthy(context.Context) bool
 }
@@ -60,12 +65,12 @@ type AuthenticationGateway interface {
 // etc.
 type AuthorizationGateway interface {
 	// TODO: should this just return an error or just a bool?
-	HasPermission(ctx context.Context, actor User, permission string) (bool, error)
+	HasPermission(ctx context.Context, actor User, permission Permission) (bool, error)
 
-	CreateRole(ctx context.Context, actor User, role string, permissions []string) error
-	AddPermissionsToRole(ctx context.Context, actor User, role string, permissions []string) error
-	RemovePermissionsFromRole(ctx context.Context, actor User, role string, permissions []string) error
-	GetPermissionsForRole(ctx context.Context, actor User, role string) ([]string, error)
+	CreateRole(ctx context.Context, actor User, role string, permissions []Permission) error
+	AddPermissionsToRole(ctx context.Context, actor User, role string, permissions []Permission) error
+	RemovePermissionsFromRole(ctx context.Context, actor User, role string, permissions []Permission) error
+	GetPermissionsForRole(ctx context.Context, actor User, role string) ([]Permission, error)
 
 	GetRolesForUser(ctx context.Context, actor User, user User) ([]string, error)
 	AssignRoleToUser(ctx context.Context, actor User, user User, role string) error
