@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/config-source/cdb/internal/auth"
@@ -16,6 +17,7 @@ var allPermissions = []auth.Permission{
 	auth.PermissionManageConfigKeys,
 	auth.PermissionManageEnvironments,
 	auth.PermissionManageUsers,
+	auth.PermissionManageRoles,
 }
 
 func userFixture(t *testing.T, gw *postgres.Gateway, email string) auth.User {
@@ -197,7 +199,20 @@ func TestGetPermissionsForAdministratorRole(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(perms, allPermissions) {
+	permStrings := make([]string, len(perms))
+	for i, perm := range permStrings {
+		permStrings[i] = string(perm)
+	}
+
+	allPermStrings := make([]string, len(allPermissions))
+	for i, perm := range allPermStrings {
+		allPermStrings[i] = string(perm)
+	}
+
+	if !reflect.DeepEqual(
+		sort.StringSlice(permStrings),
+		sort.StringSlice(allPermStrings),
+	) {
 		t.Errorf("Expected %s permissions but got: %s", allPermissions, perms)
 	}
 }
@@ -293,6 +308,7 @@ func TestAddPermissionsToRole(t *testing.T) {
 
 	expectedPerms := []auth.Permission{
 		auth.PermissionConfigureEnvironments,
+		auth.PermissionConfigureSensitiveEnvironments,
 	}
 	if !reflect.DeepEqual(perms, expectedPerms) {
 		t.Errorf("Expected %s permissions but got: %s", expectedPerms, perms)

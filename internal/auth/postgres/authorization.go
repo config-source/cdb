@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	_ "embed"
+	"errors"
 
 	"github.com/config-source/cdb/internal/auth"
 	"github.com/jackc/pgx/v5"
@@ -51,7 +52,7 @@ func (g *Gateway) CreateRole(ctx context.Context, actor auth.User, role string, 
 		return auth.ErrUnauthorized
 	}
 
-	_, err := g.pool.Query(ctx, createRoleSql, role)
+	_, err := g.pool.Exec(ctx, createRoleSql, role)
 	if err != nil {
 		return err
 	}
@@ -144,43 +145,93 @@ func (g *Gateway) RemovePermissionsFromRole(ctx context.Context, actor auth.User
 }
 
 func (g *Gateway) GetPermissionsForRole(ctx context.Context, actor auth.User, role string) ([]auth.Permission, error) {
-	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageRoles); isAuthorized {
-		rows, err := g.pool.Query(ctx, getPermissionsForRoleSql, role)
-		if err != nil {
-			return nil, err
-		}
+	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageRoles); !isAuthorized {
+		g.log.Warn().
+			Interface("actorID", actor.ID).
+			Str("role", role).
+			Bool("denied", true).
+			Bool("audit", true).
+			Msg("actor attempted to get permissions for a role")
 
-		return pgx.CollectRows(rows, func(row pgx.CollectableRow) (auth.Permission, error) {
-			var permissionName auth.Permission
-			return permissionName, row.Scan(&permissionName)
-		})
+		return nil, auth.ErrUnauthorized
 	}
 
-	return nil, auth.ErrUnauthorized
+	rows, err := g.pool.Query(ctx, getPermissionsForRoleSql, role)
+	if err != nil {
+		return nil, err
+	}
+
+	g.log.Info().
+		Interface("actorID", actor.ID).
+		Str("role", role).
+		Bool("denied", false).
+		Bool("audit", true).
+		Msg("actor got permissions for a role")
+
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (auth.Permission, error) {
+		var permissionName auth.Permission
+		return permissionName, row.Scan(&permissionName)
+	})
+
 }
 
 func (g *Gateway) GetRolesForUser(ctx context.Context, actor auth.User, user auth.User) ([]string, error) {
-	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageUsers); isAuthorized {
-		rows, err := g.pool.Query(ctx, getRolesForUserSql, user.ID)
-		if err != nil {
-			return nil, err
-		}
+	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageUsers); !isAuthorized {
+		g.log.Warn().
+			Interface("actorID", actor.ID).
+			Interface("user", user.ID).
+			Bool("denied", true).
+			Bool("audit", true).
+			Msg("actor attempted to get roles for user")
 
-		return pgx.CollectRows(rows, func(row pgx.CollectableRow) (string, error) {
-			var roleName string
-			return roleName, row.Scan(&roleName)
-		})
+		return nil, auth.ErrUnauthorized
 	}
 
-	return nil, auth.ErrUnauthorized
+	rows, err := g.pool.Query(ctx, getRolesForUserSql, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	g.log.Info().
+		Interface("actorID", actor.ID).
+		Interface("user", user.ID).
+		Bool("denied", false).
+		Bool("audit", true).
+		Msg("actor got roles for user")
+
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (string, error) {
+		var roleName string
+		return roleName, row.Scan(&roleName)
+	})
 }
 
 func (g *Gateway) AssignRoleToUser(ctx context.Context, actor auth.User, user auth.User, role string) error {
-	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageUsers); isAuthorized {
-		return g.AssignRoleToUserNoAuth(ctx, user, role)
+	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageUsers); !isAuthorized {
+		g.log.Warn().
+			Interface("actorID", actor.ID).
+			Interface("user", user.ID).
+			Str("role", role).
+			Bool("denied", true).
+			Bool("audit", true).
+			Msg("actor attempted to assign role to user")
+
+		return auth.ErrUnauthorized
 	}
 
-	return auth.ErrUnauthorized
+	err := g.AssignRoleToUserNoAuth(ctx, user, role)
+	if err != nil {
+		return err
+	}
+
+	g.log.Info().
+		Interface("actorID", actor.ID).
+		Interface("user", user.ID).
+		Str("role", role).
+		Bool("denied", false).
+		Bool("audit", true).
+		Msg("actor assigned role to user")
+
+	return nil
 }
 
 func (g *Gateway) AssignRoleToUserNoAuth(ctx context.Context, user auth.User, role string) error {
@@ -195,6 +246,30 @@ func (g *Gateway) AssignRoleToUserNoAuth(ctx context.Context, user auth.User, ro
 }
 
 func (g *Gateway) RemoveRoleFromUser(ctx context.Context, actor auth.User, user auth.User, role string) error {
-	_, err := g.pool.Exec(ctx, assignRoleToUserSql, user.ID, role)
+	if isAuthorized, _ := g.HasPermission(ctx, actor, auth.PermissionManageUsers); !isAuthorized {
+		g.log.Warn().
+			Interface("actorID", actor.ID).
+			Interface("user", user.ID).
+			Str("role", role).
+			Bool("denied", true).
+			Bool("audit", true).
+			Msg("actor attempted to remove role from user")
+
+		return auth.ErrUnauthorized
+	}
+
+	commandTag, err := g.pool.Exec(ctx, removeRoleFromUserSql, user.ID, role)
+	if commandTag.RowsAffected() <= 0 {
+		return errors.New("given role does not exist or was not assigned to the user")
+	}
+
+	g.log.Info().
+		Interface("actorID", actor.ID).
+		Interface("user", user.ID).
+		Str("role", role).
+		Bool("denied", false).
+		Bool("audit", true).
+		Msg("actor removed role from user")
+
 	return err
 }
