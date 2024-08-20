@@ -24,7 +24,7 @@ Defaults to assigning the Administrator role that comes with CDB. If you've
 changed that role or want to use a different role then specify the --role
 flag.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := setupLogger()
+		logger := settings.GetLogger()
 
 		gateway, err := postgres.NewGateway(
 			context.Background(),

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository/postgres"
@@ -13,32 +11,14 @@ import (
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/settings"
 	"github.com/pseidemann/finish"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
-
-func setupLogger() zerolog.Logger {
-	logger := zerolog.New(os.Stdout).
-		Level(settings.LogLevel()).
-		With().
-		Timestamp().
-		Logger()
-	if settings.HumanLogs() {
-		logger = logger.Output(zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
-		})
-	}
-	// Set durations to render as Milliseconds
-	zerolog.DurationFieldUnit = time.Millisecond
-	return logger
-}
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run database migrations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := setupLogger()
+		logger := settings.GetLogger()
 
 		repo, err := postgres.NewRepository(
 			context.Background(),

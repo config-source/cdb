@@ -32,13 +32,6 @@ func (u User) String() string {
 	return fmt.Sprintf("User(email=%s)", u.Email)
 }
 
-// TokenSet is a set of JWT tokens for use as Authentication and Authorisation.
-type TokenSet struct {
-	IDToken      string
-	AccessToken  string
-	RefreshToken string
-}
-
 // AuthenticationGateway must be implemented by any source of authentication in
 // CDB.
 //

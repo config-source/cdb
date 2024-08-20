@@ -3,6 +3,7 @@ package settings
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -73,4 +74,50 @@ func FrontendLocation() string {
 	}
 
 	return location
+}
+
+var keyCache []byte
+
+// JWTSigningKey returns the configured symmetric key for signing JWTs issued by
+// CDB's auth system.
+func JWTSigningKey() []byte {
+	if keyCache == nil {
+		key := os.Getenv("JWT_SIGNING_KEY")
+		if key == "" {
+			logger := GetLogger()
+			logger.
+				Error().
+				Msg(
+					"JWT_SIGNING_KEY must be configured",
+				)
+			os.Exit(1)
+		}
+
+		keyCache = []byte(key)
+	}
+
+	return keyCache
+}
+
+var logger zerolog.Logger
+
+func init() {
+	logger = zerolog.New(os.Stdout).
+		Level(LogLevel()).
+		With().
+		Timestamp().
+		Logger()
+	if HumanLogs() {
+		logger = logger.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+	}
+	// Set durations to render as Milliseconds
+	zerolog.DurationFieldUnit = time.Millisecond
+}
+
+// GetLogger returns the preconfigured global logger
+func GetLogger() zerolog.Logger {
+	return logger
 }
