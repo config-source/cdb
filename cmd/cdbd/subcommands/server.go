@@ -17,23 +17,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func setupLogger() zerolog.Logger {
+	logger := zerolog.New(os.Stdout).
+		Level(settings.LogLevel()).
+		With().
+		Timestamp().
+		Logger()
+	if settings.HumanLogs() {
+		logger = logger.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+	}
+	// Set durations to render as Milliseconds
+	zerolog.DurationFieldUnit = time.Millisecond
+	return logger
+}
+
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run database migrations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := zerolog.New(os.Stdout).
-			Level(settings.LogLevel()).
-			With().
-			Timestamp().
-			Logger()
-		if settings.HumanLogs() {
-			logger = logger.Output(zerolog.ConsoleWriter{
-				Out:        os.Stdout,
-				TimeFormat: time.RFC3339,
-			})
-		}
-		// Set durations to render as Milliseconds
-		zerolog.DurationFieldUnit = time.Millisecond
+		logger := setupLogger()
 
 		repo, err := postgres.NewRepository(
 			context.Background(),
