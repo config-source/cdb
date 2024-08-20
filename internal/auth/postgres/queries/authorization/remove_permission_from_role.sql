@@ -1,4 +1,4 @@
-DELETE FROM roles_to_permissions
+DELETE FROM permissions_to_roles
 WHERE 
     role_id IN (
         SELECT id
