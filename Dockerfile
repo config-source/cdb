@@ -37,4 +37,11 @@ COPY --chown=cdb --from=backend /app/migrations /app/migrations
 COPY --chown=cdb --from=backend /app/docker/entrypoint.sh /app/entrypoint.sh
 COPY --chown=cdb --from=frontend /app/build /app/frontend/build
 
+RUN chown -R cdb:cdb /app
+RUN apt update && apt install -y bash-completion
+
+USER cdb
+RUN echo "source /etc/bash_completion" > /app/.bashrc
+RUN /app/cdbd completion bash >> /app/.bashrc
+
 ENTRYPOINT /app/entrypoint.sh
