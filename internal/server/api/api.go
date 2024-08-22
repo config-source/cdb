@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/rs/zerolog"
@@ -13,15 +14,23 @@ import (
 
 type API struct {
 	repo               repository.ModelRepository
+	userService        *auth.UserService
 	configValueService *configvalues.Service
 	log                zerolog.Logger
 }
 
-func New(repo repository.ModelRepository, configValueService *configvalues.Service, log zerolog.Logger, mux *http.ServeMux) *API {
+func New(
+	repo repository.ModelRepository,
+	userService *auth.UserService,
+	configValueService *configvalues.Service,
+	log zerolog.Logger,
+	mux *http.ServeMux,
+) *API {
 	api := &API{
 		repo:               repo,
 		log:                log,
 		configValueService: configValueService,
+		userService:        userService,
 	}
 
 	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)

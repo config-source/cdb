@@ -57,7 +57,7 @@ func (g *Gateway) CreateRole(ctx context.Context, actor auth.User, role string, 
 		return err
 	}
 
-	g.log.Warn().
+	g.log.Info().
 		Interface("actorID", actor.ID).
 		Str("role", role).
 		Interface("permissions", permissions).

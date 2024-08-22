@@ -1,10 +1,10 @@
 package subcommands
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository/postgres"
 	"github.com/config-source/cdb/internal/server"
@@ -21,7 +21,7 @@ var serverCmd = &cobra.Command{
 		logger := settings.GetLogger()
 
 		repo, err := postgres.NewRepository(
-			context.Background(),
+			cmd.Context(),
 			logger,
 			settings.DBUrl(),
 		)
@@ -29,8 +29,17 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
+		authenticationGateway := settings.GetAuthenticationGateway(cmd.Context(), logger)
+		authorizationGateway := settings.GetAuthorizationGateway(cmd.Context(), logger)
+
 		var server http.Handler = server.New(
 			repo,
+			auth.NewUserService(
+				authenticationGateway,
+				authorizationGateway,
+				settings.AllowPublicRegistration(),
+				settings.DefaultRegisterRole(),
+			),
 			configvalues.NewService(repo, settings.DynamicConfigKeys()),
 			logger,
 			settings.FrontendLocation(),

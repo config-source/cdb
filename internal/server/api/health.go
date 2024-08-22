@@ -6,7 +6,11 @@ import (
 
 func (s *API) HealtCheck(w http.ResponseWriter, r *http.Request) {
 	if !s.repo.Healthy(r.Context()) {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}
+
+	if !s.userService.Healthy(r.Context()) {
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 
 	w.Write([]byte{}) // nolint:errcheck

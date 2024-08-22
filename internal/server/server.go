@@ -5,6 +5,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/api"
@@ -19,12 +20,13 @@ type Server struct {
 
 func New(
 	repo repository.ModelRepository,
+	userService *auth.UserService,
 	configValueService *configvalues.Service,
 	log zerolog.Logger,
 	frontendLocation string,
 ) *Server {
 	mux := http.NewServeMux()
-	apiServer := api.New(repo, configValueService, log, mux)
+	apiServer := api.New(repo, userService, configValueService, log, mux)
 
 	var frontendHandler http.Handler
 	if upstream, err := url.Parse(frontendLocation); err == nil && upstream.Scheme != "" {

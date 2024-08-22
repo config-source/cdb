@@ -10,7 +10,7 @@ var (
 	ErrInvalidPassword = errors.New("invalid password")
 	ErrEmailInUse      = errors.New("email is already in use")
 	ErrUnauthorized    = errors.New("you do not have permission to perform that action")
-	ErrUnauthenticated = errors.New("you do not have permission to perform that action")
+	ErrUnauthenticated = errors.New("no authentication information provided")
 )
 
 // UserID is a custom type for user IDs to force some validation and to ease
@@ -67,6 +67,7 @@ type AuthorizationGateway interface {
 
 	GetRolesForUser(ctx context.Context, actor User, user User) ([]string, error)
 	AssignRoleToUser(ctx context.Context, actor User, user User, role string) error
+	AssignRoleToUserNoAuth(ctx context.Context, user User, role string) error
 	RemoveRoleFromUser(ctx context.Context, actor User, user User, role string) error
 
 	Healthy(context.Context) bool

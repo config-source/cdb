@@ -1,10 +1,13 @@
 package settings
 
 import (
+	"context"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/config-source/cdb/internal/auth"
+	"github.com/config-source/cdb/internal/auth/postgres"
 	"github.com/rs/zerolog"
 )
 
@@ -120,4 +123,55 @@ func init() {
 // GetLogger returns the preconfigured global logger
 func GetLogger() zerolog.Logger {
 	return logger
+}
+
+func GetAuthenticationGateway(ctx context.Context, log zerolog.Logger) auth.AuthenticationGateway {
+	gatewayName := os.Getenv("AUTHENTICATION_GATEWAY")
+	switch gatewayName {
+	default:
+		if gatewayName == "" {
+			log.Warn().Msg("no AUTHENTICATION_GATEWAY configured, using postgres as default")
+		}
+
+		gw, err := postgres.NewGateway(ctx, log, DBUrl())
+		if err != nil {
+			log.Panic().Err(err).Msg("Failed to load gateway")
+		}
+
+		return gw
+	}
+}
+
+func GetAuthorizationGateway(ctx context.Context, log zerolog.Logger) auth.AuthorizationGateway {
+	gatewayName := os.Getenv("AUTHORIZATION_GATEWAY")
+	switch gatewayName {
+	default:
+		if gatewayName == "" {
+			log.Warn().Msg("no AUTHORIZATION_GATEWAY configured, using postgres as default")
+		}
+
+		gw, err := postgres.NewGateway(ctx, log, DBUrl())
+		if err != nil {
+			log.Panic().Err(err).Msg("Failed to load gateway")
+		}
+
+		return gw
+	}
+}
+
+func AllowPublicRegistration() bool {
+	val := os.Getenv("ALLOW_PUBLIC_REGISTRATION")
+	return strings.ToLower(val) == "true"
+}
+
+func DefaultRegisterRole() string {
+	val := os.Getenv("DEFAULT_REGISTER_ROLE")
+	if !AllowPublicRegistration() {
+		return ""
+	} else if val != "" {
+		logger.Warn().
+			Msg("ALLOW_PUBLIC_REGISTRATION is on but DEFAULT_REGISTER_ROLE is empty so it will not work")
+	}
+
+	return val
 }

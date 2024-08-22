@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 
 # Build the server binary
-FROM golang:1.22 as backend
+FROM golang:1.23 as backend
 
 WORKDIR /app
 

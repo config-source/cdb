@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/internal/auth"
 	"github.com/rs/zerolog"
 )
@@ -14,16 +16,14 @@ const SessionCookieName = "cdb-session"
 const AuthorizationHeaderPrefix = "Bearer "
 const contextUserKey = "user"
 
-func GetUser(r *http.Request) auth.User {
-	user, ok := r.Context().Value(contextUserKey).(auth.User)
+func GetUser(r *http.Request) *auth.User {
+	user, ok := r.Context().Value(contextUserKey).(*auth.User)
 	if !ok {
-		panic("somehow reached unreachable code in GetUser!")
+		return nil
 	}
 
 	return user
 }
-
-// TODO: tests
 
 func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
@@ -54,6 +54,11 @@ func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
 				}
 			}
 
+			if token == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			user, err := auth.ValidateIdToken(token)
 			if err != nil {
 				log.Err(err).Msg("invalid token")
@@ -62,8 +67,33 @@ func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
 				return
 			}
 
-			newCtx := context.WithValue(r.Context(), contextUserKey, user)
+			newCtx := context.WithValue(r.Context(), contextUserKey, &user)
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		},
+	)
+}
+
+func AuthenticationRequired(log zerolog.Logger, next http.Handler) http.Handler {
+	return Authentication(
+		log,
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				user := GetUser(r)
+				if user != nil {
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				response := cdb.ErrorResponse{
+					Message: "forbidden",
+				}
+				w.WriteHeader(http.StatusForbidden)
+				w.Header().Add("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(response)
+				if err != nil {
+					log.Err(err).Msg("failed to encode a payload")
+				}
+			},
+		),
 	)
 }
