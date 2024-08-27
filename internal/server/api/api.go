@@ -9,6 +9,7 @@ import (
 	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
+	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/rs/zerolog"
 )
 
@@ -28,8 +29,7 @@ func New(
 	tokenSigningKey []byte,
 	userService *auth.UserService,
 	configValueService *configvalues.Service,
-	mux *http.ServeMux,
-) *API {
+) (*API, *http.ServeMux) {
 	api := &API{
 		repo: repo,
 		log:  log,
@@ -40,25 +40,31 @@ func New(
 		userService:        userService,
 	}
 
-	mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
-	mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
-	mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
-	mux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
-	mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
+	apiMux := http.NewServeMux()
 
-	mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
-	mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
-	mux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
-	mux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
+	// v1 routes
 
-	mux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
-	mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
-	mux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
-	mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
+	apiMux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
+	apiMux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
+	apiMux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
+	apiMux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
+	apiMux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
 
-	mux.HandleFunc("GET /healthz", api.HealtCheck)
+	apiMux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
+	apiMux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
+	apiMux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
+	apiMux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
 
-	return api
+	apiMux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
+	apiMux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
+	apiMux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
+	apiMux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", api.HealthCheck)
+	mux.Handle("/", middleware.AuthenticationRequired(log, apiMux, api.tokenSigningKey))
+
+	return api, mux
 }
 
 func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {

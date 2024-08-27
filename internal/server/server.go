@@ -27,14 +27,14 @@ func New(
 	frontendLocation string,
 ) *Server {
 	mux := http.NewServeMux()
-	apiServer := api.New(
+	apiServer, apiMux := api.New(
 		repo,
 		log,
 		tokenSigningKey,
 		userService,
 		configValueService,
-		mux,
 	)
+	mux.Handle("/api", apiMux)
 
 	var frontendHandler http.Handler
 	frontendServingLog := log.Info()

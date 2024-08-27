@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (s *API) HealtCheck(w http.ResponseWriter, r *http.Request) {
+func (s *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	if !s.repo.Healthy(r.Context()) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}

@@ -12,9 +12,8 @@ import (
 func testAPI(
 	repo repository.ModelRepository,
 ) (*API, *http.ServeMux, *auth.TestGateway) {
-	mux := http.NewServeMux()
 	gateway := auth.NewTestGateway()
-	return New(
+	api, mux := New(
 		repo,
 		zerolog.New(nil).Level(zerolog.Disabled),
 		[]byte("testing"),
@@ -25,6 +24,6 @@ func testAPI(
 			"user-testing",
 		),
 		configvalues.NewService(repo, true),
-		mux,
-	), mux, gateway
+	)
+	return api, mux, gateway
 }

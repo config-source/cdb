@@ -136,7 +136,7 @@ func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
 	}
 
 	req.AddCookie(&http.Cookie{
-		Name:  middleware.SessionCookieName,
+		Name:  middleware.IDTokenCookieName,
 		Value: token,
 	})
 
