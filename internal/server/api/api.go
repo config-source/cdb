@@ -72,14 +72,20 @@ func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
 func (a *API) sendErr(w http.ResponseWriter, err error) {
 	switch {
 	case
+		errors.Is(err, auth.ErrUserNotFound),
 		errors.Is(err, cdb.ErrEnvNotFound),
 		errors.Is(err, cdb.ErrConfigKeyNotFound),
 		errors.Is(err, cdb.ErrConfigValueNotFound):
 		w.WriteHeader(http.StatusNotFound)
-	case errors.Is(err, cdb.ErrConfigValueNotValid):
+	case errors.Is(err, cdb.ErrConfigValueNotValid),
+		errors.Is(err, cdb.ErrConfigValueAlreadySet),
+		errors.Is(err, auth.ErrEmailInUse):
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Is(err, cdb.ErrConfigValueAlreadySet):
-		w.WriteHeader(http.StatusBadRequest)
+	case errors.Is(err, auth.ErrUnauthorized),
+		errors.Is(err, auth.ErrInvalidPassword):
+		w.WriteHeader(http.StatusForbidden)
+	case errors.Is(err, auth.ErrUnauthenticated):
+		w.WriteHeader(http.StatusUnauthorized)
 	// This is safe because subsequent calls to WriteHeader are ignored so
 	// callers can set the status code before calling errorResponse but if they
 	// haven't we want to send a 500.

@@ -11,19 +11,20 @@ import (
 
 func testAPI(
 	repo repository.ModelRepository,
-) (*API, *http.ServeMux) {
+) (*API, *http.ServeMux, *auth.TestGateway) {
 	mux := http.NewServeMux()
+	gateway := auth.NewTestGateway()
 	return New(
 		repo,
 		zerolog.New(nil).Level(zerolog.Disabled),
 		[]byte("testing"),
 		auth.NewUserService(
-			auth.NewTestGateway(),
-			auth.NewTestGateway(),
+			gateway,
+			gateway,
 			true,
 			"user-testing",
 		),
 		configvalues.NewService(repo, true),
 		mux,
-	), mux
+	), mux, gateway
 }

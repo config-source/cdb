@@ -11,6 +11,41 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var logger zerolog.Logger
+
+func init() {
+	logger = zerolog.New(os.Stdout).
+		Level(LogLevel()).
+		With().
+		Timestamp().
+		Logger()
+	if HumanLogs() {
+		logger = logger.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+	}
+	// Set durations to render as Milliseconds
+	zerolog.DurationFieldUnit = time.Millisecond
+
+	auth.TokenIssuer = TokenIssuer()
+}
+
+// TokenIssuer returns the JWT token issuer
+func TokenIssuer() string {
+	issuer := os.Getenv("JWT_TOKEN_ISSUER")
+	if issuer == "" {
+		return "cdb"
+	}
+
+	return issuer
+}
+
+// GetLogger returns the preconfigured global logger
+func GetLogger() zerolog.Logger {
+	return logger
+}
+
 // DBUrl returns the connection string as set by $DB_URL
 //
 // Most often this is left empty and instead the PG* variables are used for
@@ -100,29 +135,6 @@ func JWTSigningKey() []byte {
 	}
 
 	return keyCache
-}
-
-var logger zerolog.Logger
-
-func init() {
-	logger = zerolog.New(os.Stdout).
-		Level(LogLevel()).
-		With().
-		Timestamp().
-		Logger()
-	if HumanLogs() {
-		logger = logger.Output(zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
-		})
-	}
-	// Set durations to render as Milliseconds
-	zerolog.DurationFieldUnit = time.Millisecond
-}
-
-// GetLogger returns the preconfigured global logger
-func GetLogger() zerolog.Logger {
-	return logger
 }
 
 func GetAuthenticationGateway(ctx context.Context, log zerolog.Logger) auth.AuthenticationGateway {

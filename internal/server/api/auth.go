@@ -14,30 +14,32 @@ type Credentials struct {
 }
 
 func (a *API) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
-	// TODO: should be token set here
-	token, err := auth.GenerateIdToken(a.tokenSigningKey, user)
+	tokens, err := auth.GenerateTokens(a.tokenSigningKey, user)
 	if err != nil {
 		a.sendErr(w, err)
 		return
 	}
 
-	authCookies := []*http.Cookie{
-		&http.Cookie{
-			Name:     middleware.SessionCookieName,
-			Value:    token,
-			Domain:   r.Host,
-			HttpOnly: true,
-			SameSite: http.SameSiteStrictMode,
-		},
+	authCookies := map[string]string{
+		middleware.IDTokenCookieName:      tokens.IDToken,
+		middleware.AccessTokenCookieName:  tokens.AccessToken,
+		middleware.RefreshTokenCookieName: tokens.RefreshToken,
 	}
 
-	for _, cookie := range authCookies {
-		http.SetCookie(w, cookie)
+	for name, value := range authCookies {
+		http.SetCookie(
+			w,
+			&http.Cookie{
+				Name:     name,
+				Value:    value,
+				Domain:   r.Host,
+				HttpOnly: true,
+				SameSite: http.SameSiteStrictMode,
+			},
+		)
 	}
 
-	a.sendJson(w, auth.TokenSet{
-		IDToken: token,
-	})
+	a.sendJson(w, tokens)
 }
 
 func (a *API) Login(w http.ResponseWriter, r *http.Request) {

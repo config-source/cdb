@@ -12,9 +12,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const SessionCookieName = "cdb-session"
-const AuthorizationHeaderPrefix = "Bearer "
-const contextUserKey = "user"
+const (
+	IDTokenCookieName      = "cdb-id-token"
+	AccessTokenCookieName  = "cdb-access-token"
+	RefreshTokenCookieName = "cdb-session"
+
+	AuthorizationHeaderPrefix = "Bearer "
+	contextUserKey            = "user"
+)
 
 func GetUser(r *http.Request) *auth.User {
 	user, ok := r.Context().Value(contextUserKey).(*auth.User)
@@ -41,7 +46,7 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 			}
 
 			if token == "" {
-				cookie, err := r.Cookie(SessionCookieName)
+				cookie, err := r.Cookie(IDTokenCookieName)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					w.WriteHeader(http.StatusBadRequest)
 					w.Write([]byte("unable to read session cookie"))

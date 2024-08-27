@@ -12,7 +12,7 @@ func TestHealthCheckSuccess(t *testing.T) {
 		IsHealthy: true,
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo)
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
@@ -28,7 +28,7 @@ func TestHealthCheckFailure(t *testing.T) {
 		IsHealthy: false,
 	}
 
-	_, mux := testAPI(repo)
+	_, mux, _ := testAPI(repo)
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
