@@ -13,6 +13,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var signingKey []byte = []byte("testing")
+
 func TestAuthenticationMiddlewareNoToken(t *testing.T) {
 	var capturedUser *auth.User = nil
 	testHandler := http.HandlerFunc(
@@ -23,7 +25,7 @@ func TestAuthenticationMiddlewareNoToken(t *testing.T) {
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if capturedUser != nil {
@@ -45,14 +47,14 @@ func TestAuthenticationMiddlewareTokenInHeader(t *testing.T) {
 		ID:    1,
 		Email: "test@example.com",
 	}
-	token, err := auth.GenerateIdToken(expectedUser)
+	token, err := auth.GenerateIdToken(signingKey, expectedUser)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if !reflect.DeepEqual(*capturedUser, expectedUser) {
@@ -72,14 +74,14 @@ func TestAuthenticationMiddlewareTokenInvalidHeader(t *testing.T) {
 		ID:    1,
 		Email: "test@example.com",
 	}
-	token, err := auth.GenerateIdToken(expectedUser)
+	token, err := auth.GenerateIdToken(signingKey, expectedUser)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("JWT %s", token))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if rr.Result().StatusCode != http.StatusBadRequest {
@@ -99,14 +101,14 @@ func TestAuthenticationMiddlewareTokenInvalidToken(t *testing.T) {
 		ID:    1,
 		Email: "test@example.com",
 	}
-	token, err := auth.GenerateIdToken(expectedUser)
+	token, err := auth.GenerateIdToken(signingKey, expectedUser)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token[10:]))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if rr.Result().StatusCode != http.StatusBadRequest {
@@ -128,7 +130,7 @@ func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
 		ID:    1,
 		Email: "test@example.com",
 	}
-	token, err := auth.GenerateIdToken(expectedUser)
+	token, err := auth.GenerateIdToken(signingKey, expectedUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +140,7 @@ func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
 		Value: token,
 	})
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if !reflect.DeepEqual(*capturedUser, expectedUser) {
@@ -160,14 +162,14 @@ func TestAuthenticationRequiredMiddlewareAllowsHandlerWithValidToken(t *testing.
 		ID:    1,
 		Email: "test@example.com",
 	}
-	token, err := auth.GenerateIdToken(user)
+	token, err := auth.GenerateIdToken(signingKey, user)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if !called {
@@ -185,7 +187,7 @@ func TestAuthenticationRequiredMiddlewareProtectsHandlerWithoutToken(t *testing.
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), testHandler)
+	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
 	if called {

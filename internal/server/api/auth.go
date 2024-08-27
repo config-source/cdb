@@ -15,7 +15,7 @@ type Credentials struct {
 
 func (a *API) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
 	// TODO: should be token set here
-	token, err := auth.GenerateIdToken(user)
+	token, err := auth.GenerateIdToken(a.tokenSigningKey, user)
 	if err != nil {
 		a.sendErr(w, err)
 		return

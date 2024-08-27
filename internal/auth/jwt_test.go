@@ -7,18 +7,19 @@ import (
 )
 
 func TestCanIssueAndValidateIdToken(t *testing.T) {
+	signingKey := []byte("testing")
 	user := auth.User{
 		ID:       1,
 		Email:    "test@example.com",
 		Password: "test123",
 	}
 
-	token, err := auth.GenerateIdToken(user)
+	token, err := auth.GenerateIdToken(signingKey, user)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	validatedUser, err := auth.ValidateIdToken(token)
+	validatedUser, err := auth.ValidateIdToken(signingKey, token)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,6 +8,7 @@ import (
 
 var (
 	ErrInvalidPassword = errors.New("invalid password")
+	ErrUserNotFound    = errors.New("no user with that ID or email exists")
 	ErrEmailInUse      = errors.New("email is already in use")
 	ErrUnauthorized    = errors.New("you do not have permission to perform that action")
 	ErrUnauthenticated = errors.New("no authentication information provided")
@@ -57,7 +58,6 @@ type AuthenticationGateway interface {
 // interface is here so we can implement it for other backends later like LDAP
 // etc.
 type AuthorizationGateway interface {
-	// TODO: should this just return an error or just a bool?
 	HasPermission(ctx context.Context, actor User, permission Permission) (bool, error)
 
 	CreateRole(ctx context.Context, actor User, role string, permissions []Permission) error

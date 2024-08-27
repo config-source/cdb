@@ -25,7 +25,7 @@ func GetUser(r *http.Request) *auth.User {
 	return user
 }
 
-func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
+func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			var token string
@@ -59,7 +59,7 @@ func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
 				return
 			}
 
-			user, err := auth.ValidateIdToken(token)
+			user, err := auth.ValidateIdToken(signingKey, token)
 			if err != nil {
 				log.Err(err).Msg("invalid token")
 				w.WriteHeader(http.StatusBadRequest)
@@ -73,7 +73,7 @@ func Authentication(log zerolog.Logger, next http.Handler) http.Handler {
 	)
 }
 
-func AuthenticationRequired(log zerolog.Logger, next http.Handler) http.Handler {
+func AuthenticationRequired(log zerolog.Logger, next http.Handler, signingKey []byte) http.Handler {
 	return Authentication(
 		log,
 		http.HandlerFunc(
@@ -95,5 +95,6 @@ func AuthenticationRequired(log zerolog.Logger, next http.Handler) http.Handler 
 				}
 			},
 		),
+		signingKey,
 	)
 }

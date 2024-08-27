@@ -34,6 +34,8 @@ var serverCmd = &cobra.Command{
 
 		var server http.Handler = server.New(
 			repo,
+			logger,
+			settings.JWTSigningKey(),
 			auth.NewUserService(
 				authenticationGateway,
 				authorizationGateway,
@@ -41,7 +43,6 @@ var serverCmd = &cobra.Command{
 				settings.DefaultRegisterRole(),
 			),
 			configvalues.NewService(repo, settings.DynamicConfigKeys()),
-			logger,
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

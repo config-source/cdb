@@ -13,22 +13,29 @@ import (
 )
 
 type API struct {
-	repo               repository.ModelRepository
+	repo repository.ModelRepository
+	log  zerolog.Logger
+
+	tokenSigningKey []byte
+
 	userService        *auth.UserService
 	configValueService *configvalues.Service
-	log                zerolog.Logger
 }
 
 func New(
 	repo repository.ModelRepository,
+	log zerolog.Logger,
+	tokenSigningKey []byte,
 	userService *auth.UserService,
 	configValueService *configvalues.Service,
-	log zerolog.Logger,
 	mux *http.ServeMux,
 ) *API {
 	api := &API{
-		repo:               repo,
-		log:                log,
+		repo: repo,
+		log:  log,
+
+		tokenSigningKey: tokenSigningKey,
+
 		configValueService: configValueService,
 		userService:        userService,
 	}

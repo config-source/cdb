@@ -20,22 +20,34 @@ type Server struct {
 
 func New(
 	repo repository.ModelRepository,
+	log zerolog.Logger,
+	tokenSigningKey []byte,
 	userService *auth.UserService,
 	configValueService *configvalues.Service,
-	log zerolog.Logger,
 	frontendLocation string,
 ) *Server {
 	mux := http.NewServeMux()
-	apiServer := api.New(repo, userService, configValueService, log, mux)
+	apiServer := api.New(
+		repo,
+		log,
+		tokenSigningKey,
+		userService,
+		configValueService,
+		mux,
+	)
 
 	var frontendHandler http.Handler
+	frontendServingLog := log.Info()
+	defer frontendServingLog.Msg("Serving frontend from")
+
 	if upstream, err := url.Parse(frontendLocation); err == nil && upstream.Scheme != "" {
-		log.Info().Str("upstream", upstream.String()).Msg("Serving frontend from")
+		frontendServingLog.Str("upstream", upstream.String())
 		frontendHandler = httputil.NewSingleHostReverseProxy(upstream)
 	} else {
-		log.Info().Str("location", frontendLocation).Msg("Serving frontend from")
+		frontendServingLog.Str("location", frontendLocation)
 		frontendHandler = http.FileServer(http.Dir(frontendLocation))
 	}
+
 	mux.Handle("GET /", frontendHandler)
 
 	return &Server{

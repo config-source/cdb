@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/config-source/cdb/internal/settings"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -26,12 +25,12 @@ type IDClaims struct {
 	jwt.RegisteredClaims
 }
 
-func ValidateIdToken(idToken string) (User, error) {
+func ValidateIdToken(signingKey []byte, idToken string) (User, error) {
 	token, err := jwt.ParseWithClaims(
 		idToken,
 		&IDClaims{},
 		func(token *jwt.Token) (interface{}, error) {
-			return settings.JWTSigningKey(), nil
+			return signingKey, nil
 		},
 		jwt.WithValidMethods([]string{"HS512"}),
 		jwt.WithIssuer(TokenIssuer),
@@ -48,7 +47,7 @@ func ValidateIdToken(idToken string) (User, error) {
 	return User{}, errors.New("unrecognized token claims")
 }
 
-func GenerateIdToken(user User) (string, error) {
+func GenerateIdToken(signingKey []byte, user User) (string, error) {
 	claims := IDClaims{
 		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -63,5 +62,5 @@ func GenerateIdToken(user User) (string, error) {
 		claims,
 	)
 
-	return token.SignedString(settings.JWTSigningKey())
+	return token.SignedString(signingKey)
 }
