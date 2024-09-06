@@ -1,4 +1,4 @@
-package configvalues
+package services
 
 import (
 	"context"
@@ -13,23 +13,23 @@ var (
 	ErrValueTypeMustBeSet = errors.New("must set ValueType on the config value when trying to dynamically create a key")
 )
 
-type Service struct {
+type ConfigValuesService struct {
 	DynamicConfigKeys bool
 
 	repo repository.ModelRepository
 }
 
-func NewService(
+func NewConfigValuesService(
 	repo repository.ModelRepository,
 	dynamicConfigKeys bool,
-) *Service {
-	return &Service{
+) *ConfigValuesService {
+	return &ConfigValuesService{
 		repo:              repo,
 		DynamicConfigKeys: dynamicConfigKeys,
 	}
 }
 
-func (s *Service) SetConfigurationValue(
+func (s *ConfigValuesService) SetConfigurationValue(
 	ctx context.Context,
 	envName string,
 	key string,
@@ -85,7 +85,7 @@ func (s *Service) SetConfigurationValue(
 	return result, err
 }
 
-func (s *Service) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
+func (s *ConfigValuesService) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
 	ck, err := s.repo.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return cdb.ConfigValue{}, err

@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -o errexit
-
-docker compose exec -it server go run ./cmd/cdbd migrate "$@"

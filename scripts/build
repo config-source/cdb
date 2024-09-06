@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-set -o errexit
-
-if [[ -z "$(docker compose ps --format json)" ]]; then
-    docker compose up -d
-fi
-
-docker compose exec -it server go build "$@" ./cmd/cdbd

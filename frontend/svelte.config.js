@@ -10,6 +10,10 @@ const config = {
 		})
 	},
 
+// 	paths: {
+// 		base: '/app'
+// 	},
+
 	extensions: ['.svelte', '.md'],
 
 	preprocess: [

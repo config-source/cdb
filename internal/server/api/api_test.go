@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb/internal/auth"
-	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
+	"github.com/config-source/cdb/internal/services"
 	"github.com/rs/zerolog"
 )
 
@@ -23,7 +23,7 @@ func testAPI(
 			true,
 			"user-testing",
 		),
-		configvalues.NewService(repo, true),
+		services.NewConfigValuesService(repo, true),
 	)
 	return api, mux, gateway
 }

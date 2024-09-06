@@ -6,9 +6,9 @@ import (
 	"net/url"
 
 	"github.com/config-source/cdb/internal/auth"
-	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/api"
+	"github.com/config-source/cdb/internal/services"
 	"github.com/rs/zerolog"
 )
 
@@ -23,19 +23,9 @@ func New(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *configvalues.Service,
+	configValueService *services.ConfigValuesService,
 	frontendLocation string,
 ) *Server {
-	mux := http.NewServeMux()
-	apiServer, apiMux := api.New(
-		repo,
-		log,
-		tokenSigningKey,
-		userService,
-		configValueService,
-	)
-	mux.Handle("/api", apiMux)
-
 	var frontendHandler http.Handler
 	frontendServingLog := log.Info()
 	defer frontendServingLog.Msg("Serving frontend from")
@@ -48,10 +38,18 @@ func New(
 		frontendHandler = http.FileServer(http.Dir(frontendLocation))
 	}
 
-	mux.Handle("GET /", frontendHandler)
+	apiServer, apiMux := api.New(
+		repo,
+		log,
+		tokenSigningKey,
+		userService,
+		configValueService,
+	)
+
+	apiMux.Handle("/", frontendHandler)
 
 	return &Server{
-		mux: mux,
+		mux: apiMux,
 		api: apiServer,
 		ui:  frontendHandler,
 	}

@@ -7,9 +7,9 @@ import (
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/internal/auth"
-	"github.com/config-source/cdb/internal/configvalues"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/services"
 	"github.com/rs/zerolog"
 )
 
@@ -20,7 +20,7 @@ type API struct {
 	tokenSigningKey []byte
 
 	userService        *auth.UserService
-	configValueService *configvalues.Service
+	configValueService *services.ConfigValuesService
 }
 
 func New(
@@ -28,7 +28,7 @@ func New(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *configvalues.Service,
+	configValueService *services.ConfigValuesService,
 ) (*API, *http.ServeMux) {
 	api := &API{
 		repo: repo,
@@ -62,7 +62,7 @@ func New(
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.HealthCheck)
-	mux.Handle("/", middleware.AuthenticationRequired(log, apiMux, api.tokenSigningKey))
+	mux.Handle("/api/", middleware.AuthenticationRequired(log, apiMux, api.tokenSigningKey))
 
 	return api, mux
 }
