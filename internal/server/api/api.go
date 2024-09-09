@@ -40,27 +40,31 @@ func New(
 		userService:        userService,
 	}
 
-	apiMux := http.NewServeMux()
-
 	// v1 routes
+	v1Mux := http.NewServeMux()
 
-	apiMux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
-	apiMux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
-	apiMux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
-	apiMux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
-	apiMux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
+	v1Mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
+	v1Mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
+	v1Mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
+	v1Mux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
+	v1Mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
 
-	apiMux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
-	apiMux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
-	apiMux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
-	apiMux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
+	v1Mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
+	v1Mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
+	v1Mux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
+	v1Mux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
 
-	apiMux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
-	apiMux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
-	apiMux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
-	apiMux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
+	v1Mux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
+	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
+	v1Mux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
+	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
 
-	return api, middleware.AuthenticationRequired(log, apiMux, tokenSigningKey)
+	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("POST /api/v1/login", api.Login)
+	apiMux.HandleFunc("POST /api/v1/register", api.Register)
+	apiMux.Handle("/api/v1/", middleware.AuthenticationRequired(log, tokenSigningKey, v1Mux))
+
+	return api, apiMux
 }
 
 func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
@@ -81,6 +85,7 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Is(err, cdb.ErrConfigValueNotValid),
 		errors.Is(err, cdb.ErrConfigValueAlreadySet),
+		errors.Is(err, auth.ErrPublicRegisterDisabled),
 		errors.Is(err, auth.ErrEmailInUse):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Is(err, auth.ErrUnauthorized),

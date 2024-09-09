@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -32,7 +31,7 @@ func GetUser(r *http.Request) (auth.User, error) {
 	return *user, nil
 }
 
-func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) http.Handler {
+func Authentication(log zerolog.Logger, signingKey []byte, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			var token string
@@ -69,7 +68,6 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 			}
 
 			user, err := auth.ValidateIdToken(signingKey, token)
-			fmt.Println(token, err)
 			if err != nil {
 				log.Err(err).Msg("invalid token")
 				w.WriteHeader(http.StatusBadRequest)
@@ -84,9 +82,10 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 	)
 }
 
-func AuthenticationRequired(log zerolog.Logger, next http.Handler, signingKey []byte) http.Handler {
+func AuthenticationRequired(log zerolog.Logger, signingKey []byte, next http.Handler) http.Handler {
 	return Authentication(
 		log,
+		signingKey,
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				if _, err := GetUser(r); err == nil {
@@ -97,13 +96,12 @@ func AuthenticationRequired(log zerolog.Logger, next http.Handler, signingKey []
 				response := cdb.ErrorResponse{
 					Message: "forbidden",
 				}
-				w.WriteHeader(http.StatusForbidden)
+				w.WriteHeader(http.StatusUnauthorized)
 				w.Header().Add("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(response); err != nil {
 					log.Err(err).Msg("failed to encode a payload")
 				}
 			},
 		),
-		signingKey,
 	)
 }

@@ -6,6 +6,10 @@ import (
 	"fmt"
 )
 
+var (
+	ErrPublicRegisterDisabled = errors.New("public registration is disabled")
+)
+
 type UserService struct {
 	authn AuthenticationGateway
 	authz AuthorizationGateway
@@ -46,7 +50,7 @@ func (us *UserService) Register(ctx context.Context, email, password string) (Us
 		return user, us.authz.AssignRoleToUserNoAuth(ctx, user, us.defaultRegisterRole)
 	}
 
-	return User{}, errors.New("public registration is disabled")
+	return User{}, ErrPublicRegisterDisabled
 }
 
 func (us *UserService) CreateUser(ctx context.Context, actor User, newUser User) (User, error) {

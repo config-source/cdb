@@ -103,12 +103,12 @@ func TestCreateConfigKey(t *testing.T) {
 
 	_, mux, _ := testAPI(repo, true)
 
-	env := cdb.ConfigKey{
+	configKey := cdb.ConfigKey{
 		Name:      "owner",
 		ValueType: cdb.TypeString,
 	}
 
-	marshalled, err := json.Marshal(env)
+	marshalled, err := json.Marshal(configKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,8 +129,8 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if created.Name != env.Name {
-		t.Fatalf("Expected name to be %s got: %s", env.Name, created.Name)
+	if created.Name != configKey.Name {
+		t.Fatalf("Expected name to be %s got: %s", configKey.Name, created.Name)
 	}
 
 	if created.CreatedAt.IsZero() {

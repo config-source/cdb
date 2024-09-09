@@ -46,15 +46,15 @@ func (a *API) Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var request Credentials
-	err := decoder.Decode(&request)
+	var creds Credentials
+	err := decoder.Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
 		return
 	}
 
-	user, err := a.userService.Login(r.Context(), request.Email, request.Password)
+	user, err := a.userService.Login(r.Context(), creds.Email, creds.Password)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -67,15 +67,15 @@ func (a *API) Register(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var request Credentials
-	err := decoder.Decode(&request)
+	var creds Credentials
+	err := decoder.Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
 		return
 	}
 
-	user, err := a.userService.Register(r.Context(), request.Email, request.Password)
+	user, err := a.userService.Register(r.Context(), creds.Email, creds.Password)
 	if err != nil {
 		a.sendErr(w, err)
 		return
