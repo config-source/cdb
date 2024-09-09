@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/repository"
 )
 
@@ -13,44 +14,78 @@ var (
 	ErrValueTypeMustBeSet = errors.New("must set ValueType on the config value when trying to dynamically create a key")
 )
 
-type ConfigValuesService struct {
+type ConfigValues struct {
 	DynamicConfigKeys bool
 
 	repo repository.ModelRepository
+	auth auth.AuthorizationGateway
 }
 
 func NewConfigValuesService(
 	repo repository.ModelRepository,
+	auth auth.AuthorizationGateway,
 	dynamicConfigKeys bool,
-) *ConfigValuesService {
-	return &ConfigValuesService{
+) *ConfigValues {
+	return &ConfigValues{
 		repo:              repo,
+		auth:              auth,
 		DynamicConfigKeys: dynamicConfigKeys,
 	}
 }
 
-func (s *ConfigValuesService) SetConfigurationValue(
+func (svc *ConfigValues) canConfigureEnvironment(
 	ctx context.Context,
+	actor auth.User,
+	env cdb.Environment,
+) error {
+	canConfigure, err := svc.auth.HasPermission(ctx, actor, auth.PermissionConfigureEnvironments)
+	if err != nil {
+		return err
+	}
+
+	canConfigureSensitive, err := svc.auth.HasPermission(ctx, actor, auth.PermissionConfigureEnvironments)
+	if err != nil {
+		return err
+	}
+
+	if !canConfigureSensitive && env.Sensitive {
+		return auth.ErrUnauthorized
+	}
+
+	if canConfigure || canConfigureSensitive {
+		return nil
+	}
+
+	return auth.ErrUnauthorized
+}
+
+func (svc *ConfigValues) SetConfigurationValue(
+	ctx context.Context,
+	actor auth.User,
 	envName string,
 	key string,
 	cv *cdb.ConfigValue,
 ) (*cdb.ConfigValue, error) {
-	env, err := s.repo.GetEnvironmentByName(ctx, envName)
+	env, err := svc.repo.GetEnvironmentByName(ctx, envName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get environment by name: %s", err)
 	}
 
+	if authErr := svc.canConfigureEnvironment(ctx, actor, env); authErr != nil {
+		return nil, authErr
+	}
+
 	cv.EnvironmentID = env.ID
 
-	ck, err := s.repo.GetConfigKeyByName(ctx, key)
-	shouldCreate := errors.Is(err, cdb.ErrConfigKeyNotFound) && s.DynamicConfigKeys
+	ck, err := svc.repo.GetConfigKeyByName(ctx, key)
+	shouldCreate := errors.Is(err, cdb.ErrConfigKeyNotFound) && svc.DynamicConfigKeys
 	if shouldCreate {
 		if cv.ValueType == 0 {
 			return cv, ErrValueTypeMustBeSet
 		}
 
 		ck = cdb.NewConfigKey(key, cv.ValueType)
-		ck, err = s.repo.CreateConfigKey(ctx, ck)
+		ck, err = svc.repo.CreateConfigKey(ctx, ck)
 		if err != nil {
 			return cv, fmt.Errorf("failed to create new config key: %w", err)
 		}
@@ -70,12 +105,12 @@ func (s *ConfigValuesService) SetConfigurationValue(
 	}
 
 	var result *cdb.ConfigValue
-	alreadySet, err := s.repo.GetConfigValueByEnvAndKey(ctx, envName, key)
+	alreadySet, err := svc.repo.GetConfigValueByEnvAndKey(ctx, envName, key)
 	if err != nil {
-		result, err = s.repo.CreateConfigValue(ctx, cv)
+		result, err = svc.repo.CreateConfigValue(ctx, cv)
 	} else {
 		cv.ID = alreadySet.ID
-		result, err = s.repo.UpdateConfigurationValue(ctx, cv)
+		result, err = svc.repo.UpdateConfigurationValue(ctx, cv)
 	}
 
 	// Create and Update ConfigValue do not always populate these.
@@ -85,8 +120,21 @@ func (s *ConfigValuesService) SetConfigurationValue(
 	return result, err
 }
 
-func (s *ConfigValuesService) CreateConfigValue(ctx context.Context, cv cdb.ConfigValue) (cdb.ConfigValue, error) {
-	ck, err := s.repo.GetConfigKey(ctx, cv.ConfigKeyID)
+func (svc *ConfigValues) CreateConfigValue(
+	ctx context.Context,
+	actor auth.User,
+	cv cdb.ConfigValue,
+) (cdb.ConfigValue, error) {
+	env, err := svc.repo.GetEnvironment(ctx, cv.EnvironmentID)
+	if err != nil {
+		return cdb.ConfigValue{}, err
+	}
+
+	if authErr := svc.canConfigureEnvironment(ctx, actor, env); authErr != nil {
+		return cdb.ConfigValue{}, authErr
+	}
+
+	ck, err := svc.repo.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return cdb.ConfigValue{}, err
 	}
@@ -96,10 +144,23 @@ func (s *ConfigValuesService) CreateConfigValue(ctx context.Context, cv cdb.Conf
 		return cdb.ConfigValue{}, err
 	}
 
-	created, err := s.repo.CreateConfigValue(ctx, &cv)
+	created, err := svc.repo.CreateConfigValue(ctx, &cv)
 	if err != nil {
 		return cdb.ConfigValue{}, err
 	}
 
 	return *created, nil
+}
+
+// TODO: there isn't really a concept of permissions for reading configuration
+// yet and it's unclear if there ever will be. But these methods exist to future
+// proof for it and to simplify things so that the API struct never needs to
+// talk to ModelRepository directly.
+
+func (svc *ConfigValues) GetConfiguration(ctx context.Context, actor auth.User, envName string) ([]cdb.ConfigValue, error) {
+	return svc.repo.GetConfiguration(ctx, envName)
+}
+
+func (svc *ConfigValues) GetConfigurationValue(ctx context.Context, actor auth.User, envName, key string) (*cdb.ConfigValue, error) {
+	return svc.repo.GetConfigurationValue(ctx, envName, key)
 }

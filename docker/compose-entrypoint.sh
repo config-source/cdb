@@ -6,6 +6,14 @@ function backend() {
     apt update && apt install -y postgresql-client
   fi
 
+  if [[ ! -x $(which migrate) ]]; then
+    go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+  fi
+
+  if [[ ! -x $(which golangci-migrate) ]]; then
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+  fi
+
   until psql -c "select 1" >/dev/null 2>/dev/null; do
     echo "Waiting for postgres server..."
     sleep 1

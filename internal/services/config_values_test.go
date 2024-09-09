@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/auth"
 	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/services"
 )
@@ -38,10 +39,12 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 		},
 	}
 
-	service := services.NewConfigValuesService(repo, true)
+	gateway := auth.NewTestGateway()
+	service := services.NewConfigValuesService(repo, gateway, true)
 	val := 10
 	cv, err := service.SetConfigurationValue(
 		context.Background(),
+		auth.User{},
 		"staging",
 		"minReplicas",
 		&cdb.ConfigValue{
@@ -95,10 +98,11 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 		},
 	}
 
-	service := services.NewConfigValuesService(repo, false)
+	service := services.NewConfigValuesService(repo, auth.NewTestGateway(), false)
 	val := 10
 	_, err := service.SetConfigurationValue(
 		context.Background(),
+		auth.User{},
 		"staging",
 		"minReplicas",
 		&cdb.ConfigValue{
@@ -139,10 +143,11 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 		},
 	}
 
-	service := services.NewConfigValuesService(repo, false)
+	service := services.NewConfigValuesService(repo, auth.NewTestGateway(), false)
 	val := "test"
 	_, err := service.SetConfigurationValue(
 		context.Background(),
+		auth.User{},
 		"staging",
 		"maxReplicas",
 		&cdb.ConfigValue{

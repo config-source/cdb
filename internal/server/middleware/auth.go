@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,22 +13,23 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type contextUserKey struct{}
+
 const (
 	IDTokenCookieName      = "cdb-id-token"
 	AccessTokenCookieName  = "cdb-access-token"
 	RefreshTokenCookieName = "cdb-session"
 
 	AuthorizationHeaderPrefix = "Bearer "
-	contextUserKey            = "user"
 )
 
-func GetUser(r *http.Request) *auth.User {
-	user, ok := r.Context().Value(contextUserKey).(*auth.User)
+func GetUser(r *http.Request) (auth.User, error) {
+	user, ok := r.Context().Value(contextUserKey{}).(*auth.User)
 	if !ok {
-		return nil
+		return auth.User{}, errors.New("unable to get user from request context")
 	}
 
-	return user
+	return *user, nil
 }
 
 func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) http.Handler {
@@ -38,6 +40,7 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 			if header != "" {
 				if !strings.HasPrefix(header, AuthorizationHeaderPrefix) {
 					w.WriteHeader(http.StatusBadRequest)
+					// nolint:errcheck
 					w.Write([]byte("Malformed Authorization header."))
 					return
 				}
@@ -49,6 +52,7 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 				cookie, err := r.Cookie(IDTokenCookieName)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					w.WriteHeader(http.StatusBadRequest)
+					// nolint:errcheck
 					w.Write([]byte("unable to read session cookie"))
 					log.Err(err).Msg("unable to read session cookie")
 					return
@@ -65,14 +69,16 @@ func Authentication(log zerolog.Logger, next http.Handler, signingKey []byte) ht
 			}
 
 			user, err := auth.ValidateIdToken(signingKey, token)
+			fmt.Println(token, err)
 			if err != nil {
 				log.Err(err).Msg("invalid token")
 				w.WriteHeader(http.StatusBadRequest)
+				// nolint:errcheck
 				w.Write([]byte("invalid token"))
 				return
 			}
 
-			newCtx := context.WithValue(r.Context(), contextUserKey, &user)
+			newCtx := context.WithValue(r.Context(), contextUserKey{}, &user)
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		},
 	)
@@ -83,8 +89,7 @@ func AuthenticationRequired(log zerolog.Logger, next http.Handler, signingKey []
 		log,
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				user := GetUser(r)
-				if user != nil {
+				if _, err := GetUser(r); err == nil {
 					next.ServeHTTP(w, r)
 					return
 				}
@@ -94,8 +99,7 @@ func AuthenticationRequired(log zerolog.Logger, next http.Handler, signingKey []
 				}
 				w.WriteHeader(http.StatusForbidden)
 				w.Header().Add("Content-Type", "application/json")
-				err := json.NewEncoder(w).Encode(response)
-				if err != nil {
+				if err := json.NewEncoder(w).Encode(response); err != nil {
 					log.Err(err).Msg("failed to encode a payload")
 				}
 			},

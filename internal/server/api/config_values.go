@@ -6,9 +6,16 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/server/middleware"
 )
 
 func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	environmentName := r.PathValue("environment")
 	configKey := r.PathValue("key")
 	if environmentName == "" || configKey == "" {
@@ -17,7 +24,7 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cv, err := a.repo.GetConfigurationValue(r.Context(), environmentName, configKey)
+	cv, err := a.configValueService.GetConfigurationValue(r.Context(), user, environmentName, configKey)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -27,6 +34,12 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	environmentName := r.PathValue("environment")
 	configKey := r.PathValue("key")
 	if environmentName == "" || configKey == "" {
@@ -39,7 +52,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 
 	var newConfigValue *cdb.ConfigValue
-	err := decoder.Decode(&newConfigValue)
+	err = decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
@@ -48,6 +61,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 
 	cv, err := a.configValueService.SetConfigurationValue(
 		r.Context(),
+		user,
 		environmentName,
 		configKey,
 		newConfigValue,
@@ -61,18 +75,24 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
 	var newConfigValue cdb.ConfigValue
-	err := decoder.Decode(&newConfigValue)
+	err = decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
 		return
 	}
 
-	newConfigValue, err = a.configValueService.CreateConfigValue(r.Context(), newConfigValue)
+	newConfigValue, err = a.configValueService.CreateConfigValue(r.Context(), user, newConfigValue)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -83,6 +103,12 @@ func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) GetConfiguration(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	environmentName := r.PathValue("environment")
 	if environmentName == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,7 +116,7 @@ func (a *API) GetConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cv, err := a.repo.GetConfiguration(r.Context(), environmentName)
+	cv, err := a.configValueService.GetConfiguration(r.Context(), user, environmentName)
 	if err != nil {
 		a.sendErr(w, err)
 		return

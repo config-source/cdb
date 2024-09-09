@@ -55,6 +55,7 @@ var role string
 
 func init() {
 	createAdminUserCmd.Flags().StringVarP(&email, "email", "e", "", "")
+	// nolint:errcheck
 	createAdminUserCmd.MarkFlagRequired("email")
 
 	createAdminUserCmd.Flags().StringVarP(&role, "role", "r", "Administrator", "")

@@ -31,7 +31,7 @@ func TestListConfigKeys(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -63,7 +63,7 @@ func TestGetConfigKeyByID(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -86,7 +86,7 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -101,7 +101,7 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 func TestCreateConfigKey(t *testing.T) {
 	repo := &repository.TestRepository{}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 
 	env := cdb.ConfigKey{
 		Name:      "owner",
@@ -153,7 +153,7 @@ func TestGetConfigKeyByName(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -176,7 +176,7 @@ func TestGetConfigKeyByNameNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/minReplicas", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})

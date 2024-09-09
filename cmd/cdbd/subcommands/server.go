@@ -42,7 +42,13 @@ var serverCmd = &cobra.Command{
 				settings.AllowPublicRegistration(),
 				settings.DefaultRegisterRole(),
 			),
-			services.NewConfigValuesService(repo, settings.DynamicConfigKeys()),
+			services.NewConfigValuesService(
+				repo,
+				authorizationGateway,
+				settings.DynamicConfigKeys(),
+			),
+			services.NewEnvironmentsService(repo, authorizationGateway),
+			services.NewConfigKeysService(repo, authorizationGateway),
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

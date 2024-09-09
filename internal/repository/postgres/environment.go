@@ -22,8 +22,11 @@ var getEnvironmentByNameSql string
 //go:embed queries/environments/list_environments.sql
 var listEnvironmentsSql string
 
+//go:embed queries/environments/list_nonsensitive_environments.sql
+var listNonsensitiveEnvironmentsSql string
+
 func (r *Repository) CreateEnvironment(ctx context.Context, env cdb.Environment) (cdb.Environment, error) {
-	return postgresutils.GetOne[cdb.Environment](r.pool, ctx, createEnvironmentSql, env.Name, env.PromotesToID)
+	return postgresutils.GetOne[cdb.Environment](r.pool, ctx, createEnvironmentSql, env.Name, env.PromotesToID, env.Sensitive)
 }
 
 func (r *Repository) GetEnvironment(ctx context.Context, id int) (cdb.Environment, error) {
@@ -44,7 +47,11 @@ func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (cdb
 	return env, err
 }
 
-func (r *Repository) ListEnvironments(ctx context.Context) ([]cdb.Environment, error) {
-	environs, err := postgresutils.GetAll[cdb.Environment](r.pool, ctx, listEnvironmentsSql)
-	return environs, err
+func (r *Repository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]cdb.Environment, error) {
+	sql := listNonsensitiveEnvironmentsSql
+	if includeSensitive {
+		sql = listEnvironmentsSql
+	}
+
+	return postgresutils.GetAll[cdb.Environment](r.pool, ctx, sql)
 }

@@ -7,9 +7,16 @@ import (
 	"strconv"
 
 	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/internal/server/middleware"
 )
 
 func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -17,7 +24,7 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ck, err := a.repo.GetConfigKey(r.Context(), id)
+	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, id)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -27,6 +34,12 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	name := r.PathValue("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -34,7 +47,7 @@ func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ck, err := a.repo.GetConfigKeyByName(r.Context(), name)
+	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, name)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -44,7 +57,13 @@ func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
-	cks, err := a.repo.ListConfigKeys(r.Context())
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -54,18 +73,24 @@ func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
 	var env cdb.ConfigKey
-	err := decoder.Decode(&env)
+	err = decoder.Decode(&env)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
 		return
 	}
 
-	env, err = a.repo.CreateConfigKey(r.Context(), env)
+	env, err = a.configKeyService.CreateConfigKey(r.Context(), user, env)
 	if err != nil {
 		a.sendErr(w, err)
 		return

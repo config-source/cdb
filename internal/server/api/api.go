@@ -7,36 +7,36 @@ import (
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/internal/auth"
-	"github.com/config-source/cdb/internal/repository"
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/services"
 	"github.com/rs/zerolog"
 )
 
 type API struct {
-	repo repository.ModelRepository
-	log  zerolog.Logger
-
+	log             zerolog.Logger
 	tokenSigningKey []byte
 
 	userService        *auth.UserService
-	configValueService *services.ConfigValuesService
+	configValueService *services.ConfigValues
+	envService         *services.Environments
+	configKeyService   *services.ConfigKeys
 }
 
 func New(
-	repo repository.ModelRepository,
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *services.ConfigValuesService,
-) (*API, *http.ServeMux) {
+	configValueService *services.ConfigValues,
+	envService *services.Environments,
+	configKeyService *services.ConfigKeys,
+) (*API, http.Handler) {
 	api := &API{
-		repo: repo,
-		log:  log,
-
+		log:             log,
 		tokenSigningKey: tokenSigningKey,
 
 		configValueService: configValueService,
+		envService:         envService,
+		configKeyService:   configKeyService,
 		userService:        userService,
 	}
 
@@ -60,11 +60,7 @@ func New(
 	apiMux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
 	apiMux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", api.HealthCheck)
-	mux.Handle("/api/", middleware.AuthenticationRequired(log, apiMux, api.tokenSigningKey))
-
-	return api, mux
+	return api, middleware.AuthenticationRequired(log, apiMux, tokenSigningKey)
 }
 
 func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {

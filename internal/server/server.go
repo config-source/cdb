@@ -23,7 +23,9 @@ func New(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *services.ConfigValuesService,
+	configValueService *services.ConfigValues,
+	envService *services.Environments,
+	configKeysService *services.ConfigKeys,
 	frontendLocation string,
 ) *Server {
 	var frontendHandler http.Handler
@@ -39,17 +41,31 @@ func New(
 	}
 
 	apiServer, apiMux := api.New(
-		repo,
 		log,
 		tokenSigningKey,
 		userService,
 		configValueService,
+		envService,
+		configKeysService,
 	)
 
-	apiMux.Handle("/", frontendHandler)
+	mux := http.NewServeMux()
+	mux.Handle("/api/", apiMux)
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		if !repo.Healthy(r.Context()) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		if !userService.Healthy(r.Context()) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		w.Write([]byte{}) // nolint:errcheck
+	})
+	mux.Handle("/", frontendHandler)
 
 	return &Server{
-		mux: apiMux,
+		mux: mux,
 		api: apiServer,
 		ui:  frontendHandler,
 	}

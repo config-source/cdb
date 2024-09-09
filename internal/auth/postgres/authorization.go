@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/config-source/cdb/internal/auth"
+	"github.com/config-source/cdb/internal/postgresutils"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -83,14 +84,14 @@ func (g *Gateway) AddPermissionsToRole(ctx context.Context, actor auth.User, rol
 
 	txn, err := g.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		txn.Rollback(ctx)
+		postgresutils.Rollback(ctx, txn, g.log)
 		return err
 	}
 
 	for _, perm := range permissions {
 		_, assignErr := txn.Exec(ctx, assignPermissionToRoleSql, role, perm)
 		if assignErr != nil {
-			txn.Rollback(ctx)
+			postgresutils.Rollback(ctx, txn, g.log)
 			return assignErr
 		}
 	}
@@ -121,14 +122,14 @@ func (g *Gateway) RemovePermissionsFromRole(ctx context.Context, actor auth.User
 
 	txn, err := g.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		txn.Rollback(ctx)
+		postgresutils.Rollback(ctx, txn, g.log)
 		return err
 	}
 
 	for _, perm := range permissions {
 		_, removeErr := txn.Exec(ctx, removePermissionFromRoleSql, role, perm)
 		if removeErr != nil {
-			txn.Rollback(ctx)
+			postgresutils.Rollback(ctx, txn, g.log)
 			return removeErr
 		}
 	}

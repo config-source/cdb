@@ -16,10 +16,10 @@ import (
 var signingKey []byte = []byte("testing")
 
 func TestAuthenticationMiddlewareNoToken(t *testing.T) {
-	var capturedUser *auth.User = nil
+	var capturedUser auth.User
 	testHandler := http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			capturedUser = middleware.GetUser(r)
+			capturedUser, _ = middleware.GetUser(r)
 		},
 	)
 	req := httptest.NewRequest("GET", "/healthz", nil)
@@ -28,16 +28,16 @@ func TestAuthenticationMiddlewareNoToken(t *testing.T) {
 	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
-	if capturedUser != nil {
+	if capturedUser.ID != 0 {
 		t.Error("Expected no user to be available due to lack of auth information!")
 	}
 }
 
 func TestAuthenticationMiddlewareTokenInHeader(t *testing.T) {
-	var capturedUser *auth.User = nil
+	var capturedUser auth.User
 	testHandler := http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			capturedUser = middleware.GetUser(r)
+			capturedUser, _ = middleware.GetUser(r)
 		},
 	)
 	req := httptest.NewRequest("GET", "/healthz", nil)
@@ -57,7 +57,7 @@ func TestAuthenticationMiddlewareTokenInHeader(t *testing.T) {
 	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
-	if !reflect.DeepEqual(*capturedUser, expectedUser) {
+	if !reflect.DeepEqual(capturedUser, expectedUser) {
 		t.Errorf("Expected user %v got %v", expectedUser, capturedUser)
 	}
 }
@@ -117,10 +117,10 @@ func TestAuthenticationMiddlewareTokenInvalidToken(t *testing.T) {
 }
 
 func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
-	var capturedUser *auth.User = nil
+	var capturedUser auth.User
 	testHandler := http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			capturedUser = middleware.GetUser(r)
+			capturedUser, _ = middleware.GetUser(r)
 		},
 	)
 	req := httptest.NewRequest("GET", "/healthz", nil)
@@ -143,7 +143,7 @@ func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
 	handler := middleware.Authentication(zerolog.New(os.Stdout), testHandler, signingKey)
 	handler.ServeHTTP(rr, req)
 
-	if !reflect.DeepEqual(*capturedUser, expectedUser) {
+	if !reflect.DeepEqual(capturedUser, expectedUser) {
 		t.Errorf("Expected user %v got %v", expectedUser, capturedUser)
 	}
 }

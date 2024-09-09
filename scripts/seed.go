@@ -42,10 +42,10 @@ func main() {
 	fmt.Println("Seeding environments...")
 	clearTable(repository, "environments")
 
-	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production"})
+	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production", Sensitive: true})
 	fail(err)
 
-	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID})
+	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID, Sensitive: true})
 	fail(err)
 
 	dev, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev", PromotesToID: &staging.ID})

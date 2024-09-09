@@ -20,7 +20,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/environments/by-name/production", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -42,7 +42,7 @@ func TestGetEnvironmentByNameNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/environments/by-name/dev", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -64,7 +64,7 @@ func TestGetEnvironmentByID(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/environments/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -86,7 +86,7 @@ func TestGetEnvironmentByIDNotFound(t *testing.T) {
 		},
 	}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/environments/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -101,7 +101,7 @@ func TestGetEnvironmentByIDNotFound(t *testing.T) {
 func TestCreateEnvironment(t *testing.T) {
 	repo := &repository.TestRepository{}
 
-	_, mux, _ := testAPI(repo)
+	_, mux, _ := testAPI(repo, true)
 
 	env := cdb.Environment{
 		Name: "production",
