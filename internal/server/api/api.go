@@ -59,6 +59,9 @@ func New(
 	v1Mux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
 	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
 
+	v1Mux.HandleFunc("GET /api/v1/users/me", api.GetLoggedInUser)
+	v1Mux.HandleFunc("DELETE /api/v1/logout", api.Logout)
+
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("POST /api/v1/login", api.Login)
 	apiMux.HandleFunc("POST /api/v1/register", api.Register)

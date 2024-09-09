@@ -83,3 +83,38 @@ func (a *API) Register(w http.ResponseWriter, r *http.Request) {
 
 	a.doLogin(w, r, user)
 }
+
+func (a *API) Logout(w http.ResponseWriter, r *http.Request) {
+	authCookies := []string{
+		middleware.IDTokenCookieName,
+		middleware.AccessTokenCookieName,
+		middleware.RefreshTokenCookieName,
+	}
+
+	for _, cookie := range authCookies {
+		http.SetCookie(
+			w,
+			&http.Cookie{
+				Name:     cookie,
+				Value:    "",
+				Domain:   r.Host,
+				HttpOnly: true,
+				SameSite: http.SameSiteStrictMode,
+				// This is what deletes the cookie.
+				MaxAge: -1,
+			},
+		)
+	}
+
+	// TODO: kill the refresh token.
+}
+
+func (a *API) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	a.sendJson(w, user)
+}
