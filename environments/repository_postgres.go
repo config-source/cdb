@@ -11,13 +11,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Repository struct {
+type PostgresRepository struct {
 	pool *pgxpool.Pool
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *Repository {
-	return &Repository{
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{
 		log:  log,
 		pool: pool,
 	}
@@ -38,11 +38,11 @@ var listEnvironmentsSql string
 //go:embed queries/list_nonsensitive_environments.sql
 var listNonsensitiveEnvironmentsSql string
 
-func (r *Repository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
+func (r *PostgresRepository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
 	return postgresutils.GetOne[Environment](r.pool, ctx, createEnvironmentSql, env.Name, env.PromotesToID, env.Sensitive)
 }
 
-func (r *Repository) GetEnvironment(ctx context.Context, id int) (Environment, error) {
+func (r *PostgresRepository) GetEnvironment(ctx context.Context, id int) (Environment, error) {
 	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, ErrNotFound
@@ -51,7 +51,7 @@ func (r *Repository) GetEnvironment(ctx context.Context, id int) (Environment, e
 	return env, err
 }
 
-func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (Environment, error) {
+func (r *PostgresRepository) GetEnvironmentByName(ctx context.Context, name string) (Environment, error) {
 	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByNameSql, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, ErrNotFound
@@ -60,7 +60,7 @@ func (r *Repository) GetEnvironmentByName(ctx context.Context, name string) (Env
 	return env, err
 }
 
-func (r *Repository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error) {
+func (r *PostgresRepository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error) {
 	sql := listNonsensitiveEnvironmentsSql
 	if includeSensitive {
 		sql = listEnvironmentsSql

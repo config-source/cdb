@@ -8,10 +8,10 @@ import (
 
 type Service struct {
 	auth auth.AuthorizationGateway
-	repo ConfigKeyRepository
+	repo Repository
 }
 
-func NewService(repo ConfigKeyRepository, auth auth.AuthorizationGateway) *Service {
+func NewService(repo Repository, auth auth.AuthorizationGateway) *Service {
 	return &Service{
 		auth: auth,
 		repo: repo,

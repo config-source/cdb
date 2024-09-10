@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*environments.Repository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*environments.PostgresRepository, *postgresutils.TestRepository) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -22,7 +22,7 @@ func initTestDB(t *testing.T) (*environments.Repository, *postgresutils.TestRepo
 	return repo, tr
 }
 
-func envFixture(t *testing.T, repo *environments.Repository, name string, promotesToID *int) environments.Environment {
+func envFixture(t *testing.T, repo *environments.PostgresRepository, name string, promotesToID *int) environments.Environment {
 	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name:         name,
 		PromotesToID: promotesToID,

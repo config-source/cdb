@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*Repository, *environments.Repository, *configkeys.Repository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*PostgresRepository, *environments.PostgresRepository, *configkeys.PostgresRepository, *postgresutils.TestRepository) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -26,7 +26,7 @@ func initTestDB(t *testing.T) (*Repository, *environments.Repository, *configkey
 	return repo, envRepo, keyRepo, tr
 }
 
-func envFixture(t *testing.T, repo *environments.Repository, name string, promotesToID *int) environments.Environment {
+func envFixture(t *testing.T, repo *environments.PostgresRepository, name string, promotesToID *int) environments.Environment {
 	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name:         name,
 		PromotesToID: promotesToID,
@@ -38,7 +38,7 @@ func envFixture(t *testing.T, repo *environments.Repository, name string, promot
 	return env
 }
 
-func configKeyFixture(t *testing.T, repo *configkeys.Repository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
+func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
 	ck, err := repo.CreateConfigKey(context.Background(), configkeys.ConfigKey{
 		Name:         name,
 		ValueType:    valueType,
@@ -409,7 +409,7 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	}
 }
 
-func createConfigValue(t *testing.T, repo *Repository, cv *ConfigValue) *ConfigValue {
+func createConfigValue(t *testing.T, repo *PostgresRepository, cv *ConfigValue) *ConfigValue {
 	created, err := repo.CreateConfigValue(context.Background(), cv)
 	if err != nil {
 		t.Fatal(err)
@@ -425,7 +425,7 @@ func createConfigValue(t *testing.T, repo *Repository, cv *ConfigValue) *ConfigV
 	return retrieved
 }
 
-func createInheritedConfigValue(t *testing.T, repo *Repository, parentName string, cv *ConfigValue) *ConfigValue {
+func createInheritedConfigValue(t *testing.T, repo *PostgresRepository, parentName string, cv *ConfigValue) *ConfigValue {
 	created := createConfigValue(t, repo, cv)
 	created.Inherited = true
 	created.InheritedFrom = parentName

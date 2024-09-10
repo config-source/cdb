@@ -71,7 +71,7 @@ func (ck ConfigKey) String() string {
 	)
 }
 
-type ConfigKeyRepository interface {
+type Repository interface {
 	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
 
 	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)

@@ -35,7 +35,7 @@ func (e Environment) String() string {
 	)
 }
 
-type EnvironmentRepository interface {
+type Repository interface {
 	CreateEnvironment(context.Context, Environment) (Environment, error)
 
 	GetEnvironment(ctx context.Context, id int) (Environment, error)
@@ -44,7 +44,7 @@ type EnvironmentRepository interface {
 	ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error)
 }
 
-type EnvTree struct {
-	Env      Environment
-	Children []EnvTree
+type Tree struct {
+	Environment Environment
+	Children    []Tree
 }

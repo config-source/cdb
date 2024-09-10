@@ -11,13 +11,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Repository struct {
+type PostgresRepository struct {
 	pool *pgxpool.Pool
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *Repository {
-	return &Repository{
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{
 		log:  log,
 		pool: pool,
 	}
@@ -35,7 +35,7 @@ var getConfigKeyByNameSql string
 //go:embed queries/get_all_config_keys.sql
 var getAllConfigKeys string
 
-func (r *Repository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigKey, error) {
+func (r *PostgresRepository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigKey, error) {
 	var canPropagate bool
 	if ck.CanPropagate == nil {
 		canPropagate = true
@@ -46,7 +46,7 @@ func (r *Repository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigK
 	return postgresutils.GetOne[ConfigKey](r.pool, ctx, createConfigKeySql, ck.Name, ck.ValueType, canPropagate)
 }
 
-func (r *Repository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
+func (r *PostgresRepository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
@@ -55,7 +55,7 @@ func (r *Repository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error
 	return key, err
 }
 
-func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error) {
+func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByNameSql, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
@@ -65,6 +65,6 @@ func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (Confi
 
 }
 
-func (r *Repository) ListConfigKeys(ctx context.Context) ([]ConfigKey, error) {
+func (r *PostgresRepository) ListConfigKeys(ctx context.Context) ([]ConfigKey, error) {
 	return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeys)
 }

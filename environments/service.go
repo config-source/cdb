@@ -8,10 +8,10 @@ import (
 
 type Service struct {
 	auth auth.AuthorizationGateway
-	repo EnvironmentRepository
+	repo Repository
 }
 
-func NewService(repo EnvironmentRepository, auth auth.AuthorizationGateway) *Service {
+func NewService(repo Repository, auth auth.AuthorizationGateway) *Service {
 	return &Service{
 		auth: auth,
 		repo: repo,
@@ -113,15 +113,15 @@ func (svc *Service) ListEnvironments(ctx context.Context, actor auth.User) ([]En
 	return svc.repo.ListEnvironments(ctx, canSeeSensitiveEnvirons)
 }
 
-func getChildren(parent Environment, environments []Environment) []EnvTree {
-	children := []EnvTree{}
+func getChildren(parent Environment, environments []Environment) []Tree {
+	children := []Tree{}
 
 	for _, env := range environments {
 		isChild := env.PromotesToID != nil && *env.PromotesToID == parent.ID
 		if isChild {
-			children = append(children, EnvTree{
-				Env:      env,
-				Children: getChildren(env, environments),
+			children = append(children, Tree{
+				Environment: env,
+				Children:    getChildren(env, environments),
 			})
 		}
 	}
@@ -129,7 +129,7 @@ func getChildren(parent Environment, environments []Environment) []EnvTree {
 	return children
 }
 
-func (svc *Service) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]EnvTree, error) {
+func (svc *Service) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]Tree, error) {
 	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
 	if err != nil {
 		return nil, err
@@ -144,12 +144,12 @@ func (svc *Service) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]
 		return nil, err
 	}
 
-	trees := []EnvTree{}
+	trees := []Tree{}
 	for _, env := range environs {
 		if env.PromotesToID == nil {
-			trees = append(trees, EnvTree{
-				Env:      env,
-				Children: getChildren(env, environs),
+			trees = append(trees, Tree{
+				Environment: env,
+				Children:    getChildren(env, environs),
 			})
 		}
 	}

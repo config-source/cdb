@@ -13,16 +13,16 @@ import (
 type Service struct {
 	DynamicConfigKeys bool
 
-	repo          ConfigValueRepository
-	environRepo   environments.EnvironmentRepository
-	configKeyRepo configkeys.ConfigKeyRepository
+	repo          Repository
+	environRepo   environments.Repository
+	configKeyRepo configkeys.Repository
 	auth          auth.AuthorizationGateway
 }
 
 func NewService(
-	repo ConfigValueRepository,
-	environRepo environments.EnvironmentRepository,
-	configKeyRepo configkeys.ConfigKeyRepository,
+	repo Repository,
+	environRepo environments.Repository,
+	configKeyRepo configkeys.Repository,
 	auth auth.AuthorizationGateway,
 	dynamicConfigKeys bool,
 ) *Service {

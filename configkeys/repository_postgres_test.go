@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*configkeys.Repository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *postgresutils.TestRepository) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -24,7 +24,7 @@ func initTestDB(t *testing.T) (*configkeys.Repository, *postgresutils.TestReposi
 	return repo, tr
 }
 
-func configKeyFixture(t *testing.T, repo *configkeys.Repository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
+func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
 	ck, err := repo.CreateConfigKey(context.Background(), configkeys.ConfigKey{
 		Name:         name,
 		ValueType:    valueType,

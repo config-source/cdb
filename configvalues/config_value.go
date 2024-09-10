@@ -243,7 +243,7 @@ func (cv *ConfigValue) validateBoolean() error {
 	return nil
 }
 
-type ConfigValueRepository interface {
+type Repository interface {
 	CreateConfigValue(context.Context, *ConfigValue) (*ConfigValue, error)
 
 	GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error)
