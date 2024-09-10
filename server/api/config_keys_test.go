@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/configkeys"
-	"github.com/config-source/cdb/repository"
 )
 
 func TestListConfigKeys(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
@@ -53,7 +53,7 @@ func TestListConfigKeys(t *testing.T) {
 }
 
 func TestGetConfigKeyByID(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
@@ -76,7 +76,7 @@ func TestGetConfigKeyByID(t *testing.T) {
 }
 
 func TestGetConfigKeyByIDNotFound(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
@@ -99,7 +99,7 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 
 	_, mux, _ := testAPI(repo, true)
 
@@ -143,7 +143,7 @@ func TestCreateConfigKey(t *testing.T) {
 }
 
 func TestGetConfigKeyByName(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
@@ -166,7 +166,7 @@ func TestGetConfigKeyByName(t *testing.T) {
 }
 
 func TestGetConfigKeyByNameNotFound(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,

@@ -7,17 +7,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
 	"github.com/config-source/cdb/server/middleware"
 	"github.com/rs/zerolog"
 )
 
 func testAPI(
-	repo *repository.TestRepository,
+	repo *cdb.TestRepository,
 	alwaysAuthd bool,
 ) (*API, http.Handler, *auth.TestGateway) {
 	gateway := auth.NewTestGateway()
@@ -58,7 +58,7 @@ func testAPI(
 }
 
 func TestProtectedRoutesAreProtected(t *testing.T) {
-	_, mux, _ := testAPI(&repository.TestRepository{}, false)
+	_, mux, _ := testAPI(&cdb.TestRepository{}, false)
 	protectedRoutes := []struct {
 		endpoint string
 		method   string

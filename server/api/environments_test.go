@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
 )
 
 func TestGetEnvironmentByName(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -33,7 +33,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameNotFound(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -55,7 +55,7 @@ func TestGetEnvironmentByNameNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByID(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -77,7 +77,7 @@ func TestGetEnvironmentByID(t *testing.T) {
 }
 
 func TestGetEnvironmentByIDNotFound(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -99,7 +99,7 @@ func TestGetEnvironmentByIDNotFound(t *testing.T) {
 }
 
 func TestCreateEnvironment(t *testing.T) {
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 
 	_, mux, _ := testAPI(repo, true)
 

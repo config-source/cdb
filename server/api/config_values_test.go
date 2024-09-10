@@ -7,15 +7,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
 )
 
 func TestGetConfiguration(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -94,7 +94,7 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestCreateConfigValue(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -157,7 +157,7 @@ func TestCreateConfigValue(t *testing.T) {
 
 func TestGetConfigurationByKey(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -223,7 +223,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 
 func TestSetConfigurationByKey(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,

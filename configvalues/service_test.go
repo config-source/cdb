@@ -5,16 +5,16 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
 )
 
 func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -73,7 +73,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 
 func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
@@ -118,7 +118,7 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 
 func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 	promotesToID := 1
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,

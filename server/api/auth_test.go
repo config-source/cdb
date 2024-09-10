@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
-	"github.com/config-source/cdb/repository"
 	"github.com/config-source/cdb/server/middleware"
 )
 
@@ -24,7 +24,7 @@ func getCookieValue(cookies []*http.Cookie, cookieName string) string {
 }
 
 func TestLogin(t *testing.T) {
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 
 	_, mux, gateway := testAPI(repo, true)
 	_, err := gateway.CreateUser(context.Background(), auth.User{
@@ -91,7 +91,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 
 	_, mux, gateway := testAPI(repo, true)
 
@@ -164,7 +164,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterWhenPublicRegistrationDisabled(t *testing.T) {
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 
 	api, mux, gateway := testAPI(repo, true)
 	api.userService = auth.NewUserService(

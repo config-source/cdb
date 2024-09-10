@@ -6,16 +6,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
-func testServer(repo *repository.TestRepository) *http.ServeMux {
+func testServer(repo *cdb.TestRepository) *http.ServeMux {
 	gateway := auth.NewTestGateway()
 
 	server := New(
@@ -45,7 +45,7 @@ func TestHealthCheckSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := &repository.TestRepository{}
+	repo := &cdb.TestRepository{}
 	server := New(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		[]byte("test key"),
@@ -73,7 +73,7 @@ func TestHealthCheckSuccess(t *testing.T) {
 }
 
 func TestHealthCheckFailure(t *testing.T) {
-	repo := &repository.TestRepository{
+	repo := &cdb.TestRepository{
 		IsHealthy: false,
 	}
 
