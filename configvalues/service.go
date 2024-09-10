@@ -10,10 +10,6 @@ import (
 	"github.com/config-source/cdb/environments"
 )
 
-var (
-	ErrValueTypeMustBeSet = errors.New("must set ValueType on the config value when trying to dynamically create a key")
-)
-
 type Service struct {
 	DynamicConfigKeys bool
 
@@ -84,7 +80,7 @@ func (svc *Service) SetConfigurationValue(
 	cv.EnvironmentID = env.ID
 
 	ck, err := svc.configKeyRepo.GetConfigKeyByName(ctx, key)
-	shouldCreate := errors.Is(err, configkeys.ErrConfigKeyNotFound) && svc.DynamicConfigKeys
+	shouldCreate := errors.Is(err, configkeys.ErrNotFound) && svc.DynamicConfigKeys
 	if shouldCreate {
 		if cv.ValueType == 0 {
 			return cv, ErrValueTypeMustBeSet

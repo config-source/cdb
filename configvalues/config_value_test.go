@@ -54,7 +54,7 @@ func TestConfigValueValidatesStrValue(t *testing.T) {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
 		}
 
-		if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
+		if !errors.Is(err, configvalues.ErrNotValid) {
 			t.Fatalf("Expected a configvalues.ErrConfigValueNotValid got: %s", err)
 		}
 	}
@@ -79,7 +79,7 @@ func TestConfigValueValidatesBoolValue(t *testing.T) {
 			t.Fatalf("Expected an error for %s got: %s", value, err)
 		}
 
-		if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
+		if !errors.Is(err, configvalues.ErrNotValid) {
 			t.Fatalf("Expected a configvalues.ErrConfigValueNotValid got: %s", err)
 		}
 	}
@@ -104,7 +104,7 @@ func TestConfigValueValidatesIntValue(t *testing.T) {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
 		}
 
-		if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
+		if !errors.Is(err, configvalues.ErrNotValid) {
 			t.Fatalf("Expected a configvalues.ErrConfigValueNotValid got: %s", err)
 		}
 	}
@@ -129,7 +129,7 @@ func TestConfigValueValidatesFloatValue(t *testing.T) {
 			t.Fatalf("Expected an error for %s got: %s", cv, err)
 		}
 
-		if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
+		if !errors.Is(err, configvalues.ErrNotValid) {
 			t.Fatalf("Expected a configvalues.ErrConfigValueNotValid got: %s", err)
 		}
 	}

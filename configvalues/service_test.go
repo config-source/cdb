@@ -111,8 +111,8 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 			IntValue:  &val,
 		},
 	)
-	if !errors.Is(err, configkeys.ErrConfigKeyNotFound) {
-		t.Fatalf("Expected %s got: %s", configkeys.ErrConfigKeyNotFound, err)
+	if !errors.Is(err, configkeys.ErrNotFound) {
+		t.Fatalf("Expected %s got: %s", configkeys.ErrNotFound, err)
 	}
 }
 
@@ -156,7 +156,7 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 			StrValue:  &val,
 		},
 	)
-	if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
-		t.Fatalf("Expected %s got: %s", configvalues.ErrConfigValueNotValid, err)
+	if !errors.Is(err, configvalues.ErrNotValid) {
+		t.Fatalf("Expected %s got: %s", configvalues.ErrNotValid, err)
 	}
 }

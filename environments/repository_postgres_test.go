@@ -84,7 +84,7 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 		t.Fatal("Expected an error but got none!")
 	}
 
-	if err != environments.ErrEnvNotFound {
+	if err != environments.ErrNotFound {
 		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
 	}
 }
@@ -115,7 +115,7 @@ func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
 		t.Fatal("Expected an error but got none!")
 	}
 
-	if err != environments.ErrEnvNotFound {
+	if err != environments.ErrNotFound {
 		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
 	}
 }

@@ -56,7 +56,7 @@ func (r *Repository) CreateConfigValue(ctx context.Context, cv *ConfigValue) (*C
 		cv.BoolValue,
 	)
 	if err != nil && postgresutils.IsUniqueConstraintErr(err) {
-		return nil, ErrConfigValueAlreadySet
+		return nil, ErrAlreadySet
 	} else if err != nil {
 		return nil, err
 	}
@@ -87,16 +87,16 @@ func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *ConfigVal
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return &updated, ErrConfigValueNotFound
+		return &updated, ErrNotFound
 	}
 
 	msg := err.Error()
 	if strings.Contains(msg, "config_values_environment_id_fkey") {
-		return &updated, environments.ErrEnvNotFound
+		return &updated, environments.ErrNotFound
 	}
 
 	if strings.Contains(msg, "config_values_config_key_id_fkey") {
-		return &updated, configkeys.ErrConfigKeyNotFound
+		return &updated, configkeys.ErrNotFound
 	}
 
 	return &updated, err
@@ -111,7 +111,7 @@ func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentN
 		key,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return &cv, ErrConfigValueNotFound
+		return &cv, ErrNotFound
 	}
 
 	return &cv, err
@@ -180,7 +180,7 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 
 func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*ConfigValue, error) {
 	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentName, key)
-	if errors.Is(err, ErrConfigValueNotFound) {
+	if errors.Is(err, ErrNotFound) {
 		promotesToName, _ := r.getPromotesToName(ctx, environmentName)
 		if promotesToName != nil {
 			cv, err := r.GetConfigurationValue(ctx, *promotesToName, key)
@@ -189,7 +189,7 @@ func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName,
 			return cv, err
 		}
 
-		return cv, ErrConfigValueNotFound
+		return cv, ErrNotFound
 	}
 
 	return cv, err

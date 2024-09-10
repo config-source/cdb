@@ -54,7 +54,7 @@ func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string)
 		}
 	}
 
-	return environments.Environment{}, environments.ErrEnvNotFound
+	return environments.Environment{}, environments.ErrNotFound
 }
 
 func (tr *TestRepository) GetEnvironment(ctx context.Context, id int) (environments.Environment, error) {
@@ -66,7 +66,7 @@ func (tr *TestRepository) GetEnvironment(ctx context.Context, id int) (environme
 		return env, nil
 	}
 
-	return environments.Environment{}, environments.ErrEnvNotFound
+	return environments.Environment{}, environments.ErrNotFound
 }
 
 func (tr *TestRepository) CreateEnvironment(ctx context.Context, env environments.Environment) (environments.Environment, error) {
@@ -110,7 +110,7 @@ func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (configkeys.
 		return ck, nil
 	}
 
-	return configkeys.ConfigKey{}, configkeys.ErrConfigKeyNotFound
+	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
 func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (configkeys.ConfigKey, error) {
@@ -124,7 +124,7 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (
 		}
 	}
 
-	return configkeys.ConfigKey{}, configkeys.ErrConfigKeyNotFound
+	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
 func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]configkeys.ConfigKey, error) {
@@ -235,7 +235,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*configvalues.ConfigValue, error) {
 	cv, err := tr.GetConfigurationValue(ctx, environmentName, key)
 	if cv != nil && cv.Inherited {
-		return nil, configvalues.ErrConfigValueNotFound
+		return nil, configvalues.ErrNotFound
 	}
 
 	return cv, err
@@ -253,5 +253,5 @@ func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environment
 		}
 	}
 
-	return nil, configvalues.ErrConfigValueNotFound
+	return nil, configvalues.ErrNotFound
 }

@@ -84,13 +84,13 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 	switch {
 	case
 		errors.Is(err, auth.ErrUserNotFound),
-		errors.Is(err, environments.ErrEnvNotFound),
-		errors.Is(err, configkeys.ErrConfigKeyNotFound),
-		errors.Is(err, configvalues.ErrConfigValueNotFound):
+		errors.Is(err, environments.ErrNotFound),
+		errors.Is(err, configkeys.ErrNotFound),
+		errors.Is(err, configvalues.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case
-		errors.Is(err, configvalues.ErrConfigValueNotValid),
-		errors.Is(err, configvalues.ErrConfigValueAlreadySet),
+		errors.Is(err, configvalues.ErrNotValid),
+		errors.Is(err, configvalues.ErrAlreadySet),
 		errors.Is(err, auth.ErrPublicRegisterDisabled),
 		errors.Is(err, auth.ErrEmailInUse):
 		w.WriteHeader(http.StatusBadRequest)

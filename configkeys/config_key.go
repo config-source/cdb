@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrConfigKeyNotFound = errors.New("config key not found")
+	ErrNotFound = errors.New("config key not found")
 )
 
 type ValueType int

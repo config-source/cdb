@@ -10,9 +10,10 @@ import (
 )
 
 var (
-	ErrConfigValueNotFound   = errors.New("config value not found")
-	ErrConfigValueNotValid   = errors.New("config value is not valid")
-	ErrConfigValueAlreadySet = errors.New("config value is already set for this environment")
+	ErrNotFound           = errors.New("config value not found")
+	ErrNotValid           = errors.New("config value is not valid")
+	ErrAlreadySet         = errors.New("config value is already set for this environment")
+	ErrValueTypeMustBeSet = errors.New("must set ValueType on the config value when trying to dynamically create a key")
 )
 
 type ConfigValue struct {
@@ -158,25 +159,25 @@ func (cv *ConfigValue) Valid() error {
 	case configkeys.TypeString:
 		return cv.validateStr()
 	default:
-		return fmt.Errorf("%w: unrecognised ValueType: %s", ErrConfigValueNotValid, cv.ValueType)
+		return fmt.Errorf("%w: unrecognised ValueType: %s", ErrNotValid, cv.ValueType)
 	}
 }
 
 func (cv *ConfigValue) validateStr() error {
 	if cv.IntValue != nil {
-		return fmt.Errorf("%w: IntValue must be null for string ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: IntValue must be null for string ConfigValue", ErrNotValid)
 	}
 
 	if cv.FloatValue != nil {
-		return fmt.Errorf("%w: FloatValue must be null for string ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: FloatValue must be null for string ConfigValue", ErrNotValid)
 	}
 
 	if cv.BoolValue != nil {
-		return fmt.Errorf("%w: BoolValue must be null for string ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: BoolValue must be null for string ConfigValue", ErrNotValid)
 	}
 
 	if cv.StrValue == nil {
-		return fmt.Errorf("%w: StrValue must not be null for string ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: StrValue must not be null for string ConfigValue", ErrNotValid)
 	}
 
 	return nil
@@ -184,19 +185,19 @@ func (cv *ConfigValue) validateStr() error {
 
 func (cv *ConfigValue) validateInt() error {
 	if cv.StrValue != nil {
-		return fmt.Errorf("%w: StrValue must be null for int ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: StrValue must be null for int ConfigValue", ErrNotValid)
 	}
 
 	if cv.FloatValue != nil {
-		return fmt.Errorf("%w: FloatValue must be null for int ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: FloatValue must be null for int ConfigValue", ErrNotValid)
 	}
 
 	if cv.BoolValue != nil {
-		return fmt.Errorf("%w: BoolValue must be null for int ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: BoolValue must be null for int ConfigValue", ErrNotValid)
 	}
 
 	if cv.IntValue == nil {
-		return fmt.Errorf("%w: IntValue must not be null for int ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: IntValue must not be null for int ConfigValue", ErrNotValid)
 	}
 
 	return nil
@@ -204,19 +205,19 @@ func (cv *ConfigValue) validateInt() error {
 
 func (cv *ConfigValue) validateFloat() error {
 	if cv.StrValue != nil {
-		return fmt.Errorf("%w: StrValue must be null for float ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: StrValue must be null for float ConfigValue", ErrNotValid)
 	}
 
 	if cv.IntValue != nil {
-		return fmt.Errorf("%w: IntValue must be null for float ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: IntValue must be null for float ConfigValue", ErrNotValid)
 	}
 
 	if cv.BoolValue != nil {
-		return fmt.Errorf("%w: BoolValue must be null for float ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: BoolValue must be null for float ConfigValue", ErrNotValid)
 	}
 
 	if cv.FloatValue == nil {
-		return fmt.Errorf("%w: FloatValue must not be null for float ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: FloatValue must not be null for float ConfigValue", ErrNotValid)
 	}
 
 	return nil
@@ -224,19 +225,19 @@ func (cv *ConfigValue) validateFloat() error {
 
 func (cv *ConfigValue) validateBoolean() error {
 	if cv.StrValue != nil {
-		return fmt.Errorf("%w: StrValue must be null for boolean ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: StrValue must be null for boolean ConfigValue", ErrNotValid)
 	}
 
 	if cv.IntValue != nil {
-		return fmt.Errorf("%w: IntValue must be null for boolean ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: IntValue must be null for boolean ConfigValue", ErrNotValid)
 	}
 
 	if cv.FloatValue != nil {
-		return fmt.Errorf("%w: FloatValue must be null for boolean ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: FloatValue must be null for boolean ConfigValue", ErrNotValid)
 	}
 
 	if cv.BoolValue == nil {
-		return fmt.Errorf("%w: BoolValue must not be null for boolean ConfigValue", ErrConfigValueNotValid)
+		return fmt.Errorf("%w: BoolValue must not be null for boolean ConfigValue", ErrNotValid)
 	}
 
 	return nil

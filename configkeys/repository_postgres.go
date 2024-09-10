@@ -49,7 +49,7 @@ func (r *Repository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigK
 func (r *Repository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		return key, ErrConfigKeyNotFound
+		return key, ErrNotFound
 	}
 
 	return key, err
@@ -58,7 +58,7 @@ func (r *Repository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error
 func (r *Repository) GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByNameSql, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		return key, ErrConfigKeyNotFound
+		return key, ErrNotFound
 	}
 
 	return key, err

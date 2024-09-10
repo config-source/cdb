@@ -60,7 +60,7 @@ func (svc *Service) singleRetrievalPermissionChecks(ctx context.Context, actor a
 	}
 
 	if !(canConfigureSensitiveEnvironments || canManageEnvironments) && env.Sensitive {
-		return Environment{}, ErrEnvNotFound
+		return Environment{}, ErrNotFound
 	}
 
 	return env, retrievalErr

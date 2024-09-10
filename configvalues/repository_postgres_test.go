@@ -163,7 +163,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 
 	var err error
 	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
-	expectedError := ErrConfigValueNotFound
+	expectedError := ErrNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
 	}
@@ -184,7 +184,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 
 	var err error
 	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
-	expectedError := configkeys.ErrConfigKeyNotFound
+	expectedError := configkeys.ErrNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
 	}
@@ -205,7 +205,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 
 	var err error
 	_, err = repo.UpdateConfigurationValue(context.Background(), cv)
-	expectedError := environments.ErrEnvNotFound
+	expectedError := environments.ErrNotFound
 	if !errors.Is(err, expectedError) {
 		t.Fatalf("Expected %s Got %s", expectedError, err)
 	}
@@ -377,8 +377,8 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 	createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), dev.Name, "notfound")
-	if err != ErrConfigValueNotFound {
-		t.Fatalf("Expected: %s Got: %s", ErrConfigValueNotFound, err)
+	if err != ErrNotFound {
+		t.Fatalf("Expected: %s Got: %s", ErrNotFound, err)
 	}
 }
 
@@ -404,8 +404,8 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), "notFound", "notfound")
-	if !errors.Is(err, ErrConfigValueNotFound) {
-		t.Fatalf("Expected: %s Got: %s", environments.ErrEnvNotFound, err)
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("Expected: %s Got: %s", environments.ErrNotFound, err)
 	}
 }
 

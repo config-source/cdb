@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrEnvNotFound = errors.New("environment not found")
+	ErrNotFound = errors.New("environment not found")
 )
 
 type Environment struct {
