@@ -107,9 +107,5 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	response := cdb.ErrorResponse{
-		Message: err.Error(),
-	}
-
-	a.sendJson(w, response)
+	a.sendJson(w, cdb.NewErrorResponse(err.Error()))
 }

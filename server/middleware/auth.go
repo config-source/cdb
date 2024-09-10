@@ -93,12 +93,9 @@ func AuthenticationRequired(log zerolog.Logger, signingKey []byte, next http.Han
 					return
 				}
 
-				response := cdb.ErrorResponse{
-					Message: "forbidden",
-				}
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Header().Add("Content-Type", "application/json")
-				if err := json.NewEncoder(w).Encode(response); err != nil {
+				if err := json.NewEncoder(w).Encode(cdb.NewErrorResponse("forbidden")); err != nil {
 					log.Err(err).Msg("failed to encode a payload")
 				}
 			},

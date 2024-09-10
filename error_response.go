@@ -7,3 +7,9 @@ type ErrorResponse struct {
 func (er ErrorResponse) Error() string {
 	return er.Message
 }
+
+func NewErrorResponse(msg string) ErrorResponse {
+	return ErrorResponse{
+		Message: msg,
+	}
+}
