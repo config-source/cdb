@@ -45,7 +45,7 @@ type ConfigKey struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func NewConfigKey(name string, valueType ValueType) ConfigKey {
+func New(name string, valueType ValueType) ConfigKey {
 	canPropagate := true
 	return ConfigKey{
 		Name:         name,
@@ -54,7 +54,7 @@ func NewConfigKey(name string, valueType ValueType) ConfigKey {
 	}
 }
 
-func NewConfigKeyWithCanPropagate(name string, valueType ValueType, canPropagate bool) ConfigKey {
+func NewWithPropagation(name string, valueType ValueType, canPropagate bool) ConfigKey {
 	return ConfigKey{
 		Name:         name,
 		ValueType:    valueType,

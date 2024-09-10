@@ -37,27 +37,27 @@ type ConfigValue struct {
 	InheritedFrom string `db:"-"`
 }
 
-func NewConfigValue(environmentID, configKeyID int) *ConfigValue {
+func New(environmentID, configKeyID int) *ConfigValue {
 	return &ConfigValue{
 		EnvironmentID: environmentID,
 		ConfigKeyID:   configKeyID,
 	}
 }
 
-func NewBoolConfigValue(environmentID int, configKeyID int, value bool) *ConfigValue {
-	return NewConfigValue(environmentID, configKeyID).SetBoolValue(value)
+func NewBool(environmentID int, configKeyID int, value bool) *ConfigValue {
+	return New(environmentID, configKeyID).SetBoolValue(value)
 }
 
-func NewFloatConfigValue(environmentID int, configKeyID int, value float64) *ConfigValue {
-	return NewConfigValue(environmentID, configKeyID).SetFloatValue(value)
+func NewFloat(environmentID int, configKeyID int, value float64) *ConfigValue {
+	return New(environmentID, configKeyID).SetFloatValue(value)
 }
 
-func NewStringConfigValue(environmentID int, configKeyID int, value string) *ConfigValue {
-	return NewConfigValue(environmentID, configKeyID).SetStrValue(value)
+func NewString(environmentID int, configKeyID int, value string) *ConfigValue {
+	return New(environmentID, configKeyID).SetStrValue(value)
 }
 
-func NewIntConfigValue(environmentID int, configKeyID int, value int) *ConfigValue {
-	return NewConfigValue(environmentID, configKeyID).SetIntValue(value)
+func NewInt(environmentID int, configKeyID int, value int) *ConfigValue {
+	return New(environmentID, configKeyID).SetIntValue(value)
 }
 
 func (cv *ConfigValue) Value() interface{} {

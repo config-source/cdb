@@ -42,7 +42,7 @@ func TestConfigValueValidatesStrValue(t *testing.T) {
 		setFloatValue,
 	}
 
-	value := configvalues.NewStringConfigValue(1, 1, "test")
+	value := configvalues.NewString(1, 1, "test")
 	if err := value.Valid(); err != nil {
 		t.Fatalf("Expected no error got: %s", err)
 	}
@@ -67,7 +67,7 @@ func TestConfigValueValidatesBoolValue(t *testing.T) {
 		setFloatValue,
 	}
 
-	value := configvalues.NewBoolConfigValue(1, 1, true)
+	value := configvalues.NewBool(1, 1, true)
 	if err := value.Valid(); err != nil {
 		t.Fatalf("Expected no error got: %s", err)
 	}
@@ -92,7 +92,7 @@ func TestConfigValueValidatesIntValue(t *testing.T) {
 		setFloatValue,
 	}
 
-	value := configvalues.NewIntConfigValue(1, 1, 10)
+	value := configvalues.NewInt(1, 1, 10)
 	if err := value.Valid(); err != nil {
 		t.Fatalf("Expected no error got: %s", err)
 	}
@@ -117,7 +117,7 @@ func TestConfigValueValidatesFloatValue(t *testing.T) {
 		setIntValue,
 	}
 
-	value := configvalues.NewFloatConfigValue(1, 1, 10.10)
+	value := configvalues.NewFloat(1, 1, 10.10)
 	if err := value.Valid(); err != nil {
 		t.Fatalf("Expected no error got: %s", err)
 	}

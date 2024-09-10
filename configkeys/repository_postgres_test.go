@@ -65,7 +65,7 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatalf("Expected can propagate to default to true got: %v", *ck.CanPropagate)
 	}
 
-	ck2, err := repo.CreateConfigKey(context.Background(), configkeys.NewConfigKeyWithCanPropagate("mat2", configkeys.TypeString, false))
+	ck2, err := repo.CreateConfigKey(context.Background(), configkeys.NewWithPropagation("mat2", configkeys.TypeString, false))
 	if err != nil {
 		t.Fatal(err)
 	}

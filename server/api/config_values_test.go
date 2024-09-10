@@ -42,9 +42,9 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewStringConfigValue(1, 1, "SRE"),
-		configvalues.NewIntConfigValue(1, 2, 100),
-		configvalues.NewIntConfigValue(2, 2, 10),
+		configvalues.NewString(1, 1, "SRE"),
+		configvalues.NewInt(1, 2, 100),
+		configvalues.NewInt(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {
@@ -184,9 +184,9 @@ func TestGetConfigurationByKey(t *testing.T) {
 	}
 
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewStringConfigValue(1, 1, "SRE"),
-		configvalues.NewIntConfigValue(1, 2, 100),
-		configvalues.NewIntConfigValue(2, 2, 10),
+		configvalues.NewString(1, 1, "SRE"),
+		configvalues.NewInt(1, 2, 100),
+		configvalues.NewInt(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {
@@ -250,9 +250,9 @@ func TestSetConfigurationByKey(t *testing.T) {
 	}
 
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewStringConfigValue(1, 1, "SRE"),
-		configvalues.NewIntConfigValue(1, 2, 100),
-		configvalues.NewIntConfigValue(2, 2, 10),
+		configvalues.NewString(1, 1, "SRE"),
+		configvalues.NewInt(1, 2, 100),
+		configvalues.NewInt(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {

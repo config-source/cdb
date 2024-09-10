@@ -61,7 +61,7 @@ func TestCreateConfigValue(t *testing.T) {
 	val := "test"
 	cv, err := repo.CreateConfigValue(
 		context.Background(),
-		NewStringConfigValue(env.ID, key.ID, val),
+		NewString(env.ID, key.ID, val),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -104,7 +104,7 @@ func TestUpdateConfigValue(t *testing.T) {
 
 	env := envFixture(t, envRepo, "cdb", nil)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	cv := createConfigValue(t, repo, NewStringConfigValue(
+	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
 		"test",
@@ -154,7 +154,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 
 	env := envFixture(t, envRepo, "cdb", nil)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	cv := createConfigValue(t, repo, NewStringConfigValue(
+	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
 		"test",
@@ -175,7 +175,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 
 	env := envFixture(t, envRepo, "cdb", nil)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	cv := createConfigValue(t, repo, NewStringConfigValue(
+	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
 		"test",
@@ -196,7 +196,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 
 	env := envFixture(t, envRepo, "cdb", nil)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	cv := createConfigValue(t, repo, NewStringConfigValue(
+	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
 		"test",
@@ -221,7 +221,7 @@ func TestCreateIntConfigValue(t *testing.T) {
 	val := "test"
 	cv, err := repo.CreateConfigValue(
 		context.Background(),
-		NewStringConfigValue(env.ID, key.ID, val),
+		NewString(env.ID, key.ID, val),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -266,7 +266,7 @@ func TestGetConfigValue(t *testing.T) {
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	secondKey := configKeyFixture(t, keyRepo, "secondKey", configkeys.TypeString, true)
 
-	_, err := repo.CreateConfigValue(context.Background(), NewStringConfigValue(
+	_, err := repo.CreateConfigValue(context.Background(), NewString(
 		env.ID,
 		secondKey.ID,
 		"test",
@@ -275,7 +275,7 @@ func TestGetConfigValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cv, err := repo.CreateConfigValue(context.Background(), NewStringConfigValue(
+	cv, err := repo.CreateConfigValue(context.Background(), NewString(
 		env.ID,
 		key.ID,
 		"test",
@@ -311,13 +311,13 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
 
-	setDirectly := createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	stagingInherited := createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	productionInherited := createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	setDirectly := createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1))
+	stagingInherited := createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
+	productionInherited := createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
 	setDirectlyValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, setDirectly.Name)
 	if err != nil {
@@ -369,12 +369,12 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
-	createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1))
+	createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
+	createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), dev.Name, "notfound")
 	if err != ErrNotFound {
@@ -396,12 +396,12 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
-	createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1))
-	createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50))
-	createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE"))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1))
+	createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
+	createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
 	_, err := repo.GetConfigurationValue(context.Background(), "notFound", "notfound")
 	if !errors.Is(err, ErrNotFound) {
@@ -446,14 +446,14 @@ func TestGetConfiguration(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
 
 	expectedValues := []ConfigValue{
-		*createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -481,15 +481,15 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
-	createConfigValue(t, repo, NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewString(production.ID, noChildren.ID, "Nope"))
 
 	expectedValues := []ConfigValue{
-		*createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -517,16 +517,16 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
-	createConfigValue(t, repo, NewStringConfigValue(production.ID, noChildren.ID, "Nope"))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewString(production.ID, noChildren.ID, "Nope"))
 
 	expectedValues := []ConfigValue{
-		*createConfigValue(t, repo, NewStringConfigValue(dev.ID, noChildren.ID, "Yes")),
-		*createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, NewString(dev.ID, noChildren.ID, "Yes")),
+		*createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
@@ -553,14 +553,14 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
-	createConfigValue(t, repo, NewIntConfigValue(staging.ID, minReplicas.ID, 5))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, minReplicas.ID, 10))
-	createConfigValue(t, repo, NewIntConfigValue(production.ID, maxReplicas.ID, 100))
+	createConfigValue(t, repo, NewInt(staging.ID, minReplicas.ID, 5))
+	createConfigValue(t, repo, NewInt(production.ID, minReplicas.ID, 10))
+	createConfigValue(t, repo, NewInt(production.ID, maxReplicas.ID, 100))
 
 	expectedValues := []ConfigValue{
-		*createConfigValue(t, repo, NewIntConfigValue(dev.ID, minReplicas.ID, 1)),
-		*createInheritedConfigValue(t, repo, staging.Name, NewIntConfigValue(staging.ID, maxReplicas.ID, 50)),
-		*createInheritedConfigValue(t, repo, production.Name, NewStringConfigValue(production.ID, owner.ID, "SRE")),
+		*createConfigValue(t, repo, NewInt(dev.ID, minReplicas.ID, 1)),
+		*createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50)),
+		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
 	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)

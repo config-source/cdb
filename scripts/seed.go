@@ -65,20 +65,20 @@ func main() {
 	fmt.Println("Seeding config keys...")
 	clearTable(pool, "config_keys")
 
-	owner, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("owner", configkeys.TypeString))
+	owner, err := keyRepo.CreateConfigKey(ctx, configkeys.New("owner", configkeys.TypeString))
 	fail(err)
 
-	maxReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("maxReplicas", configkeys.TypeInteger))
+	maxReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New("maxReplicas", configkeys.TypeInteger))
 	fail(err)
 
-	minReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("minReplicas", configkeys.TypeInteger))
+	minReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New("minReplicas", configkeys.TypeInteger))
 	fail(err)
 
-	sslEnabled, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("sslEnabled", configkeys.TypeBoolean))
+	sslEnabled, err := keyRepo.CreateConfigKey(ctx, configkeys.New("sslEnabled", configkeys.TypeBoolean))
 	fail(err)
 
 	// Add an unconfigured config key for testing those features which require it.
-	_, err = keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("readyForReaping", configkeys.TypeBoolean))
+	_, err = keyRepo.CreateConfigKey(ctx, configkeys.New("readyForReaping", configkeys.TypeBoolean))
 	fail(err)
 
 	fmt.Println("Done seeding config keys.")
@@ -86,42 +86,42 @@ func main() {
 	fmt.Println("Seeding config values...")
 	clearTable(pool, "config_values")
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewStringConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
 		production.ID,
 		owner.ID,
 		"SRE",
 	))
 	fail(err)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 		production.ID,
 		maxReplicas.ID,
 		100,
 	))
 	fail(err)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 		production.ID,
 		minReplicas.ID,
 		10,
 	))
 	fail(err)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBoolConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
 		production.ID,
 		sslEnabled.ID,
 		true,
 	))
 	fail(err)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 		staging.ID,
 		minReplicas.ID,
 		1,
 	))
 	fail(err)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 		dev.ID,
 		maxReplicas.ID,
 		10,
@@ -136,7 +136,7 @@ func main() {
 		fe, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
 		fail(err)
 
-		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBoolConfigValue(
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
 			fe.ID,
 			sslEnabled.ID,
 			false,
@@ -145,21 +145,21 @@ func main() {
 
 		switch rand.Intn(3) {
 		case 0:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewStringConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
 				fe.ID,
 				owner.ID,
 				fmt.Sprintf("dev-team-%d", rand.Intn(10)),
 			))
 			fail(err)
 		case 1:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 				fe.ID,
 				maxReplicas.ID,
 				rand.Intn(30),
 			))
 			fail(err)
 		case 2:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 				fe.ID,
 				minReplicas.ID,
 				rand.Intn(9)+1,
