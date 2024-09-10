@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/config-source/cdb/internal/settings"
+	"github.com/config-source/cdb/settings"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/spf13/cobra"
 

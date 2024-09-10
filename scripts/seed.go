@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/internal/auth"
-	authpg "github.com/config-source/cdb/internal/auth/postgres"
-	"github.com/config-source/cdb/internal/repository/postgres"
+	"github.com/config-source/cdb/auth"
+	authpg "github.com/config-source/cdb/auth/postgres"
+	"github.com/config-source/cdb/repository/postgres"
 	"github.com/rs/zerolog"
 )
 

@@ -4,12 +4,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/config-source/cdb/internal/auth"
-	"github.com/config-source/cdb/internal/repository/postgres"
-	"github.com/config-source/cdb/internal/server"
-	"github.com/config-source/cdb/internal/server/middleware"
-	"github.com/config-source/cdb/internal/services"
-	"github.com/config-source/cdb/internal/settings"
+	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/repository/postgres"
+	"github.com/config-source/cdb/server"
+	"github.com/config-source/cdb/server/middleware"
+	"github.com/config-source/cdb/services"
+	"github.com/config-source/cdb/settings"
 	"github.com/pseidemann/finish"
 	"github.com/spf13/cobra"
 )
