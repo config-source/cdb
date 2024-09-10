@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository/postgres"
 	"github.com/config-source/cdb/server"
 	"github.com/config-source/cdb/server/middleware"
-	"github.com/config-source/cdb/services"
 	"github.com/config-source/cdb/settings"
 	"github.com/pseidemann/finish"
 	"github.com/spf13/cobra"
@@ -42,13 +44,13 @@ var serverCmd = &cobra.Command{
 				settings.AllowPublicRegistration(),
 				settings.DefaultRegisterRole(),
 			),
-			services.NewConfigValuesService(
+			configvalues.NewService(
 				repo,
 				authorizationGateway,
 				settings.DynamicConfigKeys(),
 			),
-			services.NewEnvironmentsService(repo, authorizationGateway),
-			services.NewConfigKeysService(repo, authorizationGateway),
+			environments.NewService(repo, authorizationGateway),
+			configkeys.NewService(repo, authorizationGateway),
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

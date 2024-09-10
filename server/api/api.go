@@ -7,8 +7,10 @@ import (
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/server/middleware"
-	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
@@ -17,18 +19,18 @@ type API struct {
 	tokenSigningKey []byte
 
 	userService        *auth.UserService
-	configValueService *services.ConfigValues
-	envService         *services.Environments
-	configKeyService   *services.ConfigKeys
+	configValueService *configvalues.Service
+	envService         *environments.Service
+	configKeyService   *configkeys.Service
 }
 
 func New(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *services.ConfigValues,
-	envService *services.Environments,
-	configKeyService *services.ConfigKeys,
+	configValueService *configvalues.Service,
+	envService *environments.Service,
+	configKeyService *configkeys.Service,
 ) (*API, http.Handler) {
 	api := &API{
 		log:             log,

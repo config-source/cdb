@@ -1,4 +1,4 @@
-package services
+package configvalues
 
 import (
 	"context"
@@ -14,26 +14,26 @@ var (
 	ErrValueTypeMustBeSet = errors.New("must set ValueType on the config value when trying to dynamically create a key")
 )
 
-type ConfigValues struct {
+type Service struct {
 	DynamicConfigKeys bool
 
 	repo repository.ModelRepository
 	auth auth.AuthorizationGateway
 }
 
-func NewConfigValuesService(
+func NewService(
 	repo repository.ModelRepository,
 	auth auth.AuthorizationGateway,
 	dynamicConfigKeys bool,
-) *ConfigValues {
-	return &ConfigValues{
+) *Service {
+	return &Service{
 		repo:              repo,
 		auth:              auth,
 		DynamicConfigKeys: dynamicConfigKeys,
 	}
 }
 
-func (svc *ConfigValues) canConfigureEnvironment(
+func (svc *Service) canConfigureEnvironment(
 	ctx context.Context,
 	actor auth.User,
 	env cdb.Environment,
@@ -59,7 +59,7 @@ func (svc *ConfigValues) canConfigureEnvironment(
 	return auth.ErrUnauthorized
 }
 
-func (svc *ConfigValues) SetConfigurationValue(
+func (svc *Service) SetConfigurationValue(
 	ctx context.Context,
 	actor auth.User,
 	envName string,
@@ -120,7 +120,7 @@ func (svc *ConfigValues) SetConfigurationValue(
 	return result, err
 }
 
-func (svc *ConfigValues) CreateConfigValue(
+func (svc *Service) CreateConfigValue(
 	ctx context.Context,
 	actor auth.User,
 	cv cdb.ConfigValue,
@@ -157,10 +157,10 @@ func (svc *ConfigValues) CreateConfigValue(
 // proof for it and to simplify things so that the API struct never needs to
 // talk to ModelRepository directly.
 
-func (svc *ConfigValues) GetConfiguration(ctx context.Context, actor auth.User, envName string) ([]cdb.ConfigValue, error) {
+func (svc *Service) GetConfiguration(ctx context.Context, actor auth.User, envName string) ([]cdb.ConfigValue, error) {
 	return svc.repo.GetConfiguration(ctx, envName)
 }
 
-func (svc *ConfigValues) GetConfigurationValue(ctx context.Context, actor auth.User, envName, key string) (*cdb.ConfigValue, error) {
+func (svc *Service) GetConfigurationValue(ctx context.Context, actor auth.User, envName, key string) (*cdb.ConfigValue, error) {
 	return svc.repo.GetConfigurationValue(ctx, envName, key)
 }

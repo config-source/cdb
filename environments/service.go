@@ -1,4 +1,4 @@
-package services
+package environments
 
 import (
 	"context"
@@ -8,19 +8,19 @@ import (
 	"github.com/config-source/cdb/repository"
 )
 
-type Environments struct {
+type Service struct {
 	auth auth.AuthorizationGateway
 	repo repository.ModelRepository
 }
 
-func NewEnvironmentsService(repo repository.ModelRepository, auth auth.AuthorizationGateway) *Environments {
-	return &Environments{
+func NewService(repo repository.ModelRepository, auth auth.AuthorizationGateway) *Service {
+	return &Service{
 		auth: auth,
 		repo: repo,
 	}
 }
 
-func (svc *Environments) CreateEnvironment(ctx context.Context, actor auth.User, env cdb.Environment) (cdb.Environment, error) {
+func (svc *Service) CreateEnvironment(ctx context.Context, actor auth.User, env cdb.Environment) (cdb.Environment, error) {
 	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
 	if err != nil {
 		return cdb.Environment{}, err
@@ -33,7 +33,7 @@ func (svc *Environments) CreateEnvironment(ctx context.Context, actor auth.User,
 	return svc.repo.CreateEnvironment(ctx, env)
 }
 
-func (svc *Environments) singleRetrievalPermissionChecks(ctx context.Context, actor auth.User, env cdb.Environment, retrievalErr error) (cdb.Environment, error) {
+func (svc *Service) singleRetrievalPermissionChecks(ctx context.Context, actor auth.User, env cdb.Environment, retrievalErr error) (cdb.Environment, error) {
 	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
 	if err != nil {
 		return cdb.Environment{}, err
@@ -68,7 +68,7 @@ func (svc *Environments) singleRetrievalPermissionChecks(ctx context.Context, ac
 	return env, retrievalErr
 }
 
-func (svc *Environments) GetEnvironmentByName(ctx context.Context, actor auth.User, name string) (cdb.Environment, error) {
+func (svc *Service) GetEnvironmentByName(ctx context.Context, actor auth.User, name string) (cdb.Environment, error) {
 	env, err := svc.repo.GetEnvironmentByName(ctx, name)
 	return svc.singleRetrievalPermissionChecks(
 		ctx,
@@ -78,7 +78,7 @@ func (svc *Environments) GetEnvironmentByName(ctx context.Context, actor auth.Us
 	)
 }
 
-func (svc *Environments) GetEnvironmentByID(ctx context.Context, actor auth.User, id int) (cdb.Environment, error) {
+func (svc *Service) GetEnvironmentByID(ctx context.Context, actor auth.User, id int) (cdb.Environment, error) {
 	env, err := svc.repo.GetEnvironment(ctx, id)
 	return svc.singleRetrievalPermissionChecks(
 		ctx,
@@ -88,7 +88,7 @@ func (svc *Environments) GetEnvironmentByID(ctx context.Context, actor auth.User
 	)
 }
 
-func (svc *Environments) ListEnvironments(ctx context.Context, actor auth.User) ([]cdb.Environment, error) {
+func (svc *Service) ListEnvironments(ctx context.Context, actor auth.User) ([]cdb.Environment, error) {
 	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func getChildren(parent cdb.Environment, environments []cdb.Environment) []cdb.E
 	return children
 }
 
-func (svc *Environments) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]cdb.EnvTree, error) {
+func (svc *Service) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]cdb.EnvTree, error) {
 	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
 	if err != nil {
 		return nil, err

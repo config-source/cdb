@@ -1,4 +1,4 @@
-package services_test
+package configvalues_test
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/repository"
-	"github.com/config-source/cdb/services"
 )
 
 func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
@@ -40,7 +40,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	}
 
 	gateway := auth.NewTestGateway()
-	service := services.NewConfigValuesService(repo, gateway, true)
+	service := configvalues.NewService(repo, gateway, true)
 	val := 10
 	cv, err := service.SetConfigurationValue(
 		context.Background(),
@@ -98,7 +98,7 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 		},
 	}
 
-	service := services.NewConfigValuesService(repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(repo, auth.NewTestGateway(), false)
 	val := 10
 	_, err := service.SetConfigurationValue(
 		context.Background(),
@@ -143,7 +143,7 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 		},
 	}
 
-	service := services.NewConfigValuesService(repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(repo, auth.NewTestGateway(), false)
 	val := "test"
 	_, err := service.SetConfigurationValue(
 		context.Background(),

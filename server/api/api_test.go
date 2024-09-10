@@ -8,9 +8,10 @@ import (
 	"testing"
 
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/repository"
 	"github.com/config-source/cdb/server/middleware"
-	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
@@ -30,9 +31,9 @@ func testAPI(
 			true,
 			"user-testing",
 		),
-		services.NewConfigValuesService(repo, gateway, true),
-		services.NewEnvironmentsService(repo, gateway),
-		services.NewConfigKeysService(repo, gateway),
+		configvalues.NewService(repo, gateway, true),
+		environments.NewService(repo, gateway),
+		configkeys.NewService(repo, gateway),
 	)
 
 	if alwaysAuthd {

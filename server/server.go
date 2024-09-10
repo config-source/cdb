@@ -6,9 +6,11 @@ import (
 	"net/url"
 
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository"
 	"github.com/config-source/cdb/server/api"
-	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
@@ -23,9 +25,9 @@ func New(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
-	configValueService *services.ConfigValues,
-	envService *services.Environments,
-	configKeysService *services.ConfigKeys,
+	configValueService *configvalues.Service,
+	envService *environments.Service,
+	configKeyService *configkeys.Service,
 	frontendLocation string,
 ) *Server {
 	var frontendHandler http.Handler
@@ -46,7 +48,7 @@ func New(
 		userService,
 		configValueService,
 		envService,
-		configKeysService,
+		configKeyService,
 	)
 
 	mux := http.NewServeMux()
