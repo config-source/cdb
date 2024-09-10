@@ -1,4 +1,4 @@
-package cdb
+package environments
 
 import (
 	"context"

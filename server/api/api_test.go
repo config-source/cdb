@@ -10,13 +10,14 @@ import (
 	"github.com/config-source/cdb/auth"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository"
 	"github.com/config-source/cdb/server/middleware"
 	"github.com/rs/zerolog"
 )
 
 func testAPI(
-	repo repository.ModelRepository,
+	repo *repository.TestRepository,
 	alwaysAuthd bool,
 ) (*API, http.Handler, *auth.TestGateway) {
 	gateway := auth.NewTestGateway()
@@ -31,7 +32,7 @@ func testAPI(
 			true,
 			"user-testing",
 		),
-		configvalues.NewService(repo, gateway, true),
+		configvalues.NewService(repo, repo, repo, gateway, true),
 		environments.NewService(repo, gateway),
 		configkeys.NewService(repo, gateway),
 	)

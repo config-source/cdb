@@ -1,4 +1,4 @@
-package postgres
+package configvalues
 
 import (
 	"context"
@@ -6,30 +6,45 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/postgresutils"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
 )
 
-//go:embed queries/configValues/create_config_value.sql
+type Repository struct {
+	pool *pgxpool.Pool
+	log  zerolog.Logger
+}
+
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *Repository {
+	return &Repository{
+		log:  log,
+		pool: pool,
+	}
+}
+
+//go:embed queries/create_config_value.sql
 var createConfigValueSql string
 
-//go:embed queries/configValues/update_config_value.sql
+//go:embed queries/update_config_value.sql
 var updateConfigValueSql string
 
-//go:embed queries/configValues/get_config_value_by_id.sql
+//go:embed queries/get_config_value_by_id.sql
 var getConfigValueByIDSql string
 
-//go:embed queries/configValues/get_config_value_by_environment_and_key.sql
+//go:embed queries/get_config_value_by_environment_and_key.sql
 var getConfigValueByEnvironmentAndKeySql string
 
-//go:embed queries/configValues/get_all_config_values_for_environment.sql
+//go:embed queries/get_all_config_values_for_environment.sql
 var getAllConfigValuesForEnvironmentSql string
 
-//go:embed queries/configValues/get_all_config_values_except_matching_keys.sql
+//go:embed queries/get_all_config_values_except_matching_keys.sql
 var getAllConfigValuesForEnvironmentExceptKeysSql string
 
-func (r *Repository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
+func (r *Repository) CreateConfigValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
 	rows, err := r.pool.Query(
 		ctx,
 		createConfigValueSql,
@@ -41,16 +56,16 @@ func (r *Repository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue)
 		cv.BoolValue,
 	)
 	if err != nil && postgresutils.IsUniqueConstraintErr(err) {
-		return nil, cdb.ErrConfigValueAlreadySet
+		return nil, ErrConfigValueAlreadySet
 	} else if err != nil {
 		return nil, err
 	}
 
-	created, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[cdb.ConfigValue])
+	created, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[ConfigValue])
 	return &created, err
 }
 
-func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
+func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
 	rows, err := r.pool.Query(
 		ctx,
 		updateConfigValueSql,
@@ -66,29 +81,29 @@ func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *cdb.Confi
 		return nil, err
 	}
 
-	updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[cdb.ConfigValue])
+	updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[ConfigValue])
 	if err == nil {
 		return &updated, err
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return &updated, cdb.ErrConfigValueNotFound
+		return &updated, ErrConfigValueNotFound
 	}
 
 	msg := err.Error()
 	if strings.Contains(msg, "config_values_environment_id_fkey") {
-		return &updated, cdb.ErrEnvNotFound
+		return &updated, environments.ErrEnvNotFound
 	}
 
 	if strings.Contains(msg, "config_values_config_key_id_fkey") {
-		return &updated, cdb.ErrConfigKeyNotFound
+		return &updated, configkeys.ErrConfigKeyNotFound
 	}
 
 	return &updated, err
 }
 
-func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName string, key string) (*cdb.ConfigValue, error) {
-	cv, err := postgresutils.GetOne[cdb.ConfigValue](
+func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName string, key string) (*ConfigValue, error) {
+	cv, err := postgresutils.GetOne[ConfigValue](
 		r.pool,
 		ctx,
 		getConfigValueByEnvironmentAndKeySql,
@@ -96,13 +111,13 @@ func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentN
 		key,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return &cv, cdb.ErrConfigValueNotFound
+		return &cv, ErrConfigValueNotFound
 	}
 
 	return &cv, err
 }
 
-func getAllKeys(values []cdb.ConfigValue) []string {
+func getAllKeys(values []ConfigValue) []string {
 	keys := make([]string, len(values))
 	for idx, cv := range values {
 		keys[idx] = cv.Name
@@ -112,7 +127,7 @@ func getAllKeys(values []cdb.ConfigValue) []string {
 
 func (r *Repository) getPromotesToName(ctx context.Context, envName string) (*string, error) {
 	var promotesToName *string
-	err := r.Raw().QueryRow(
+	err := r.pool.QueryRow(
 		ctx,
 		"SELECT name FROM environments WHERE id = (SELECT promotes_to_id FROM environments WHERE name = $1)",
 		envName,
@@ -124,8 +139,8 @@ func (r *Repository) getPromotesToName(ctx context.Context, envName string) (*st
 	return promotesToName, nil
 }
 
-func getConfigurationRecursively(ctx context.Context, r *Repository, environmentName string, excludedKeys []string) ([]cdb.ConfigValue, error) {
-	immediateValues, err := postgresutils.GetAll[cdb.ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentName, excludedKeys)
+func getConfigurationRecursively(ctx context.Context, r *Repository, environmentName string, excludedKeys []string) ([]ConfigValue, error) {
+	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentName, excludedKeys)
 	if err != nil {
 		return immediateValues, err
 	}
@@ -148,8 +163,8 @@ func getConfigurationRecursively(ctx context.Context, r *Repository, environment
 	return immediateValues, nil
 }
 
-func (r *Repository) GetConfiguration(ctx context.Context, environmentName string) ([]cdb.ConfigValue, error) {
-	immediateValues, err := postgresutils.GetAll[cdb.ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentSql, environmentName)
+func (r *Repository) GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error) {
+	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentSql, environmentName)
 	if err != nil {
 		return immediateValues, err
 	}
@@ -163,9 +178,9 @@ func (r *Repository) GetConfiguration(ctx context.Context, environmentName strin
 	return immediateValues, nil
 }
 
-func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
+func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*ConfigValue, error) {
 	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentName, key)
-	if errors.Is(err, cdb.ErrConfigValueNotFound) {
+	if errors.Is(err, ErrConfigValueNotFound) {
 		promotesToName, _ := r.getPromotesToName(ctx, environmentName)
 		if promotesToName != nil {
 			cv, err := r.GetConfigurationValue(ctx, *promotesToName, key)
@@ -174,13 +189,13 @@ func (r *Repository) GetConfigurationValue(ctx context.Context, environmentName,
 			return cv, err
 		}
 
-		return cv, cdb.ErrConfigValueNotFound
+		return cv, ErrConfigValueNotFound
 	}
 
 	return cv, err
 }
 
-func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (*cdb.ConfigValue, error) {
-	cv, err := postgresutils.GetOne[cdb.ConfigValue](r.pool, ctx, getConfigValueByIDSql, configValueID)
+func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (*ConfigValue, error) {
+	cv, err := postgresutils.GetOne[ConfigValue](r.pool, ctx, getConfigValueByIDSql, configValueID)
 	return &cv, err
 }

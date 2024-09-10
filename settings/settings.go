@@ -1,13 +1,11 @@
 package settings
 
 import (
-	"context"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/config-source/cdb/auth"
-	"github.com/config-source/cdb/auth/postgres"
 	"github.com/rs/zerolog"
 )
 
@@ -137,38 +135,12 @@ func JWTSigningKey() []byte {
 	return keyCache
 }
 
-func GetAuthenticationGateway(ctx context.Context, log zerolog.Logger) auth.AuthenticationGateway {
-	gatewayName := os.Getenv("AUTHENTICATION_GATEWAY")
-	switch gatewayName {
-	default:
-		if gatewayName == "" {
-			log.Warn().Msg("no AUTHENTICATION_GATEWAY configured, using postgres as default")
-		}
-
-		gw, err := postgres.NewGateway(ctx, log, DBUrl())
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to load gateway")
-		}
-
-		return gw
-	}
+func AuthenticationGateway() string {
+	return os.Getenv("AUTHENTICATION_GATEWAY")
 }
 
-func GetAuthorizationGateway(ctx context.Context, log zerolog.Logger) auth.AuthorizationGateway {
-	gatewayName := os.Getenv("AUTHORIZATION_GATEWAY")
-	switch gatewayName {
-	default:
-		if gatewayName == "" {
-			log.Warn().Msg("no AUTHORIZATION_GATEWAY configured, using postgres as default")
-		}
-
-		gw, err := postgres.NewGateway(ctx, log, DBUrl())
-		if err != nil {
-			log.Panic().Err(err).Msg("Failed to load gateway")
-		}
-
-		return gw
-	}
+func AuthorizationGateway() string {
+	return os.Getenv("AUTHORIZATION_GATEWAY")
 }
 
 func AllowPublicRegistration() bool {

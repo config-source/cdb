@@ -7,6 +7,7 @@ import (
 
 	"github.com/config-source/cdb/auth/postgres"
 	"github.com/config-source/cdb/settings"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -26,14 +27,15 @@ flag.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := settings.GetLogger()
 
-		gateway, err := postgres.NewGateway(
-			context.Background(),
-			logger,
+		pool, err := pgxpool.New(
+			cmd.Context(),
 			settings.DBUrl(),
 		)
 		if err != nil {
 			return err
 		}
+
+		gateway := postgres.NewGateway(logger, pool)
 
 		fmt.Print("Password: ")
 		bytepw, err := term.ReadPassword(syscall.Stdin)

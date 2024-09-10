@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/server/middleware"
 )
 
@@ -51,7 +51,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var newConfigValue *cdb.ConfigValue
+	var newConfigValue *configvalues.ConfigValue
 	err = decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -84,7 +84,7 @@ func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var newConfigValue cdb.ConfigValue
+	var newConfigValue configvalues.ConfigValue
 	err = decoder.Decode(&newConfigValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

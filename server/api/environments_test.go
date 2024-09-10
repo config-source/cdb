@@ -6,13 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository"
 )
 
 func TestGetEnvironmentByName(t *testing.T) {
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -34,7 +34,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 
 func TestGetEnvironmentByNameNotFound(t *testing.T) {
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -56,7 +56,7 @@ func TestGetEnvironmentByNameNotFound(t *testing.T) {
 
 func TestGetEnvironmentByID(t *testing.T) {
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -78,7 +78,7 @@ func TestGetEnvironmentByID(t *testing.T) {
 
 func TestGetEnvironmentByIDNotFound(t *testing.T) {
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -103,7 +103,7 @@ func TestCreateEnvironment(t *testing.T) {
 
 	_, mux, _ := testAPI(repo, true)
 
-	env := cdb.Environment{
+	env := environments.Environment{
 		Name: "production",
 	}
 
@@ -122,7 +122,7 @@ func TestCreateEnvironment(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var created cdb.Environment
+	var created environments.Environment
 	err = json.NewDecoder(rr.Body).Decode(&created)
 	if err != nil {
 		t.Fatal(err)

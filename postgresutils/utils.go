@@ -14,6 +14,10 @@ func HealthCheck(ctx context.Context, pool *pgxpool.Pool, logger zerolog.Logger)
 	var healthy int
 	var log *zerolog.Event
 
+	if pool == nil {
+		return false
+	}
+
 	err := pool.QueryRow(ctx, "SELECT 1").Scan(&healthy)
 	if err != nil {
 		log = logger.Err(err)

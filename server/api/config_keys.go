@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/server/middleware"
 )
 
@@ -82,7 +82,7 @@ func (a *API) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var env cdb.ConfigKey
+	var env configkeys.ConfigKey
 	err = decoder.Decode(&env)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

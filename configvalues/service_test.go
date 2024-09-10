@@ -5,16 +5,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository"
 )
 
 func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -25,30 +26,30 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
 	gateway := auth.NewTestGateway()
-	service := configvalues.NewService(repo, gateway, true)
+	service := configvalues.NewService(repo, repo, repo, gateway, true)
 	val := 10
 	cv, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
 		"staging",
 		"minReplicas",
-		&cdb.ConfigValue{
-			ValueType: cdb.TypeInteger,
+		&configvalues.ConfigValue{
+			ValueType: configkeys.TypeInteger,
 			IntValue:  &val,
 		},
 	)
@@ -73,7 +74,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -84,41 +85,41 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
-	service := configvalues.NewService(repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(repo, repo, repo, auth.NewTestGateway(), false)
 	val := 10
 	_, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
 		"staging",
 		"minReplicas",
-		&cdb.ConfigValue{
-			ValueType: cdb.TypeInteger,
+		&configvalues.ConfigValue{
+			ValueType: configkeys.TypeInteger,
 			IntValue:  &val,
 		},
 	)
-	if !errors.Is(err, cdb.ErrConfigKeyNotFound) {
-		t.Fatalf("Expected %s got: %s", cdb.ErrConfigKeyNotFound, err)
+	if !errors.Is(err, configkeys.ErrConfigKeyNotFound) {
+		t.Fatalf("Expected %s got: %s", configkeys.ErrConfigKeyNotFound, err)
 	}
 }
 
 func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -129,33 +130,33 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
-	service := configvalues.NewService(repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(repo, repo, repo, auth.NewTestGateway(), false)
 	val := "test"
 	_, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
 		"staging",
 		"maxReplicas",
-		&cdb.ConfigValue{
-			ValueType: cdb.TypeString,
+		&configvalues.ConfigValue{
+			ValueType: configkeys.TypeString,
 			StrValue:  &val,
 		},
 	)
-	if !errors.Is(err, cdb.ErrConfigValueNotValid) {
-		t.Fatalf("Expected %s got: %s", cdb.ErrConfigValueNotValid, err)
+	if !errors.Is(err, configvalues.ErrConfigValueNotValid) {
+		t.Fatalf("Expected %s got: %s", configvalues.ErrConfigValueNotValid, err)
 	}
 }

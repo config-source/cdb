@@ -1,10 +1,12 @@
-package cdb
+package configvalues
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/config-source/cdb/configkeys"
 )
 
 var (
@@ -19,8 +21,8 @@ type ConfigValue struct {
 	EnvironmentID int `db:"environment_id"`
 
 	// From config_key tables
-	Name      string    `db:"name"`
-	ValueType ValueType `db:"value_type"`
+	Name      string               `db:"name"`
+	ValueType configkeys.ValueType `db:"value_type"`
 
 	StrValue   *string  `db:"str_value"`
 	IntValue   *int     `db:"int_value"`
@@ -63,13 +65,13 @@ func (cv *ConfigValue) Value() interface{} {
 	}
 
 	switch cv.ValueType {
-	case TypeString:
+	case configkeys.TypeString:
 		return *cv.StrValue
-	case TypeInteger:
+	case configkeys.TypeInteger:
 		return *cv.IntValue
-	case TypeFloat:
+	case configkeys.TypeFloat:
 		return *cv.FloatValue
-	case TypeBoolean:
+	case configkeys.TypeBoolean:
 		return *cv.BoolValue
 	// This should be unreachable.
 	default:
@@ -117,7 +119,7 @@ func (cv *ConfigValue) SetStrValue(val string) *ConfigValue {
 	cv.resetValues()
 	storage := val
 	cv.StrValue = &storage
-	cv.ValueType = TypeString
+	cv.ValueType = configkeys.TypeString
 	return cv
 }
 
@@ -125,7 +127,7 @@ func (cv *ConfigValue) SetIntValue(val int) *ConfigValue {
 	cv.resetValues()
 	storage := val
 	cv.IntValue = &storage
-	cv.ValueType = TypeInteger
+	cv.ValueType = configkeys.TypeInteger
 	return cv
 }
 
@@ -133,7 +135,7 @@ func (cv *ConfigValue) SetFloatValue(val float64) *ConfigValue {
 	cv.resetValues()
 	storage := val
 	cv.FloatValue = &storage
-	cv.ValueType = TypeFloat
+	cv.ValueType = configkeys.TypeFloat
 	return cv
 }
 
@@ -141,19 +143,19 @@ func (cv *ConfigValue) SetBoolValue(val bool) *ConfigValue {
 	cv.resetValues()
 	storage := val
 	cv.BoolValue = &storage
-	cv.ValueType = TypeBoolean
+	cv.ValueType = configkeys.TypeBoolean
 	return cv
 }
 
 func (cv *ConfigValue) Valid() error {
 	switch cv.ValueType {
-	case TypeBoolean:
+	case configkeys.TypeBoolean:
 		return cv.validateBoolean()
-	case TypeFloat:
+	case configkeys.TypeFloat:
 		return cv.validateFloat()
-	case TypeInteger:
+	case configkeys.TypeInteger:
 		return cv.validateInt()
-	case TypeString:
+	case configkeys.TypeString:
 		return cv.validateStr()
 	default:
 		return fmt.Errorf("%w: unrecognised ValueType: %s", ErrConfigValueNotValid, cv.ValueType)

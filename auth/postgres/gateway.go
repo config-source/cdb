@@ -15,16 +15,11 @@ type Gateway struct {
 	log  zerolog.Logger
 }
 
-func NewGateway(ctx context.Context, log zerolog.Logger, connString string) (*Gateway, error) {
-	pool, err := pgxpool.New(ctx, connString)
-	if err != nil {
-		return nil, err
-	}
-
+func NewGateway(log zerolog.Logger, pool *pgxpool.Pool) *Gateway {
 	return &Gateway{
 		pool: pool,
 		log:  log,
-	}, nil
+	}
 }
 
 // Raw returns the raw pgxpool.Pool in use by this repository. Should only be

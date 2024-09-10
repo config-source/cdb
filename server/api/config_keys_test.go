@@ -6,27 +6,27 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/repository"
 )
 
 func TestListConfigKeys(t *testing.T) {
 	repo := &repository.TestRepository{
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "minReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 			3: {
 				ID:        3,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
@@ -42,7 +42,7 @@ func TestListConfigKeys(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var keys []cdb.ConfigKey
+	var keys []configkeys.ConfigKey
 	if err := json.NewDecoder(rr.Body).Decode(&keys); err != nil {
 		t.Fatal(err)
 	}
@@ -54,11 +54,11 @@ func TestListConfigKeys(t *testing.T) {
 
 func TestGetConfigKeyByID(t *testing.T) {
 	repo := &repository.TestRepository{
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 		},
 	}
@@ -77,11 +77,11 @@ func TestGetConfigKeyByID(t *testing.T) {
 
 func TestGetConfigKeyByIDNotFound(t *testing.T) {
 	repo := &repository.TestRepository{
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 		},
 	}
@@ -103,9 +103,9 @@ func TestCreateConfigKey(t *testing.T) {
 
 	_, mux, _ := testAPI(repo, true)
 
-	configKey := cdb.ConfigKey{
+	configKey := configkeys.ConfigKey{
 		Name:      "owner",
-		ValueType: cdb.TypeString,
+		ValueType: configkeys.TypeString,
 	}
 
 	marshalled, err := json.Marshal(configKey)
@@ -123,7 +123,7 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var created cdb.ConfigKey
+	var created configkeys.ConfigKey
 	err = json.NewDecoder(rr.Body).Decode(&created)
 	if err != nil {
 		t.Fatal(err)
@@ -144,11 +144,11 @@ func TestCreateConfigKey(t *testing.T) {
 
 func TestGetConfigKeyByName(t *testing.T) {
 	repo := &repository.TestRepository{
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 		},
 	}
@@ -167,11 +167,11 @@ func TestGetConfigKeyByName(t *testing.T) {
 
 func TestGetConfigKeyByNameNotFound(t *testing.T) {
 	repo := &repository.TestRepository{
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 		},
 	}

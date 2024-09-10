@@ -1,16 +1,29 @@
-package postgres_test
+package environments_test
 
 import (
 	"context"
 	"reflect"
 	"testing"
 
-	"github.com/config-source/cdb"
-	"github.com/config-source/cdb/repository/postgres"
+	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/postgresutils"
+	"github.com/rs/zerolog"
 )
 
-func envFixture(t *testing.T, repo *postgres.Repository, name string, promotesToID *int) cdb.Environment {
-	env, err := repo.CreateEnvironment(context.Background(), cdb.Environment{
+func initTestDB(t *testing.T) (*environments.Repository, *postgresutils.TestRepository) {
+	t.Helper()
+
+	tr, pool := postgresutils.InitTestDB(t)
+	repo := environments.NewRepository(
+		zerolog.New(nil).Level(zerolog.Disabled),
+		pool,
+	)
+
+	return repo, tr
+}
+
+func envFixture(t *testing.T, repo *environments.Repository, name string, promotesToID *int) environments.Environment {
+	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name:         name,
 		PromotesToID: promotesToID,
 	})
@@ -25,7 +38,7 @@ func TestCreateEnvironment(t *testing.T) {
 	repo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env, err := repo.CreateEnvironment(context.Background(), cdb.Environment{
+	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name: "mat",
 	})
 	if err != nil {
@@ -71,7 +84,7 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 		t.Fatal("Expected an error but got none!")
 	}
 
-	if err != cdb.ErrEnvNotFound {
+	if err != environments.ErrEnvNotFound {
 		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
 	}
 }
@@ -102,7 +115,7 @@ func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
 		t.Fatal("Expected an error but got none!")
 	}
 
-	if err != cdb.ErrEnvNotFound {
+	if err != environments.ErrEnvNotFound {
 		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
 	}
 }

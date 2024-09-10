@@ -7,14 +7,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/repository"
 )
 
 func TestGetConfiguration(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -25,24 +27,24 @@ func TestGetConfiguration(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
-	fixtures := []*cdb.ConfigValue{
-		cdb.NewStringConfigValue(1, 1, "SRE"),
-		cdb.NewIntConfigValue(1, 2, 100),
-		cdb.NewIntConfigValue(2, 2, 10),
+	fixtures := []*configvalues.ConfigValue{
+		configvalues.NewStringConfigValue(1, 1, "SRE"),
+		configvalues.NewIntConfigValue(1, 2, 100),
+		configvalues.NewIntConfigValue(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {
@@ -63,7 +65,7 @@ func TestGetConfiguration(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var values []cdb.ConfigValue
+	var values []configvalues.ConfigValue
 	if err := json.NewDecoder(rr.Body).Decode(&values); err != nil {
 		t.Fatal(err)
 	}
@@ -73,8 +75,8 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	owner := values[1]
-	if owner.ValueType != cdb.TypeString {
-		t.Fatalf("Expected cdb.TypeString (%d) config got: %v", cdb.TypeString, owner)
+	if owner.ValueType != configkeys.TypeString {
+		t.Fatalf("Expected configkeys.TypeString (%d) config got: %v", configkeys.TypeString, owner)
 	}
 
 	if owner.Value().(string) != "SRE" {
@@ -82,8 +84,8 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	maxReplicas := values[0]
-	if maxReplicas.ValueType != cdb.TypeInteger {
-		t.Fatalf("Expected cdb.TypeInteger (%d) config got: %v", cdb.TypeInteger, maxReplicas)
+	if maxReplicas.ValueType != configkeys.TypeInteger {
+		t.Fatalf("Expected configkeys.TypeInteger (%d) config got: %v", configkeys.TypeInteger, maxReplicas)
 	}
 
 	if maxReplicas.Value().(int) != 10 {
@@ -93,17 +95,17 @@ func TestGetConfiguration(t *testing.T) {
 
 func TestCreateConfigValue(t *testing.T) {
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 		},
 	}
@@ -111,9 +113,9 @@ func TestCreateConfigValue(t *testing.T) {
 	_, mux, _ := testAPI(repo, true)
 
 	val := "test"
-	env := cdb.ConfigValue{
+	env := configvalues.ConfigValue{
 		Name:          "owner",
-		ValueType:     cdb.TypeString,
+		ValueType:     configkeys.TypeString,
 		EnvironmentID: 1,
 		ConfigKeyID:   1,
 		StrValue:      &val,
@@ -134,7 +136,7 @@ func TestCreateConfigValue(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var created cdb.ConfigValue
+	var created configvalues.ConfigValue
 	err = json.NewDecoder(rr.Body).Decode(&created)
 	if err != nil {
 		t.Fatal(err)
@@ -156,7 +158,7 @@ func TestCreateConfigValue(t *testing.T) {
 func TestGetConfigurationByKey(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -167,24 +169,24 @@ func TestGetConfigurationByKey(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
-	fixtures := []*cdb.ConfigValue{
-		cdb.NewStringConfigValue(1, 1, "SRE"),
-		cdb.NewIntConfigValue(1, 2, 100),
-		cdb.NewIntConfigValue(2, 2, 10),
+	fixtures := []*configvalues.ConfigValue{
+		configvalues.NewStringConfigValue(1, 1, "SRE"),
+		configvalues.NewIntConfigValue(1, 2, 100),
+		configvalues.NewIntConfigValue(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {
@@ -205,13 +207,13 @@ func TestGetConfigurationByKey(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var owner cdb.ConfigValue
+	var owner configvalues.ConfigValue
 	if err := json.NewDecoder(rr.Body).Decode(&owner); err != nil {
 		t.Fatal(err)
 	}
 
-	if owner.ValueType != cdb.TypeString {
-		t.Fatalf("Expected cdb.TypeString (%d) config got: %v", cdb.TypeString, owner)
+	if owner.ValueType != configkeys.TypeString {
+		t.Fatalf("Expected configkeys.TypeString (%d) config got: %v", configkeys.TypeString, owner)
 	}
 
 	if owner.Value().(string) != "SRE" {
@@ -222,7 +224,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 func TestSetConfigurationByKey(t *testing.T) {
 	promotesToID := 1
 	repo := &repository.TestRepository{
-		Environments: map[int]cdb.Environment{
+		Environments: map[int]environments.Environment{
 			1: {
 				ID:   1,
 				Name: "production",
@@ -233,24 +235,24 @@ func TestSetConfigurationByKey(t *testing.T) {
 				PromotesToID: &promotesToID,
 			},
 		},
-		ConfigKeys: map[int]cdb.ConfigKey{
+		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
-				ValueType: cdb.TypeString,
+				ValueType: configkeys.TypeString,
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
-				ValueType: cdb.TypeInteger,
+				ValueType: configkeys.TypeInteger,
 			},
 		},
 	}
 
-	fixtures := []*cdb.ConfigValue{
-		cdb.NewStringConfigValue(1, 1, "SRE"),
-		cdb.NewIntConfigValue(1, 2, 100),
-		cdb.NewIntConfigValue(2, 2, 10),
+	fixtures := []*configvalues.ConfigValue{
+		configvalues.NewStringConfigValue(1, 1, "SRE"),
+		configvalues.NewIntConfigValue(1, 2, 100),
+		configvalues.NewIntConfigValue(2, 2, 10),
 	}
 
 	for _, cv := range fixtures {
@@ -263,8 +265,8 @@ func TestSetConfigurationByKey(t *testing.T) {
 	_, mux, _ := testAPI(repo, true)
 
 	val := 10
-	env := cdb.ConfigValue{
-		ValueType: cdb.TypeInteger,
+	env := configvalues.ConfigValue{
+		ValueType: configkeys.TypeInteger,
 		IntValue:  &val,
 	}
 
@@ -283,13 +285,13 @@ func TestSetConfigurationByKey(t *testing.T) {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
 
-	var maxReplicas cdb.ConfigValue
+	var maxReplicas configvalues.ConfigValue
 	if err := json.NewDecoder(rr.Body).Decode(&maxReplicas); err != nil {
 		t.Fatal(err)
 	}
 
-	if maxReplicas.ValueType != cdb.TypeInteger {
-		t.Fatalf("Expected cdb.TypeInteger (%d) config got: %v", cdb.TypeInteger, maxReplicas)
+	if maxReplicas.ValueType != configkeys.TypeInteger {
+		t.Fatalf("Expected configkeys.TypeInteger (%d) config got: %v", configkeys.TypeInteger, maxReplicas)
 	}
 
 	if maxReplicas.Value().(int) != 10 {

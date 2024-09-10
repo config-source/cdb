@@ -5,16 +5,42 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb/auth"
+	"github.com/config-source/cdb/auth/postgres"
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository/postgres"
 	"github.com/config-source/cdb/server"
 	"github.com/config-source/cdb/server/middleware"
 	"github.com/config-source/cdb/settings"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pseidemann/finish"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
+
+func getAuthenticationGateway(log zerolog.Logger, pool *pgxpool.Pool) auth.AuthenticationGateway {
+	gatewayName := settings.AuthenticationGateway()
+	switch gatewayName {
+	default:
+		if gatewayName == "" {
+			log.Warn().Msg("no AUTHENTICATION_GATEWAY configured, using postgres as default")
+		}
+
+		return postgres.NewGateway(log, pool)
+	}
+}
+
+func getAuthorizationGateway(log zerolog.Logger, pool *pgxpool.Pool) auth.AuthorizationGateway {
+	gatewayName := settings.AuthorizationGateway()
+	switch gatewayName {
+	default:
+		if gatewayName == "" {
+			log.Warn().Msg("no AUTHORIZATION_GATEWAY configured, using postgres as default")
+		}
+
+		return postgres.NewGateway(log, pool)
+	}
+}
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
@@ -22,35 +48,45 @@ var serverCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := settings.GetLogger()
 
-		repo, err := postgres.NewRepository(
+		pool, err := pgxpool.New(
 			cmd.Context(),
-			logger,
 			settings.DBUrl(),
 		)
 		if err != nil {
 			return err
 		}
 
-		authenticationGateway := settings.GetAuthenticationGateway(cmd.Context(), logger)
-		authorizationGateway := settings.GetAuthorizationGateway(cmd.Context(), logger)
+		authenticationGateway := getAuthenticationGateway(logger, pool)
+		authorizationGateway := getAuthorizationGateway(logger, pool)
+
+		envsRepo := environments.NewRepository(logger, pool)
+		keysRepo := configkeys.NewRepository(logger, pool)
+		valuesRepo := configvalues.NewRepository(logger, pool)
+
+		envsService := environments.NewService(envsRepo, authorizationGateway)
+		keysService := configkeys.NewService(keysRepo, authorizationGateway)
+		valuesService := configvalues.NewService(
+			valuesRepo,
+			envsRepo,
+			keysRepo,
+			authorizationGateway,
+			settings.DynamicConfigKeys(),
+		)
+		userService := auth.NewUserService(
+			authenticationGateway,
+			authorizationGateway,
+			settings.AllowPublicRegistration(),
+			settings.DefaultRegisterRole(),
+		)
 
 		var server http.Handler = server.New(
-			repo,
 			logger,
 			settings.JWTSigningKey(),
-			auth.NewUserService(
-				authenticationGateway,
-				authorizationGateway,
-				settings.AllowPublicRegistration(),
-				settings.DefaultRegisterRole(),
-			),
-			configvalues.NewService(
-				repo,
-				authorizationGateway,
-				settings.DynamicConfigKeys(),
-			),
-			environments.NewService(repo, authorizationGateway),
-			configkeys.NewService(repo, authorizationGateway),
+			pool,
+			userService,
+			valuesService,
+			envsService,
+			keysService,
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

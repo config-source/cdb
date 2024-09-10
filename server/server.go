@@ -9,8 +9,9 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/repository"
+	"github.com/config-source/cdb/postgresutils"
 	"github.com/config-source/cdb/server/api"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
@@ -21,9 +22,9 @@ type Server struct {
 }
 
 func New(
-	repo repository.ModelRepository,
 	log zerolog.Logger,
 	tokenSigningKey []byte,
+	postgresPool *pgxpool.Pool,
 	userService *auth.UserService,
 	configValueService *configvalues.Service,
 	envService *environments.Service,
@@ -54,7 +55,7 @@ func New(
 	mux := http.NewServeMux()
 	mux.Handle("/api/", apiMux)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		if !repo.Healthy(r.Context()) {
+		if !postgresutils.HealthCheck(r.Context(), postgresPool, log) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 

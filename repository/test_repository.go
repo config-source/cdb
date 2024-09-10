@@ -5,7 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/config-source/cdb"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
 )
 
 // TestRepository is an in-memory ModelRepository used for tests only.
@@ -13,21 +15,21 @@ type TestRepository struct {
 	IsHealthy bool
 	Error     error
 
-	Environments map[int]cdb.Environment
-	ConfigKeys   map[int]cdb.ConfigKey
-	ConfigValues map[int]*cdb.ConfigValue
+	Environments map[int]environments.Environment
+	ConfigKeys   map[int]configkeys.ConfigKey
+	ConfigValues map[int]*configvalues.ConfigValue
 }
 
 func (tr *TestRepository) Healthy(ctx context.Context) bool {
 	return tr.IsHealthy
 }
 
-func (tr *TestRepository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]cdb.Environment, error) {
+func (tr *TestRepository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]environments.Environment, error) {
 	if tr.Error != nil {
 		return nil, tr.Error
 	}
 
-	envs := make([]cdb.Environment, len(tr.Environments))
+	envs := make([]environments.Environment, len(tr.Environments))
 	for id, env := range tr.Environments {
 		if includeSensitive && env.Sensitive {
 			envs[id-1] = env
@@ -41,9 +43,9 @@ func (tr *TestRepository) ListEnvironments(ctx context.Context, includeSensitive
 	return envs, nil
 }
 
-func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string) (cdb.Environment, error) {
+func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string) (environments.Environment, error) {
 	if tr.Error != nil {
-		return cdb.Environment{}, tr.Error
+		return environments.Environment{}, tr.Error
 	}
 
 	for _, env := range tr.Environments {
@@ -52,28 +54,28 @@ func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string)
 		}
 	}
 
-	return cdb.Environment{}, cdb.ErrEnvNotFound
+	return environments.Environment{}, environments.ErrEnvNotFound
 }
 
-func (tr *TestRepository) GetEnvironment(ctx context.Context, id int) (cdb.Environment, error) {
+func (tr *TestRepository) GetEnvironment(ctx context.Context, id int) (environments.Environment, error) {
 	if tr.Error != nil {
-		return cdb.Environment{}, tr.Error
+		return environments.Environment{}, tr.Error
 	}
 
 	if env, ok := tr.Environments[id]; ok {
 		return env, nil
 	}
 
-	return cdb.Environment{}, cdb.ErrEnvNotFound
+	return environments.Environment{}, environments.ErrEnvNotFound
 }
 
-func (tr *TestRepository) CreateEnvironment(ctx context.Context, env cdb.Environment) (cdb.Environment, error) {
+func (tr *TestRepository) CreateEnvironment(ctx context.Context, env environments.Environment) (environments.Environment, error) {
 	if tr.Error != nil {
-		return cdb.Environment{}, tr.Error
+		return environments.Environment{}, tr.Error
 	}
 
 	if tr.Environments == nil {
-		tr.Environments = make(map[int]cdb.Environment)
+		tr.Environments = make(map[int]environments.Environment)
 	}
 
 	env.ID = len(tr.Environments) + 1
@@ -88,9 +90,9 @@ func (tr *TestRepository) CreateEnvironment(ctx context.Context, env cdb.Environ
 	return env, nil
 }
 
-func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck cdb.ConfigKey) (cdb.ConfigKey, error) {
+func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck configkeys.ConfigKey) (configkeys.ConfigKey, error) {
 	if tr.ConfigKeys == nil {
-		tr.ConfigKeys = make(map[int]cdb.ConfigKey)
+		tr.ConfigKeys = make(map[int]configkeys.ConfigKey)
 	}
 
 	ck.ID = len(tr.ConfigKeys) + 1
@@ -99,21 +101,21 @@ func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck cdb.ConfigKey)
 	return ck, nil
 }
 
-func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (cdb.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
-		return cdb.ConfigKey{}, tr.Error
+		return configkeys.ConfigKey{}, tr.Error
 	}
 
 	if ck, ok := tr.ConfigKeys[id]; ok {
 		return ck, nil
 	}
 
-	return cdb.ConfigKey{}, cdb.ErrConfigKeyNotFound
+	return configkeys.ConfigKey{}, configkeys.ErrConfigKeyNotFound
 }
 
-func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (cdb.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
-		return cdb.ConfigKey{}, tr.Error
+		return configkeys.ConfigKey{}, tr.Error
 	}
 
 	for _, ck := range tr.ConfigKeys {
@@ -122,11 +124,11 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (
 		}
 	}
 
-	return cdb.ConfigKey{}, cdb.ErrConfigKeyNotFound
+	return configkeys.ConfigKey{}, configkeys.ErrConfigKeyNotFound
 }
 
-func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, error) {
-	keys := make([]cdb.ConfigKey, len(tr.ConfigKeys))
+func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]configkeys.ConfigKey, error) {
+	keys := make([]configkeys.ConfigKey, len(tr.ConfigKeys))
 
 	for id, ck := range tr.ConfigKeys {
 		keys[id-1] = ck
@@ -135,7 +137,7 @@ func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]cdb.ConfigKey, 
 	return keys, nil
 }
 
-func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
+func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
 	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
@@ -147,7 +149,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigV
 	}
 
 	if tr.ConfigValues == nil {
-		tr.ConfigValues = make(map[int]*cdb.ConfigValue)
+		tr.ConfigValues = make(map[int]*configvalues.ConfigValue)
 	}
 
 	cv.ID = len(tr.ConfigValues) + 1
@@ -156,7 +158,7 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *cdb.ConfigV
 	return cv, nil
 }
 
-func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *cdb.ConfigValue) (*cdb.ConfigValue, error) {
+func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
 	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
@@ -168,7 +170,7 @@ func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *cdb.
 	}
 
 	if tr.ConfigValues == nil {
-		tr.ConfigValues = make(map[int]*cdb.ConfigValue)
+		tr.ConfigValues = make(map[int]*configvalues.ConfigValue)
 	}
 
 	cv.CreatedAt = time.Now()
@@ -176,7 +178,7 @@ func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *cdb.
 	return cv, nil
 }
 
-func keyAlreadyInSet(values []cdb.ConfigValue, newValue cdb.ConfigValue) bool {
+func keyAlreadyInSet(values []configvalues.ConfigValue, newValue configvalues.ConfigValue) bool {
 	for _, cv := range values {
 		if cv.ConfigKeyID == newValue.ConfigKeyID {
 			return true
@@ -186,8 +188,8 @@ func keyAlreadyInSet(values []cdb.ConfigValue, newValue cdb.ConfigValue) bool {
 	return false
 }
 
-func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName string) ([]cdb.ConfigValue, error) {
-	values := make([]cdb.ConfigValue, 0)
+func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName string) ([]configvalues.ConfigValue, error) {
+	values := make([]configvalues.ConfigValue, 0)
 
 	env, err := tr.GetEnvironmentByName(ctx, environmentName)
 	if err != nil {
@@ -230,16 +232,16 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 	return values, nil
 }
 
-func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
+func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*configvalues.ConfigValue, error) {
 	cv, err := tr.GetConfigurationValue(ctx, environmentName, key)
 	if cv != nil && cv.Inherited {
-		return nil, cdb.ErrConfigValueNotFound
+		return nil, configvalues.ErrConfigValueNotFound
 	}
 
 	return cv, err
 }
 
-func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*cdb.ConfigValue, error) {
+func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*configvalues.ConfigValue, error) {
 	configValues, err := tr.GetConfiguration(ctx, environmentName)
 	if err != nil {
 		return nil, err
@@ -251,5 +253,5 @@ func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environment
 		}
 	}
 
-	return nil, cdb.ErrConfigValueNotFound
+	return nil, configvalues.ErrConfigValueNotFound
 }

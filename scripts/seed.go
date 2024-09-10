@@ -7,10 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/auth"
 	authpg "github.com/config-source/cdb/auth/postgres"
-	"github.com/config-source/cdb/repository/postgres"
+	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/environments"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
@@ -20,8 +22,8 @@ func fail(err error) {
 	}
 }
 
-func clearTable(repository *postgres.Repository, name string) {
-	_, err := repository.Raw().Exec(context.Background(), fmt.Sprintf("DELETE FROM %s", name))
+func clearTable(pool *pgxpool.Pool, name string) {
+	_, err := pool.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s", name))
 	fail(err)
 }
 
@@ -36,88 +38,90 @@ func main() {
 			TimeFormat: time.RFC3339,
 		})
 
-	repository, err := postgres.NewRepository(context.Background(), logger, "")
+	pool, err := pgxpool.New(context.Background(), "")
 	fail(err)
 
-	authGw, err := authpg.NewGateway(context.Background(), logger, "")
-	fail(err)
+	authGw := authpg.NewGateway(logger, pool)
+	envRepo := environments.NewRepository(logger, pool)
+	keyRepo := configkeys.NewRepository(logger, pool)
+	valueRepo := configvalues.NewRepository(logger, pool)
 
 	ctx := context.Background()
 
 	fmt.Println("Seeding environments...")
-	clearTable(repository, "environments")
+	clearTable(pool, "environments")
 
-	production, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "production", Sensitive: true})
+	production, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "production", Sensitive: true})
 	fail(err)
 
-	staging, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "staging", PromotesToID: &production.ID, Sensitive: true})
+	staging, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "staging", PromotesToID: &production.ID, Sensitive: true})
 	fail(err)
 
-	dev, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: "dev", PromotesToID: &staging.ID})
+	dev, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "dev", PromotesToID: &staging.ID})
 	fail(err)
 
 	fmt.Println("Done seeding environments.")
 
 	fmt.Println("Seeding config keys...")
-	clearTable(repository, "config_keys")
+	clearTable(pool, "config_keys")
 
-	owner, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("owner", cdb.TypeString))
+	owner, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("owner", configkeys.TypeString))
 	fail(err)
 
-	maxReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("maxReplicas", cdb.TypeInteger))
+	maxReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("maxReplicas", configkeys.TypeInteger))
 	fail(err)
 
-	minReplicas, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("minReplicas", cdb.TypeInteger))
+	minReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("minReplicas", configkeys.TypeInteger))
 	fail(err)
 
-	sslEnabled, err := repository.CreateConfigKey(ctx, cdb.NewConfigKey("sslEnabled", cdb.TypeBoolean))
+	sslEnabled, err := keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("sslEnabled", configkeys.TypeBoolean))
 	fail(err)
 
 	// Add an unconfigured config key for testing those features which require it.
-	_, err = repository.CreateConfigKey(ctx, cdb.NewConfigKey("readyForReaping", cdb.TypeBoolean))
+	_, err = keyRepo.CreateConfigKey(ctx, configkeys.NewConfigKey("readyForReaping", configkeys.TypeBoolean))
 	fail(err)
 
 	fmt.Println("Done seeding config keys.")
 
 	fmt.Println("Seeding config values...")
-	clearTable(repository, "config_values")
+	clearTable(pool, "config_values")
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewStringConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewStringConfigValue(
 		production.ID,
 		owner.ID,
 		"SRE",
 	))
 	fail(err)
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 		production.ID,
 		maxReplicas.ID,
 		100,
 	))
 	fail(err)
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 		production.ID,
 		minReplicas.ID,
 		10,
 	))
 	fail(err)
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewBoolConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBoolConfigValue(
 		production.ID,
 		sslEnabled.ID,
 		true,
 	))
 	fail(err)
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 		staging.ID,
 		minReplicas.ID,
 		1,
 	))
 	fail(err)
 
-	_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 		dev.ID,
 		maxReplicas.ID,
 		10,
@@ -129,10 +133,10 @@ func main() {
 	fmt.Println("Seeding feature environments")
 
 	for i := range 100 {
-		fe, err := repository.CreateEnvironment(ctx, cdb.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
+		fe, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
 		fail(err)
 
-		_, err = repository.CreateConfigValue(ctx, cdb.NewBoolConfigValue(
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBoolConfigValue(
 			fe.ID,
 			sslEnabled.ID,
 			false,
@@ -141,21 +145,21 @@ func main() {
 
 		switch rand.Intn(3) {
 		case 0:
-			_, err = repository.CreateConfigValue(ctx, cdb.NewStringConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewStringConfigValue(
 				fe.ID,
 				owner.ID,
 				fmt.Sprintf("dev-team-%d", rand.Intn(10)),
 			))
 			fail(err)
 		case 1:
-			_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 				fe.ID,
 				maxReplicas.ID,
 				rand.Intn(30),
 			))
 			fail(err)
 		case 2:
-			_, err = repository.CreateConfigValue(ctx, cdb.NewIntConfigValue(
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewIntConfigValue(
 				fe.ID,
 				minReplicas.ID,
 				rand.Intn(9)+1,
@@ -167,8 +171,8 @@ func main() {
 	fmt.Println("Done seeding feature environments.")
 
 	fmt.Println("Seeding users")
-	clearTable(repository, "users")
-	clearTable(repository, "users_to_roles")
+	clearTable(pool, "users")
+	clearTable(pool, "users_to_roles")
 
 	adminUser, err := authGw.CreateUser(ctx, auth.User{
 		Email:    "admin@example.com",

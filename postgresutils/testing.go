@@ -22,13 +22,9 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-type PostgresPooler interface {
-	Raw() *pgxpool.Pool
-}
-
 type TestRepository struct {
 	conn      *pgx.Conn
-	Repo      PostgresPooler
+	pool      *pgxpool.Pool
 	testName  string
 	TestDBURL string
 }
@@ -131,17 +127,17 @@ func (tr *TestRepository) Start(testName string) error {
 
 // Cleanup deletes the test database.
 func (tr *TestRepository) Cleanup() {
-	if tr.Repo != nil {
-		tr.Repo.Raw().Close()
-	}
-
 	_, err := tr.conn.Exec(context.Background(), fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", tr.testName))
 	if err != nil {
 		panic(err)
 	}
+
+	if tr.pool != nil {
+		tr.pool.Close()
+	}
 }
 
-func InitTestDB(t *testing.T) *TestRepository {
+func InitTestDB(t *testing.T) (*TestRepository, *pgxpool.Pool) {
 	t.Parallel()
 	t.Helper()
 
@@ -151,5 +147,10 @@ func InitTestDB(t *testing.T) *TestRepository {
 		t.Fatal(err)
 	}
 
-	return &tr
+	tr.pool, err = pgxpool.New(context.Background(), tr.TestDBURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return &tr, tr.pool
 }
