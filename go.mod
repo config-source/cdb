@@ -1,6 +1,8 @@
 module github.com/config-source/cdb
 
-go 1.22.0
+go 1.22.1
+
+toolchain go1.23.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -14,6 +16,7 @@ require (
 )
 
 require (
+	github.com/chasinglogic/appdirs v0.0.0-20240910093348-1aea124d8cd9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -28,4 +31,5 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -1,9 +1,21 @@
 package main
 
 import (
-	"github.com/config-source/cdb/cmd/cdbd/subcommands"
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
 )
 
+var rootCmd = &cobra.Command{
+	Use:          "cdbd",
+	Short:        "Configuration database, this is the server bit.",
+	SilenceUsage: true,
+}
+
 func main() {
-	subcommands.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

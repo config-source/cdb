@@ -1,4 +1,4 @@
-package subcommands
+package main
 
 import (
 	"context"
