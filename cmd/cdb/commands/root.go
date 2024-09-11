@@ -22,6 +22,7 @@ func init() {
 	rootCmd.AddCommand(configuration.Command)
 	rootCmd.AddCommand(env.Command)
 	rootCmd.AddCommand(setupCmd)
+	rootCmd.AddCommand(loginCmd)
 }
 
 func Execute() {

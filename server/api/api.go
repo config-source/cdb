@@ -62,12 +62,14 @@ func New(
 	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
 
 	v1Mux.HandleFunc("GET /api/v1/users/me", api.GetLoggedInUser)
-	v1Mux.HandleFunc("DELETE /api/v1/logout", api.Logout)
+	v1Mux.HandleFunc("POST /api/v1/auth/api-tokens", api.IssueAPIToken)
+	v1Mux.HandleFunc("GET /api/v1/auth/api-tokens", api.ListAPITokens)
 
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("POST /api/v1/login", api.Login)
-	apiMux.HandleFunc("POST /api/v1/register", api.Register)
-	apiMux.Handle("/api/v1/", middleware.AuthenticationRequired(log, tokenSigningKey, v1Mux))
+	apiMux.HandleFunc("DELETE /api/v1/auth/logout", api.Logout)
+	apiMux.HandleFunc("POST /api/v1/auth/login", api.Login)
+	apiMux.HandleFunc("POST /api/v1/auth/register", api.Register)
+	apiMux.Handle("/api/v1/", middleware.AuthenticationRequired(log, userService, tokenSigningKey, v1Mux))
 
 	return api, apiMux
 }

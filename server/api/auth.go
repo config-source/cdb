@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/config-source/cdb/auth"
@@ -91,6 +92,23 @@ func (a *API) Logout(w http.ResponseWriter, r *http.Request) {
 		middleware.RefreshTokenCookieName,
 	}
 
+	refreshToken := r.Header.Get("X-Refresh-Token")
+	if refreshToken == "" {
+		cookie, err := r.Cookie(middleware.RefreshTokenCookieName)
+		if err != nil && !errors.Is(err, http.ErrNoCookie) {
+			a.sendErr(w, err)
+			return
+		} else if err == nil {
+			refreshToken = cookie.Value
+		}
+	}
+
+	if refreshToken == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, errors.New("no refresh token supplied"))
+		return
+	}
+
 	for _, cookie := range authCookies {
 		http.SetCookie(
 			w,
@@ -106,7 +124,10 @@ func (a *API) Logout(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	// TODO: kill the refresh token.
+	err := a.userService.Logout(r.Context(), refreshToken)
+	if err != nil {
+		a.sendErr(w, err)
+	}
 }
 
 func (a *API) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
@@ -117,4 +138,36 @@ func (a *API) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.sendJson(w, user)
+}
+
+func (a *API) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	token, err := a.userService.IssueAPIToken(r.Context(), a.tokenSigningKey, user)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	a.sendJson(w, token)
+}
+
+func (a *API) ListAPITokens(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	tokens, err := a.userService.ListAPITokens(r.Context(), user)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	a.sendJson(w, tokens)
 }

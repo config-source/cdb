@@ -25,6 +25,15 @@ function backend() {
   air
 }
 
+function live_build_cli() {
+  go install github.com/air-verse/air@latest
+  air \
+    --build.cmd "go build -buildvcs=false -o ./tmp/cdb ./cmd/cdb" \
+    --build.bin "./tmp/cdb" \
+    --build.exclude_dir "assets,tmp,vendor,testdata,scripts,migrations,frontend" \
+    --build.args_bin "\-\-help"
+}
+
 function frontend() {
   echo "Checking for node_modules"
   if [[ ! -f node_modules/.package-lock.json ]]; then
@@ -42,6 +51,10 @@ frontend)
 
 backend)
   backend
+  ;;
+
+cli)
+  live_build_cli
   ;;
 
 *)

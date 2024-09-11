@@ -31,7 +31,7 @@ func GetUser(r *http.Request) (auth.User, error) {
 	return *user, nil
 }
 
-func Authentication(log zerolog.Logger, signingKey []byte, next http.Handler) http.Handler {
+func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []byte, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			var token string
@@ -82,9 +82,10 @@ func Authentication(log zerolog.Logger, signingKey []byte, next http.Handler) ht
 	)
 }
 
-func AuthenticationRequired(log zerolog.Logger, signingKey []byte, next http.Handler) http.Handler {
+func AuthenticationRequired(log zerolog.Logger, userSvc *auth.UserService, signingKey []byte, next http.Handler) http.Handler {
 	return Authentication(
 		log,
+		userSvc,
 		signingKey,
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {

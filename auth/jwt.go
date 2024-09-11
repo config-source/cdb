@@ -119,7 +119,6 @@ func ValidateIdToken(signingKey []byte, idToken string) (User, error) {
 		},
 		jwt.WithValidMethods(validMethods),
 		jwt.WithIssuer(TokenIssuer),
-		jwt.WithExpirationRequired(),
 	)
 	if err != nil {
 		return User{}, err
@@ -139,6 +138,24 @@ func GenerateIdToken(signingKey []byte, user User) (string, error) {
 			Issuer:    TokenIssuer,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS512,
+		claims,
+	)
+
+	return token.SignedString(signingKey)
+}
+
+func GenerateAPIToken(signingKey []byte, user User) (string, error) {
+	claims := IDClaims{
+		User: user,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: TokenIssuer,
+			// ExpiresAt omitted so the token is forever
+			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 

@@ -11,8 +11,9 @@ var (
 )
 
 type UserService struct {
-	authn AuthenticationGateway
-	authz AuthorizationGateway
+	authn    AuthenticationGateway
+	authz    AuthorizationGateway
+	registry *TokenRegistry
 
 	publicRegisterAllowed bool
 	defaultRegisterRole   string
@@ -21,12 +22,14 @@ type UserService struct {
 func NewUserService(
 	authn AuthenticationGateway,
 	authz AuthorizationGateway,
+	registry *TokenRegistry,
 	allowPublicRegistration bool,
 	defaultRegisterRole string,
 ) *UserService {
 	return &UserService{
 		authn:                 authn,
 		authz:                 authz,
+		registry:              registry,
 		publicRegisterAllowed: allowPublicRegistration,
 		defaultRegisterRole:   defaultRegisterRole,
 	}
@@ -38,6 +41,10 @@ func (us *UserService) Healthy(ctx context.Context) bool {
 
 func (us *UserService) Login(ctx context.Context, email, password string) (User, error) {
 	return us.authn.Login(ctx, email, password)
+}
+
+func (us *UserService) Logout(ctx context.Context, refreshToken string) error {
+	return us.registry.Revoke(ctx, refreshToken)
 }
 
 func (us *UserService) Register(ctx context.Context, email, password string) (User, error) {
@@ -103,4 +110,12 @@ func (us *UserService) ListUsers(ctx context.Context, actor User) ([]User, error
 	}
 
 	return us.authn.ListUsers(ctx)
+}
+
+func (us *UserService) IssueAPIToken(ctx context.Context, signingKey []byte, actor User) (APIToken, error) {
+	return us.registry.IssueAPIToken(ctx, signingKey, actor)
+}
+
+func (us *UserService) ListAPITokens(ctx context.Context, actor User) ([]APIToken, error) {
+	return us.registry.ListAPITokens(ctx, actor)
 }

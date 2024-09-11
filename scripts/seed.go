@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/config-source/cdb/auth"
@@ -24,6 +25,11 @@ func fail(err error) {
 
 func clearTable(pool *pgxpool.Pool, name string) {
 	_, err := pool.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s", name))
+	fail(err)
+}
+
+func resetIDs(pool *pgxpool.Pool, tableName string) {
+	_, err := pool.Exec(context.Background(), fmt.Sprintf("ALTER SEQUENCE %s_id_seq RESTART", tableName))
 	fail(err)
 }
 
@@ -171,8 +177,9 @@ func main() {
 	fmt.Println("Done seeding feature environments.")
 
 	fmt.Println("Seeding users")
-	clearTable(pool, "users")
 	clearTable(pool, "users_to_roles")
+	clearTable(pool, "users")
+	resetIDs(pool, "users")
 
 	adminUser, err := authGw.CreateUser(ctx, auth.User{
 		Email:    "admin@example.com",
@@ -189,4 +196,24 @@ func main() {
 	fail(authGw.AssignRoleToUserNoAuth(ctx, operatorUser, "Operator"))
 
 	fmt.Println("Done seeding users")
+
+	clearTable(pool, "api_tokens")
+
+	_, err = pool.Query(
+		ctx,
+		"INSERT INTO api_tokens (user_id, token, created_at) VALUES ($1, $2, $3)",
+		strconv.Itoa(int(adminUser.ID)),
+		"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlzcyI6ImNkYiIsImlhdCI6MTcyNjA2Njk0M30.QkpwWcOXxYOhWvbo8sf0F-xlAfQ59X84ZlQaDHERxWc06nWtjjkh5vqTMl8haZ9mSaOK_-FwZXABrtGoV3nRuA",
+		time.Now(),
+	)
+	fail(err)
+
+	_, err = pool.Query(
+		ctx,
+		"INSERT INTO api_tokens (user_id, token, created_at) VALUES ($1, $2, $3)",
+		strconv.Itoa(int(operatorUser.ID)),
+		"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiRW1haWwiOiJvcGVyYXRvckBleGFtcGxlLmNvbSIsImlzcyI6ImNkYiIsImlhdCI6MTcyNjA2Njk0M30.CzI0bmdz6MCJPPmcHGD_pltgCkZMTXxweX96Ejy4R499IqPSNqdS-igX9pvxyeJvtgn8jIuBnMIUUxjGKIia5A",
+		time.Now(),
+	)
+	fail(err)
 }

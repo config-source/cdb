@@ -53,6 +53,9 @@ func (c *Client) Do(ctx context.Context, spec requestSpec, output interface{}) (
 
 	req.Header.Add("Accepts", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+	if c.token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
+	}
 
 	query := url.Values{}
 	for key, value := range spec.params {

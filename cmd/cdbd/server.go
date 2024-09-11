@@ -24,6 +24,8 @@ func getAuthenticationGateway(log zerolog.Logger, pool *pgxpool.Pool) auth.Authe
 	default:
 		if gatewayName == "" {
 			log.Warn().Msg("no AUTHENTICATION_GATEWAY configured, using postgres as default")
+		} else if gatewayName != "postgres" {
+			log.Error().Str("gatewayName", gatewayName).Msg("is not a valid gateway")
 		}
 
 		return postgres.NewGateway(log, pool)
@@ -36,6 +38,8 @@ func getAuthorizationGateway(log zerolog.Logger, pool *pgxpool.Pool) auth.Author
 	default:
 		if gatewayName == "" {
 			log.Warn().Msg("no AUTHORIZATION_GATEWAY configured, using postgres as default")
+		} else if gatewayName != "postgres" {
+			log.Error().Str("gatewayName", gatewayName).Msg("is not a valid gateway")
 		}
 
 		return postgres.NewGateway(log, pool)
@@ -62,6 +66,7 @@ var serverCmd = &cobra.Command{
 		envsRepo := environments.NewRepository(logger, pool)
 		keysRepo := configkeys.NewRepository(logger, pool)
 		valuesRepo := configvalues.NewRepository(logger, pool)
+		tokenRegistry := auth.NewTokenRegistry(logger, pool)
 
 		envsService := environments.NewService(envsRepo, authorizationGateway)
 		keysService := configkeys.NewService(keysRepo, authorizationGateway)
@@ -75,6 +80,7 @@ var serverCmd = &cobra.Command{
 		userService := auth.NewUserService(
 			authenticationGateway,
 			authorizationGateway,
+			tokenRegistry,
 			settings.AllowPublicRegistration(),
 			settings.DefaultRegisterRole(),
 		)

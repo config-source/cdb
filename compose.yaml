@@ -20,6 +20,23 @@ services:
     depends_on:
       - postgres
 
+  cli:
+    environment:
+      CDB_BASE_URL: http://server:8080
+      # Admin token
+      CDB_TOKEN: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlzcyI6ImNkYiIsImlhdCI6MTcyNjA2Njk0M30.QkpwWcOXxYOhWvbo8sf0F-xlAfQ59X84ZlQaDHERxWc06nWtjjkh5vqTMl8haZ9mSaOK_-FwZXABrtGoV3nRuA"
+      # Operator token
+      # CDB_TOKEN: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiRW1haWwiOiJvcGVyYXRvckBleGFtcGxlLmNvbSIsImlzcyI6ImNkYiIsImlhdCI6MTcyNjA2Njk0M30.CzI0bmdz6MCJPPmcHGD_pltgCkZMTXxweX96Ejy4R499IqPSNqdS-igX9pvxyeJvtgn8jIuBnMIUUxjGKIia5A"
+    command: [cli]
+    image: golang:1.22
+    entrypoint: /app/docker/compose-entrypoint.sh
+    working_dir: /app
+    volumes:
+      - .:/app
+      - cdb-go-path:/go
+    depends_on:
+      - server
+
   frontend:
     image: node:lts
     entrypoint: /app/docker/compose-entrypoint.sh
