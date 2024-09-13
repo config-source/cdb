@@ -24,6 +24,21 @@ func NewTestGateway() *TestGateway {
 	}
 }
 
+func NewTestServiceWithGateway(testgw *TestGateway) *UserService {
+	return NewUserService(
+		testgw,
+		testgw,
+		&TokenRegistry{},
+		true,
+		"Operator",
+	)
+}
+
+func NewTestService() *UserService {
+	testgw := NewTestGateway()
+	return NewTestServiceWithGateway(testgw)
+}
+
 func (tr *TestGateway) Healthy(ctx context.Context) bool {
 	return tr.IsHealthy
 }
@@ -96,7 +111,12 @@ func (tg *TestGateway) ListUsers(ctx context.Context) ([]User, error) {
 
 // AuthorizationGateway
 
-func (tg *TestGateway) HasPermission(ctx context.Context, actor User, permission Permission) (bool, error) {
+func (tg *TestGateway) HasPermission(
+	ctx context.Context,
+	actor User,
+	permission Permission,
+	additionalPermissions ...Permission,
+) (bool, error) {
 	return !tg.DenyPermissionCheck, tg.Error
 }
 

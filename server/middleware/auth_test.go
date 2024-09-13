@@ -25,7 +25,12 @@ func TestAuthenticationMiddlewareNoToken(t *testing.T) {
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.Authentication(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if capturedUser.ID != 0 {
@@ -54,7 +59,12 @@ func TestAuthenticationMiddlewareTokenInHeader(t *testing.T) {
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.Authentication(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if !reflect.DeepEqual(capturedUser, expectedUser) {
@@ -81,7 +91,12 @@ func TestAuthenticationMiddlewareTokenInvalidHeader(t *testing.T) {
 
 	req.Header.Add("Authorization", fmt.Sprintf("JWT %s", token))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.Authentication(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if rr.Result().StatusCode != http.StatusBadRequest {
@@ -108,7 +123,12 @@ func TestAuthenticationMiddlewareTokenInvalidToken(t *testing.T) {
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token[10:]))
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.Authentication(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if rr.Result().StatusCode != http.StatusBadRequest {
@@ -140,7 +160,12 @@ func TestAuthenticationMiddlewareTokenInCookie(t *testing.T) {
 		Value: token,
 	})
 
-	handler := middleware.Authentication(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.Authentication(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if !reflect.DeepEqual(capturedUser, expectedUser) {
@@ -169,7 +194,12 @@ func TestAuthenticationRequiredMiddlewareAllowsHandlerWithValidToken(t *testing.
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.AuthenticationRequired(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if !called {
@@ -187,7 +217,12 @@ func TestAuthenticationRequiredMiddlewareProtectsHandlerWithoutToken(t *testing.
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	handler := middleware.AuthenticationRequired(zerolog.New(os.Stdout), signingKey, testHandler)
+	handler := middleware.AuthenticationRequired(
+		zerolog.New(os.Stdout),
+		auth.NewTestService(),
+		signingKey,
+		testHandler,
+	)
 	handler.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusUnauthorized {

@@ -89,8 +89,30 @@ func TestOperatorHasConfigurePermissions(t *testing.T) {
 		}
 
 		if !hasPerm {
-			t.Errorf("Expected Administrator to have permission: %s", perm)
+			t.Errorf("Expected Operator to have permission: %s", perm)
 		}
+	}
+}
+
+func TestHasPermissionWithMultiplePermissions(t *testing.T) {
+	gateway, tr := initTestDB(t)
+	defer tr.Cleanup()
+
+	operator := operatorFixture(t, gateway)
+	ctx := context.Background()
+	permissions := []auth.Permission{
+		auth.PermissionManageConfigKeys,
+		auth.PermissionManageRoles,
+		auth.PermissionConfigureEnvironments,
+	}
+
+	hasPerm, err := gateway.HasPermission(ctx, operator, permissions[0], permissions[1:]...)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !hasPerm {
+		t.Errorf("Expected to have permissions: %v", permissions)
 	}
 }
 

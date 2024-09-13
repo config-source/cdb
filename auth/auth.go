@@ -58,7 +58,7 @@ type AuthenticationGateway interface {
 // interface is here so we can implement it for other backends later like LDAP
 // etc.
 type AuthorizationGateway interface {
-	HasPermission(ctx context.Context, actor User, permission Permission) (bool, error)
+	HasPermission(ctx context.Context, actor User, permission Permission, additionalPermissions ...Permission) (bool, error)
 
 	CreateRole(ctx context.Context, actor User, role string, permissions []Permission) error
 	AddPermissionsToRole(ctx context.Context, actor User, role string, permissions []Permission) error

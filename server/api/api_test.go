@@ -26,12 +26,7 @@ func testAPI(
 	api, mux := New(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		tokenSigningKey,
-		auth.NewUserService(
-			gateway,
-			gateway,
-			true,
-			"user-testing",
-		),
+		auth.NewTestServiceWithGateway(gateway),
 		configvalues.NewService(repo, repo, repo, gateway, true),
 		environments.NewService(repo, gateway),
 		configkeys.NewService(repo, gateway),

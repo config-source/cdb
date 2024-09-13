@@ -45,7 +45,7 @@ func TestLogin(t *testing.T) {
 		t.Error(err)
 	}
 
-	req := httptest.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(marshalled))
+	req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(marshalled))
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -105,7 +105,7 @@ func TestRegister(t *testing.T) {
 		t.Error(err)
 	}
 
-	req := httptest.NewRequest("POST", "/api/v1/register", bytes.NewBuffer(marshalled))
+	req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(marshalled))
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -170,6 +170,7 @@ func TestRegisterWhenPublicRegistrationDisabled(t *testing.T) {
 	api.userService = auth.NewUserService(
 		gateway,
 		gateway,
+		&auth.TokenRegistry{},
 		false,
 		"",
 	)
@@ -184,7 +185,7 @@ func TestRegisterWhenPublicRegistrationDisabled(t *testing.T) {
 		t.Error(err)
 	}
 
-	req := httptest.NewRequest("POST", "/api/v1/register", bytes.NewBuffer(marshalled))
+	req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(marshalled))
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 

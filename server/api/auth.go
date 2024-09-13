@@ -35,6 +35,7 @@ func (a *API) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
 				Value:    value,
 				Domain:   r.Host,
 				HttpOnly: true,
+				Path:     "/",
 				SameSite: http.SameSiteStrictMode,
 			},
 		)

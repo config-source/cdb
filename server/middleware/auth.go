@@ -59,10 +59,13 @@ func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []
 
 				if err == nil {
 					token = cookie.Value
+				} else {
+					log.Debug().Str("cookieErr", err.Error()).Msg("error getting ID token cookie")
 				}
 			}
 
 			if token == "" {
+				log.Debug().Msg("unable to get token for request")
 				next.ServeHTTP(w, r)
 				return
 			}

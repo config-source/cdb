@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"fmt"
 
 	"github.com/config-source/cdb/auth"
 	"github.com/config-source/cdb/postgresutils"
@@ -35,10 +34,20 @@ var assignPermissionToRoleSql string
 //go:embed queries/authorization/remove_permission_from_role.sql
 var removePermissionFromRoleSql string
 
-func (g *Gateway) HasPermission(ctx context.Context, actor auth.User, permission auth.Permission) (bool, error) {
+func (g *Gateway) HasPermission(
+	ctx context.Context,
+	actor auth.User,
+	permission auth.Permission,
+	additionalPermissions ...auth.Permission,
+) (bool, error) {
 	var rowCount int
-	fmt.Println(hasPermissionSql)
-	err := g.pool.QueryRow(ctx, hasPermissionSql, actor.ID, permission).Scan(&rowCount)
+	err := g.pool.QueryRow(
+		ctx,
+		hasPermissionSql,
+		actor.ID,
+		permission,
+		additionalPermissions,
+	).Scan(&rowCount)
 	return rowCount > 0, err
 }
 
