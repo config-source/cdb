@@ -1,1 +1,3 @@
-SELECT * FROM environments WHERE name = $1;
+SELECT environments.*, services.name as service_name FROM environments 
+JOIN services ON services.id = environments.service_id
+WHERE environments.name = $1;

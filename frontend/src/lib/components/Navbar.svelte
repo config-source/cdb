@@ -2,10 +2,23 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import { user } from '$lib/stores/user';
+	import { selectedService } from '$lib/stores/selectedService';
 	import { goto } from '$app/navigation';
 
+	/** @type string[] */
+	let services = ['All'];
+
+	const fetchServices = async () => {
+		const res = await fetch('/api/v1/services');
+		const data = await res.json();
+		services = ['All', ...data.map((s) => s.Name)];
+	};
+
+	fetchServices();
+	user.subscribe(() => fetchServices());
+
 	const logout = async () => {
-		const res = await fetch('/api/v1/logout', {
+		const res = await fetch('/api/v1/auth/logout', {
 			method: 'DELETE'
 		});
 		if (res.ok) {
@@ -36,6 +49,18 @@
 		</div>
 
 		<div class="navbar-end">
+			<div class="navbar-item has-dropdown is-hoverable">
+				<a class="navbar-link"> Service: {$selectedService} </a>
+
+				<div class="navbar-dropdown">
+					{#each services as service}
+						<a class="navbar-item" on:click={() => selectedService.set(service)}>
+							{service}
+						</a>
+					{/each}
+				</div>
+			</div>
+
 			<div class="navbar-item has-dropdown is-hoverable">
 				<a class="navbar-link"> {$user.data.Email} </a>
 

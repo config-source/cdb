@@ -8,6 +8,7 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/services"
 )
 
 // TestRepository is an in-memory ModelRepository used for tests only.
@@ -15,6 +16,7 @@ type TestRepository struct {
 	IsHealthy bool
 	Error     error
 
+	Services     map[int]services.Service
 	Environments map[int]environments.Environment
 	ConfigKeys   map[int]configkeys.ConfigKey
 	ConfigValues map[int]*configvalues.ConfigValue
@@ -78,8 +80,14 @@ func (tr *TestRepository) CreateEnvironment(ctx context.Context, env environment
 		tr.Environments = make(map[int]environments.Environment)
 	}
 
+	svc, ok := tr.Services[env.ServiceID]
+	if !ok {
+		return env, services.ErrNotFound
+	}
+
 	env.ID = len(tr.Environments) + 1
 	env.CreatedAt = time.Now()
+	env.Service = svc.Name
 	if env.PromotesToID != nil && *env.PromotesToID != 0 {
 		if _, ok := tr.Environments[*env.PromotesToID]; !ok {
 			return env, errors.New("promotes to id does not exist!")
@@ -254,4 +262,58 @@ func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environment
 	}
 
 	return nil, configvalues.ErrNotFound
+}
+
+func (tr *TestRepository) ListServices(ctx context.Context, includeSensitive bool) ([]services.Service, error) {
+	if tr.Error != nil {
+		return nil, tr.Error
+	}
+
+	svcs := make([]services.Service, len(tr.Services))
+	for id, svc := range tr.Services {
+		svcs[id-1] = svc
+	}
+
+	return svcs, nil
+}
+
+func (tr *TestRepository) GetServiceByName(ctx context.Context, name string) (services.Service, error) {
+	if tr.Error != nil {
+		return services.Service{}, tr.Error
+	}
+
+	for _, svc := range tr.Services {
+		if svc.Name == name {
+			return svc, nil
+		}
+	}
+
+	return services.Service{}, services.ErrNotFound
+}
+
+func (tr *TestRepository) GetService(ctx context.Context, id int) (services.Service, error) {
+	if tr.Error != nil {
+		return services.Service{}, tr.Error
+	}
+
+	if svc, ok := tr.Services[id]; ok {
+		return svc, nil
+	}
+
+	return services.Service{}, services.ErrNotFound
+}
+
+func (tr *TestRepository) CreateService(ctx context.Context, svc services.Service) (services.Service, error) {
+	if tr.Error != nil {
+		return services.Service{}, tr.Error
+	}
+
+	if tr.Services == nil {
+		tr.Services = make(map[int]services.Service)
+	}
+
+	svc.ID = len(tr.Services) + 1
+	svc.CreatedAt = time.Now()
+	tr.Services[svc.ID] = svc
+	return svc, nil
 }

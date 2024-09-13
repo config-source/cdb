@@ -1,1 +1,2 @@
-SELECT * FROM environments;
+SELECT environments.*, services.name as service_name FROM environments 
+JOIN services ON services.id = environments.service_id;

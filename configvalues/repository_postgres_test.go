@@ -10,10 +10,17 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/postgresutils"
+	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*PostgresRepository, *environments.PostgresRepository, *configkeys.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (
+	*PostgresRepository,
+	*environments.PostgresRepository,
+	*configkeys.PostgresRepository,
+	*services.PostgresRepository,
+	*postgresutils.TestRepository,
+) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -22,20 +29,39 @@ func initTestDB(t *testing.T) (*PostgresRepository, *environments.PostgresReposi
 	repo := NewRepository(logger, pool)
 	envRepo := environments.NewRepository(logger, pool)
 	keyRepo := configkeys.NewRepository(logger, pool)
+	svcRepo := services.NewRepository(logger, pool)
 
-	return repo, envRepo, keyRepo, tr
+	return repo, envRepo, keyRepo, svcRepo, tr
 }
 
-func envFixture(t *testing.T, repo *environments.PostgresRepository, name string, promotesToID *int) environments.Environment {
+func envFixture(
+	t *testing.T,
+	repo *environments.PostgresRepository,
+	name string,
+	promotesToID *int,
+	serviceID int,
+) environments.Environment {
 	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name:         name,
 		PromotesToID: promotesToID,
+		ServiceID:    serviceID,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return env
+}
+
+func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+	svc, err := repo.CreateService(context.Background(), services.Service{
+		Name: name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return svc
 }
 
 func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
@@ -52,10 +78,11 @@ func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name st
 }
 
 func TestCreateConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 
 	val := "test"
@@ -99,10 +126,11 @@ func TestCreateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
@@ -149,10 +177,11 @@ func TestUpdateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
@@ -170,10 +199,11 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
@@ -191,10 +221,11 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
@@ -212,10 +243,11 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 }
 
 func TestCreateIntConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeInteger, true)
 
 	val := "test"
@@ -259,10 +291,11 @@ func TestCreateIntConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env := envFixture(t, envRepo, "cdb", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
 	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	secondKey := configKeyFixture(t, keyRepo, "secondKey", configkeys.TypeString, true)
 
@@ -298,12 +331,13 @@ func TestGetConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValueInheritsValues(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
@@ -356,12 +390,13 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
@@ -383,12 +418,13 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
@@ -433,12 +469,13 @@ func createInheritedConfigValue(t *testing.T, repo *PostgresRepository, parentNa
 }
 
 func TestGetConfiguration(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
@@ -467,12 +504,13 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	noChildren := configKeyFixture(t, keyRepo, "noChildren", configkeys.TypeString, false)
@@ -503,12 +541,13 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 }
 
 func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	noChildren := configKeyFixture(t, keyRepo, "noChildren", configkeys.TypeString, false)
@@ -540,12 +579,13 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 }
 
 func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
-	repo, envRepo, keyRepo, tr := initTestDB(t)
+	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	production := envFixture(t, envRepo, "production", nil)
-	staging := envFixture(t, envRepo, "staging", &production.ID)
-	dev := envFixture(t, envRepo, "dev", &staging.ID)
+	svc := svcFixture(t, svcRepo, "svc1")
+	production := envFixture(t, envRepo, "production", nil, svc.ID)
+	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
+	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
 	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
 	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)

@@ -11,6 +11,7 @@ import (
 	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/postgresutils"
 	"github.com/config-source/cdb/server/api"
+	"github.com/config-source/cdb/services"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
@@ -29,6 +30,7 @@ func New(
 	configValueService *configvalues.Service,
 	envService *environments.Service,
 	configKeyService *configkeys.Service,
+	svcService *services.ServiceService,
 	frontendLocation string,
 ) *Server {
 	var frontendHandler http.Handler
@@ -50,6 +52,7 @@ func New(
 		configValueService,
 		envService,
 		configKeyService,
+		svcService,
 	)
 
 	mux := http.NewServeMux()

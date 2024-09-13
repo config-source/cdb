@@ -1,20 +1,32 @@
 <script>
 	import Heading from '$lib/components/utility/Heading.svelte';
+	import { selectedService } from '$lib/stores/selectedService';
 
 	let environments = [];
 	let filteredEnvironments = [];
+	let query = '';
 
-	const filterEnvironments = (evt) => {
-		const name = evt.target.value;
-		if (name === '') {
+	const filterEnvironments = () => {
+		if (query === '') {
 			filteredEnvironments = environments;
-			return;
+		} else {
+			filteredEnvironments = environments
+				.filter(
+					(env) =>
+						env.Name.toLowerCase().includes(query.toLowerCase()) ||
+						env.Service.toLowerCase().includes(query.toLowerCase())
+				)
+				// TODO: prioritise things that match the name over things that match the
+				// service if both match the query.
+				.sort((a, b) => a.Name.localeCompare(b.Name));
 		}
 
-		filteredEnvironments = environments.filter((env) =>
-			env.Name.toLowerCase().includes(name.toLowerCase())
-		);
+		if ($selectedService !== 'All') {
+			filteredEnvironments = filteredEnvironments.filter((env) => env.Service === $selectedService);
+		}
 	};
+
+	selectedService.subscribe(() => filterEnvironments());
 
 	const getNameFromId = (id) => {
 		const env = environments.find((env) => env.ID === id);
@@ -41,18 +53,23 @@
 				class="is-input column is-full"
 				type="text"
 				placeholder="Filter environments by name"
+				bind:value={query}
 				on:keyup={filterEnvironments}
 			/>
 		</div>
 	</div>
 	<table class="table is-fullwidth is-hoverable">
 		<thead>
+			<th>Service</th>
 			<th>Name</th>
 			<th>Promotes To</th>
 		</thead>
 		<tbody>
 			{#each filteredEnvironments as env}
 				<tr>
+					<td>
+						{env.Service}
+					</td>
 					<td>
 						<a href="/environments/{env.Name}">
 							{env.Name}

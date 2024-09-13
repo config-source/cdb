@@ -49,6 +49,22 @@ func GetOne[T any](pool *pgxpool.Pool, ctx context.Context, sql string, args ...
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
 
+// GetOneLax runs the given query and serializes the returned row into T
+//
+// If more than a single row matches the given query an error is returned.
+//
+// GetOne should be preferred but when ignoring missing columns is desirable
+// this function should be used.
+func GetOneLax[T any](pool *pgxpool.Pool, ctx context.Context, sql string, args ...interface{}) (T, error) {
+	rows, err := pool.Query(ctx, sql, args...)
+	if err != nil {
+		var def T
+		return def, err
+	}
+
+	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[T])
+}
+
 // GetAll runs the given query and serializes the returned rows into a slice of T
 func GetAll[T any](pool *pgxpool.Pool, ctx context.Context, sql string, args ...interface{}) ([]T, error) {
 	rows, err := pool.Query(ctx, sql, args...)

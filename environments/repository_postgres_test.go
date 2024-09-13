@@ -7,10 +7,11 @@ import (
 
 	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/postgresutils"
+	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*environments.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*environments.PostgresRepository, *services.PostgresRepository, *postgresutils.TestRepository) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -18,14 +19,25 @@ func initTestDB(t *testing.T) (*environments.PostgresRepository, *postgresutils.
 		zerolog.New(nil).Level(zerolog.Disabled),
 		pool,
 	)
+	svcRepo := services.NewRepository(
+		zerolog.New(nil).Level(zerolog.Disabled),
+		pool,
+	)
 
-	return repo, tr
+	return repo, svcRepo, tr
 }
 
-func envFixture(t *testing.T, repo *environments.PostgresRepository, name string, promotesToID *int) environments.Environment {
+func envFixture(
+	t *testing.T,
+	repo *environments.PostgresRepository,
+	name string,
+	promotesToID *int,
+	serviceID int,
+) environments.Environment {
 	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
 		Name:         name,
 		PromotesToID: promotesToID,
+		ServiceID:    serviceID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -34,12 +46,26 @@ func envFixture(t *testing.T, repo *environments.PostgresRepository, name string
 	return env
 }
 
+func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+	svc, err := repo.CreateService(context.Background(), services.Service{
+		Name: name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return svc
+}
+
 func TestCreateEnvironment(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
+	svc := svcFixture(t, svcRepo, "svc1")
+
 	env, err := repo.CreateEnvironment(context.Background(), environments.Environment{
-		Name: "mat",
+		Name:      "mat",
+		ServiceID: svc.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -59,11 +85,14 @@ func TestCreateEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	envFixture(t, repo, "env1", nil)
-	env2 := envFixture(t, repo, "env2", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+
+	envFixture(t, repo, "env1", nil, svc.ID)
+	env2 := envFixture(t, repo, "env2", nil, svc.ID)
+	env2.Service = svc.Name
 
 	env, err := repo.GetEnvironment(context.Background(), env2.ID)
 	if err != nil {
@@ -76,7 +105,7 @@ func TestGetEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, _, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	_, err := repo.GetEnvironment(context.Background(), 1)
@@ -90,11 +119,14 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByName(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	env1 := envFixture(t, repo, "env1", nil)
-	envFixture(t, repo, "env2", nil)
+	svc := svcFixture(t, svcRepo, "svc1")
+
+	env1 := envFixture(t, repo, "env1", nil, svc.ID)
+	env1.Service = svc.Name
+	envFixture(t, repo, "env2", nil, svc.ID)
 
 	env, err := repo.GetEnvironmentByName(context.Background(), env1.Name)
 	if err != nil {
@@ -107,7 +139,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, _, tr := initTestDB(t)
 	defer tr.Cleanup()
 
 	_, err := repo.GetEnvironmentByName(context.Background(), "dev")

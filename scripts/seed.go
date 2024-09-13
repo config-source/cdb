@@ -13,6 +13,7 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/services"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
@@ -50,23 +51,28 @@ func main() {
 	authGw := authpg.NewGateway(logger, pool)
 	envRepo := environments.NewRepository(logger, pool)
 	keyRepo := configkeys.NewRepository(logger, pool)
+	svcRepo := services.NewRepository(logger, pool)
 	valueRepo := configvalues.NewRepository(logger, pool)
 
 	ctx := context.Background()
 
-	fmt.Println("Seeding environments...")
-	clearTable(pool, "environments")
+	fmt.Println("Seeding services")
+	clearTable(pool, "services")
 
-	production, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "production", Sensitive: true})
-	fail(err)
+	makeSvc := func(name string) services.Service {
+		svc, err := svcRepo.CreateService(ctx, services.Service{Name: name})
+		if err != nil {
+			panic(err)
+		}
 
-	staging, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "staging", PromotesToID: &production.ID, Sensitive: true})
-	fail(err)
+		return svc
+	}
 
-	dev, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: "dev", PromotesToID: &staging.ID})
-	fail(err)
-
-	fmt.Println("Done seeding environments.")
+	services := []services.Service{
+		makeSvc("legacy-service"),
+		makeSvc("deployment-service"),
+		makeSvc("delivery-service"),
+	}
 
 	fmt.Println("Seeding config keys...")
 	clearTable(pool, "config_keys")
@@ -89,92 +95,139 @@ func main() {
 
 	fmt.Println("Done seeding config keys.")
 
-	fmt.Println("Seeding config values...")
+	clearTable(pool, "environments")
 	clearTable(pool, "config_values")
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
-		production.ID,
-		owner.ID,
-		"SRE",
-	))
-	fail(err)
+	for _, svc := range services {
+		fmt.Printf("Seeding environments for %s...\n", svc.Name)
 
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-		production.ID,
-		maxReplicas.ID,
-		100,
-	))
-	fail(err)
-
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-		production.ID,
-		minReplicas.ID,
-		10,
-	))
-	fail(err)
-
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
-		production.ID,
-		sslEnabled.ID,
-		true,
-	))
-	fail(err)
-
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-		staging.ID,
-		minReplicas.ID,
-		1,
-	))
-	fail(err)
-
-	_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-		dev.ID,
-		maxReplicas.ID,
-		10,
-	))
-	fail(err)
-
-	fmt.Println("Done seeding config values.")
-
-	fmt.Println("Seeding feature environments")
-
-	for i := range 100 {
-		fe, err := envRepo.CreateEnvironment(ctx, environments.Environment{Name: fmt.Sprintf("feature-environment-%d", i+1), PromotesToID: &staging.ID})
+		production, err := envRepo.CreateEnvironment(
+			ctx,
+			environments.Environment{
+				Name:      "production",
+				Sensitive: true,
+				ServiceID: svc.ID,
+			},
+		)
 		fail(err)
 
-		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
-			fe.ID,
-			sslEnabled.ID,
-			false,
+		staging, err := envRepo.CreateEnvironment(
+			ctx,
+			environments.Environment{
+				Name:         "staging",
+				PromotesToID: &production.ID,
+				Sensitive:    true,
+				ServiceID:    svc.ID,
+			},
+		)
+		fail(err)
+
+		dev, err := envRepo.CreateEnvironment(
+			ctx,
+			environments.Environment{
+				Name:         "dev",
+				PromotesToID: &staging.ID,
+				ServiceID:    svc.ID,
+			},
+		)
+		fail(err)
+
+		fmt.Println("Done seeding environments.")
+
+		fmt.Printf("Seeding config values for %s...\n", svc.Name)
+
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
+			production.ID,
+			owner.ID,
+			"SRE",
 		))
 		fail(err)
 
-		switch rand.Intn(3) {
-		case 0:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
-				fe.ID,
-				owner.ID,
-				fmt.Sprintf("dev-team-%d", rand.Intn(10)),
-			))
-			fail(err)
-		case 1:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-				fe.ID,
-				maxReplicas.ID,
-				rand.Intn(30),
-			))
-			fail(err)
-		case 2:
-			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
-				fe.ID,
-				minReplicas.ID,
-				rand.Intn(9)+1,
-			))
-			fail(err)
-		}
-	}
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+			production.ID,
+			maxReplicas.ID,
+			100,
+		))
+		fail(err)
 
-	fmt.Println("Done seeding feature environments.")
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+			production.ID,
+			minReplicas.ID,
+			10,
+		))
+		fail(err)
+
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
+			production.ID,
+			sslEnabled.ID,
+			true,
+		))
+		fail(err)
+
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+			staging.ID,
+			minReplicas.ID,
+			1,
+		))
+		fail(err)
+
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+			dev.ID,
+			maxReplicas.ID,
+			10,
+		))
+		fail(err)
+
+		fmt.Println("Done seeding config values.")
+
+		featureEnvCount := rand.Intn(100)
+		fmt.Printf("Seeding %d feature environments for %s...\n", featureEnvCount, svc.Name)
+
+		for i := range featureEnvCount {
+			fe, err := envRepo.CreateEnvironment(
+				ctx,
+				environments.Environment{
+					Name:         fmt.Sprintf("feature-environment-%d", i+1),
+					PromotesToID: &staging.ID,
+					ServiceID:    svc.ID,
+				},
+			)
+			fail(err)
+
+			_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewBool(
+				fe.ID,
+				sslEnabled.ID,
+				false,
+			))
+			fail(err)
+
+			switch rand.Intn(3) {
+			case 0:
+				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
+					fe.ID,
+					owner.ID,
+					fmt.Sprintf("dev-team-%d", rand.Intn(10)),
+				))
+				fail(err)
+			case 1:
+				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+					fe.ID,
+					maxReplicas.ID,
+					rand.Intn(30),
+				))
+				fail(err)
+			case 2:
+				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
+					fe.ID,
+					minReplicas.ID,
+					rand.Intn(9)+1,
+				))
+				fail(err)
+			}
+		}
+
+		fmt.Println("Done seeding feature environments.")
+	}
 
 	fmt.Println("Seeding users")
 	clearTable(pool, "users_to_roles")

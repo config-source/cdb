@@ -11,6 +11,7 @@ import (
 	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/server"
 	"github.com/config-source/cdb/server/middleware"
+	"github.com/config-source/cdb/services"
 	"github.com/config-source/cdb/settings"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pseidemann/finish"
@@ -66,6 +67,7 @@ var serverCmd = &cobra.Command{
 		envsRepo := environments.NewRepository(logger, pool)
 		keysRepo := configkeys.NewRepository(logger, pool)
 		valuesRepo := configvalues.NewRepository(logger, pool)
+		svcRepo := services.NewRepository(logger, pool)
 		tokenRegistry := auth.NewTokenRegistry(logger, pool)
 
 		envsService := environments.NewService(envsRepo, authorizationGateway)
@@ -84,6 +86,7 @@ var serverCmd = &cobra.Command{
 			settings.AllowPublicRegistration(),
 			settings.DefaultRegisterRole(),
 		)
+		svcService := services.NewServiceService(svcRepo, authorizationGateway)
 
 		var server http.Handler = server.New(
 			logger,
@@ -93,6 +96,7 @@ var serverCmd = &cobra.Command{
 			valuesService,
 			envsService,
 			keysService,
+			svcService,
 			settings.FrontendLocation(),
 		)
 		server = middleware.AccessLog(logger, server)

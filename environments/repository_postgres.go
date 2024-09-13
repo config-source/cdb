@@ -39,7 +39,15 @@ var listEnvironmentsSql string
 var listNonsensitiveEnvironmentsSql string
 
 func (r *PostgresRepository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
-	return postgresutils.GetOne[Environment](r.pool, ctx, createEnvironmentSql, env.Name, env.PromotesToID, env.Sensitive)
+	return postgresutils.GetOneLax[Environment](
+		r.pool,
+		ctx,
+		createEnvironmentSql,
+		env.Name,
+		env.PromotesToID,
+		env.Sensitive,
+		env.ServiceID,
+	)
 }
 
 func (r *PostgresRepository) GetEnvironment(ctx context.Context, id int) (Environment, error) {
@@ -66,5 +74,7 @@ func (r *PostgresRepository) ListEnvironments(ctx context.Context, includeSensit
 		sql = listEnvironmentsSql
 	}
 
-	return postgresutils.GetAll[Environment](r.pool, ctx, sql)
+	envs, err := postgresutils.GetAll[Environment](r.pool, ctx, sql)
+	r.log.Debug().Int("envCount", len(envs)).Msg("retrieved environments")
+	return envs, err
 }

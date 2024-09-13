@@ -7,7 +7,7 @@
 
 	/** @type (email: string, password: string) => Promise<void> */
 	const onSubmit = async (email, password) => {
-		const res = await fetch('/api/v1/login', {
+		const res = await fetch('/api/v1/auth/login', {
 			method: 'POST',
 			body: JSON.stringify({ Email: email, Password: password })
 		});

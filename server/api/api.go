@@ -11,6 +11,7 @@ import (
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
 	"github.com/config-source/cdb/server/middleware"
+	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
@@ -21,6 +22,7 @@ type API struct {
 	userService        *auth.UserService
 	configValueService *configvalues.Service
 	envService         *environments.Service
+	svcService         *services.ServiceService
 	configKeyService   *configkeys.Service
 }
 
@@ -31,6 +33,7 @@ func New(
 	configValueService *configvalues.Service,
 	envService *environments.Service,
 	configKeyService *configkeys.Service,
+	svcService *services.ServiceService,
 ) (*API, http.Handler) {
 	api := &API{
 		log:             log,
@@ -40,6 +43,7 @@ func New(
 		envService:         envService,
 		configKeyService:   configKeyService,
 		userService:        userService,
+		svcService:         svcService,
 	}
 
 	// v1 routes
@@ -50,6 +54,11 @@ func New(
 	v1Mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
 	v1Mux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
 	v1Mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
+
+	v1Mux.HandleFunc("GET /api/v1/services/by-name/{name}", api.GetServiceByName)
+	v1Mux.HandleFunc("GET /api/v1/services/by-id/{id}", api.GetServiceByID)
+	v1Mux.HandleFunc("GET /api/v1/services", api.ListServices)
+	v1Mux.HandleFunc("POST /api/v1/services", api.CreateService)
 
 	v1Mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
 	v1Mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)

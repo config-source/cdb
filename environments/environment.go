@@ -18,6 +18,9 @@ type Environment struct {
 	PromotesToID *int   `db:"promotes_to_id"`
 	Sensitive    bool   `db:"sensitive"`
 
+	ServiceID int    `db:"service_id"`
+	Service   string `db:"service_name"`
+
 	CreatedAt time.Time `db:"created_at"`
 }
 
