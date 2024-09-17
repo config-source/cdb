@@ -1,1 +1,3 @@
-SELECT * FROM config_keys WHERE name = $1;
+SELECT config_keys.*, services.id as service_id, services.name as service_name FROM config_keys
+INNER JOIN services ON services.id = config_keys.service_id
+WHERE config_keys.name = $1;

@@ -86,7 +86,7 @@ func (svc *Service) SetConfigurationValue(
 			return cv, ErrValueTypeMustBeSet
 		}
 
-		ck = configkeys.New(key, cv.ValueType)
+		ck = configkeys.New(env.ServiceID, key, cv.ValueType)
 		ck, err = svc.configKeyRepo.CreateConfigKey(ctx, ck)
 		if err != nil {
 			return cv, fmt.Errorf("failed to create new config key: %w", err)

@@ -42,24 +42,26 @@ type ConfigKey struct {
 	ValueType    ValueType `db:"value_type"`
 	CanPropagate *bool     `db:"can_propagate"`
 
+	ServiceID int    `db:"service_id"`
+	Service   string `db:"service_name"`
+
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func New(name string, valueType ValueType) ConfigKey {
+func New(serviceID int, name string, valueType ValueType) ConfigKey {
 	canPropagate := true
 	return ConfigKey{
 		Name:         name,
 		ValueType:    valueType,
 		CanPropagate: &canPropagate,
+		ServiceID:    serviceID,
 	}
 }
 
-func NewWithPropagation(name string, valueType ValueType, canPropagate bool) ConfigKey {
-	return ConfigKey{
-		Name:         name,
-		ValueType:    valueType,
-		CanPropagate: &canPropagate,
-	}
+func NewWithPropagation(serviceID int, name string, valueType ValueType, canPropagate bool) ConfigKey {
+	ck := New(serviceID, name, valueType)
+	ck.CanPropagate = &canPropagate
+	return ck
 }
 
 func (ck ConfigKey) String() string {

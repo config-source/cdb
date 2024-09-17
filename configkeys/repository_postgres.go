@@ -43,7 +43,15 @@ func (r *PostgresRepository) CreateConfigKey(ctx context.Context, ck ConfigKey) 
 		canPropagate = *ck.CanPropagate
 	}
 
-	return postgresutils.GetOne[ConfigKey](r.pool, ctx, createConfigKeySql, ck.Name, ck.ValueType, canPropagate)
+	return postgresutils.GetOneLax[ConfigKey](
+		r.pool,
+		ctx,
+		createConfigKeySql,
+		ck.Name,
+		ck.ValueType,
+		canPropagate,
+		ck.ServiceID,
+	)
 }
 
 func (r *PostgresRepository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {

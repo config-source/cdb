@@ -8,10 +8,11 @@ import (
 
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/postgresutils"
+	"github.com/config-source/cdb/services"
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *services.PostgresRepository, *postgresutils.TestRepository) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -20,16 +21,35 @@ func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *postgresutils.Te
 		zerolog.New(nil).Level(zerolog.Disabled),
 		pool,
 	)
+	svcRepo := services.NewRepository(
+		zerolog.New(nil).Level(zerolog.Disabled),
+		pool,
+	)
 
-	return repo, tr
+	return repo, svcRepo, tr
 }
 
-func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
-	ck, err := repo.CreateConfigKey(context.Background(), configkeys.ConfigKey{
-		Name:         name,
-		ValueType:    valueType,
-		CanPropagate: &canPropagate,
+func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+	svc, err := repo.CreateService(context.Background(), services.Service{
+		Name: name,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return svc
+}
+
+func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, svcID int, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
+	ck, err := repo.CreateConfigKey(
+		context.Background(),
+		configkeys.NewWithPropagation(
+			svcID,
+			name,
+			valueType,
+			canPropagate,
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,13 +58,15 @@ func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name st
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	ck, err := repo.CreateConfigKey(context.Background(), configkeys.ConfigKey{
-		Name:      "mat",
-		ValueType: configkeys.TypeString,
-	})
+	svc := svcFixture(t, svcRepo, "test")
+	ck, err := repo.CreateConfigKey(context.Background(), configkeys.New(
+		svc.ID,
+		"mat",
+		configkeys.TypeString,
+	))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +87,15 @@ func TestCreateConfigKey(t *testing.T) {
 		t.Fatalf("Expected can propagate to default to true got: %v", *ck.CanPropagate)
 	}
 
-	ck2, err := repo.CreateConfigKey(context.Background(), configkeys.NewWithPropagation("mat2", configkeys.TypeString, false))
+	ck2, err := repo.CreateConfigKey(
+		context.Background(),
+		configkeys.NewWithPropagation(
+			svc.ID,
+			"mat2",
+			configkeys.TypeString,
+			false,
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,11 +118,26 @@ func TestCreateConfigKey(t *testing.T) {
 }
 
 func TestGetConfigKey(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	configKey1 := configKeyFixture(t, repo, "getConfigKey1", configkeys.TypeInteger, true)
-	configKeyFixture(t, repo, "getConfigKey2", configkeys.TypeString, true)
+	svc := svcFixture(t, svcRepo, "test")
+	configKey1 := configKeyFixture(
+		t,
+		repo,
+		svc.ID,
+		"getConfigKey1",
+		configkeys.TypeInteger,
+		true,
+	)
+	configKeyFixture(
+		t,
+		repo,
+		svc.ID,
+		"getConfigKey2",
+		configkeys.TypeString,
+		true,
+	)
 
 	configKey, err := repo.GetConfigKey(context.Background(), configKey1.ID)
 	if err != nil {
@@ -105,13 +150,15 @@ func TestGetConfigKey(t *testing.T) {
 }
 
 func TestListConfigKeys(t *testing.T) {
-	repo, tr := initTestDB(t)
+	repo, svcRepo, tr := initTestDB(t)
 	defer tr.Cleanup()
 
+	svc := svcFixture(t, svcRepo, "test")
+
 	configKeys := []configkeys.ConfigKey{
-		configKeyFixture(t, repo, "configKey1", configkeys.TypeInteger, true),
-		configKeyFixture(t, repo, "configKey2", configkeys.TypeString, true),
-		configKeyFixture(t, repo, "configKey3", configkeys.TypeBoolean, true),
+		configKeyFixture(t, repo, svc.ID, "configKey1", configkeys.TypeInteger, true),
+		configKeyFixture(t, repo, svc.ID, "configKey2", configkeys.TypeString, true),
+		configKeyFixture(t, repo, svc.ID, "configKey3", configkeys.TypeBoolean, true),
 	}
 
 	retrieved, err := repo.ListConfigKeys(context.Background())
