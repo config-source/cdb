@@ -64,20 +64,30 @@ func NewWithPropagation(serviceID int, name string, valueType ValueType, canProp
 	return ck
 }
 
+func (ck ConfigKey) Propagates() bool {
+	if ck.CanPropagate != nil {
+		return *ck.CanPropagate
+	}
+
+	return true
+}
+
 func (ck ConfigKey) String() string {
+
 	return fmt.Sprintf(
-		"ConfigKey(id=%d, name=%s, canPropagate=%t)",
+		"ConfigKey(id=%d, name=%s, serviceID=%d, canPropagate=%t)",
 		ck.ID,
 		ck.Name,
-		*ck.CanPropagate,
+		ck.ServiceID,
+		ck.Propagates(),
 	)
 }
 
 type Repository interface {
 	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
 
-	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
-	GetConfigKeyByName(ctx context.Context, name string) (ConfigKey, error)
+	GetConfigKey(ctx context.Context, serviceID int, id int) (ConfigKey, error)
+	GetConfigKeyByName(ctx context.Context, serviceID int, name string) (ConfigKey, error)
 
-	ListConfigKeys(context.Context) ([]ConfigKey, error)
+	ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error)
 }

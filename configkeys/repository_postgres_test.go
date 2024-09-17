@@ -140,7 +140,7 @@ func TestGetConfigKey(t *testing.T) {
 		true,
 	)
 
-	configKey, err := repo.GetConfigKey(context.Background(), configKey1.ID)
+	configKey, err := repo.GetConfigKey(context.Background(), svc.ID, configKey1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,6 +163,38 @@ func TestListConfigKeys(t *testing.T) {
 	ck1.Service = svc.Name
 	ck2.Service = svc.Name
 	ck3.Service = svc.Name
+
+	configKeys := []configkeys.ConfigKey{
+		ck1,
+		ck2,
+		ck3,
+	}
+
+	retrieved, err := repo.ListConfigKeys(context.Background(), svc.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(retrieved, configKeys) {
+		t.Fatalf("Expected config keys: %v Got: %v", configKeys, retrieved)
+	}
+}
+
+func TestListConfigKeysNoService(t *testing.T) {
+	repo, svcRepo, tr := initTestDB(t)
+	defer tr.Cleanup()
+
+	svc1 := svcFixture(t, svcRepo, "test1")
+	svc2 := svcFixture(t, svcRepo, "test2")
+	svc3 := svcFixture(t, svcRepo, "test3")
+
+	ck1 := configKeyFixture(t, repo, svc1.ID, "configKey1", configkeys.TypeInteger, true)
+	ck2 := configKeyFixture(t, repo, svc2.ID, "configKey2", configkeys.TypeString, true)
+	ck3 := configKeyFixture(t, repo, svc3.ID, "configKey3", configkeys.TypeBoolean, true)
+
+	ck1.Service = svc1.Name
+	ck2.Service = svc2.Name
+	ck3.Service = svc3.Name
 
 	configKeys := []configkeys.ConfigKey{
 		ck1,

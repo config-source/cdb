@@ -10,20 +10,31 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/services"
 )
 
 func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	promotesToID := 1
 	repo := &cdb.TestRepository{
-		Environments: map[int]environments.Environment{
+		Services: map[int]services.Service{
 			1: {
 				ID:   1,
-				Name: "production",
+				Name: "test",
+			},
+		},
+		Environments: map[int]environments.Environment{
+			1: {
+				ID:        1,
+				Name:      "production",
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:           2,
 				Name:         "staging",
 				PromotesToID: &promotesToID,
+				ServiceID:    1,
+				Service:      "test",
 			},
 		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
@@ -31,11 +42,15 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
@@ -57,7 +72,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 		t.Fatalf("Failed to set configuration value: %s", err)
 	}
 
-	newKey, err := repo.GetConfigKeyByName(context.Background(), "minReplicas")
+	newKey, err := repo.GetConfigKeyByName(context.Background(), 1, "minReplicas")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,15 +89,25 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 	promotesToID := 1
 	repo := &cdb.TestRepository{
-		Environments: map[int]environments.Environment{
+		Services: map[int]services.Service{
 			1: {
 				ID:   1,
-				Name: "production",
+				Name: "test",
+			},
+		},
+		Environments: map[int]environments.Environment{
+			1: {
+				ID:        1,
+				Name:      "production",
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:           2,
 				Name:         "staging",
 				PromotesToID: &promotesToID,
+				ServiceID:    1,
+				Service:      "test",
 			},
 		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
@@ -90,11 +115,15 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
@@ -119,15 +148,25 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 	promotesToID := 1
 	repo := &cdb.TestRepository{
-		Environments: map[int]environments.Environment{
+		Services: map[int]services.Service{
 			1: {
 				ID:   1,
-				Name: "production",
+				Name: "test",
+			},
+		},
+		Environments: map[int]environments.Environment{
+			1: {
+				ID:        1,
+				Name:      "production",
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:           2,
 				Name:         "staging",
 				PromotesToID: &promotesToID,
+				ServiceID:    1,
+				Service:      "test",
 			},
 		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
@@ -135,11 +174,15 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}

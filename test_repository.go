@@ -3,6 +3,7 @@ package cdb
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/config-source/cdb/configkeys"
@@ -109,25 +110,25 @@ func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck configkeys.Con
 	return ck, nil
 }
 
-func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (configkeys.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKey(ctx context.Context, serviceID int, id int) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
 		return configkeys.ConfigKey{}, tr.Error
 	}
 
-	if ck, ok := tr.ConfigKeys[id]; ok {
+	if ck, ok := tr.ConfigKeys[id]; ok && ck.ServiceID == serviceID {
 		return ck, nil
 	}
 
 	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
-func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (configkeys.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, serviceID int, name string) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
 		return configkeys.ConfigKey{}, tr.Error
 	}
 
 	for _, ck := range tr.ConfigKeys {
-		if ck.Name == name {
+		if ck.Name == name && ck.ServiceID == serviceID {
 			return ck, nil
 		}
 	}
@@ -135,23 +136,25 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, name string) (
 	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
-func (tr *TestRepository) ListConfigKeys(ctx context.Context) ([]configkeys.ConfigKey, error) {
-	keys := make([]configkeys.ConfigKey, len(tr.ConfigKeys))
+func (tr *TestRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]configkeys.ConfigKey, error) {
+	keys := make([]configkeys.ConfigKey, 0)
 
-	for id, ck := range tr.ConfigKeys {
-		keys[id-1] = ck
+	for _, ck := range tr.ConfigKeys {
+		if serviceIDs == nil || slices.Contains(serviceIDs, ck.ServiceID) {
+			keys = append(keys, ck)
+		}
 	}
 
 	return keys, nil
 }
 
 func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
-	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
+	env, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
 	}
 
-	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
+	_, err = tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
 	if err != nil {
 		return cv, err
 	}
@@ -167,12 +170,12 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *configvalue
 }
 
 func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
-	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
+	env, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
 	}
 
-	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
+	_, err = tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
 	if err != nil {
 		return cv, err
 	}
@@ -206,7 +209,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 
 	for _, cv := range tr.ConfigValues {
 		if cv.EnvironmentID == env.ID {
-			ck, err := tr.GetConfigKey(ctx, cv.ConfigKeyID)
+			ck, err := tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
 			if err != nil {
 				return values, err
 			}
