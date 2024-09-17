@@ -5,6 +5,9 @@ ci: lint test
 shell container-name:
     docker compose exec -it {{container-name}} bash
 
+db:
+    docker compose exec -it postgres psql -U postgres cdb
+
 up:
     docker compose up -d
     docker compose logs -f server frontend cli

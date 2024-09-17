@@ -40,16 +40,34 @@ var migrateCmd = &cobra.Command{
 			return fmt.Errorf("failed to load migrations: %w", err)
 		}
 
+		if steps == 0 && force {
+			return fmt.Errorf("mut specify steps if using --force")
+		}
+
 		var migrationErr error
 		if steps > 0 {
 			if rollback {
-				fmt.Printf("Rolling back %d database migrations...\n", steps)
 				steps = -1 * steps
-			} else {
-				fmt.Printf("Applying %d database migrations...\n", steps)
 			}
 
-			migrationErr = m.Steps(steps)
+			if force {
+				ver, _, err := m.Version()
+				if err != nil {
+					return err
+				}
+
+				setVersion := int(ver) + steps
+				fmt.Printf("Setting database to version %d...\n", setVersion)
+				migrationErr = m.Force(setVersion)
+			} else {
+				if rollback {
+					fmt.Printf("Rolling back %d database migrations...\n", steps)
+				} else {
+					fmt.Printf("Applying %d database migrations...\n", steps)
+				}
+
+				migrationErr = m.Steps(steps)
+			}
 		} else if rollback {
 			fmt.Println("Rolling back database migrations...")
 			migrationErr = m.Down()

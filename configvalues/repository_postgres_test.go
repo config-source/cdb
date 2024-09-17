@@ -64,12 +64,23 @@ func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) se
 	return svc
 }
 
-func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
-	ck, err := repo.CreateConfigKey(context.Background(), configkeys.ConfigKey{
-		Name:         name,
-		ValueType:    valueType,
-		CanPropagate: &canPropagate,
-	})
+func configKeyFixture(
+	t *testing.T,
+	repo *configkeys.PostgresRepository,
+	svcID int,
+	name string,
+	valueType configkeys.ValueType,
+	canPropagate bool,
+) configkeys.ConfigKey {
+	ck, err := repo.CreateConfigKey(
+		context.Background(),
+		configkeys.NewWithPropagation(
+			svcID,
+			name,
+			valueType,
+			canPropagate,
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +94,7 @@ func TestCreateConfigValue(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
 
 	val := "test"
 	cv, err := repo.CreateConfigValue(
@@ -131,7 +142,7 @@ func TestUpdateConfigValue(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
@@ -182,7 +193,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
@@ -204,7 +215,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
@@ -226,7 +237,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
 	cv := createConfigValue(t, repo, NewString(
 		env.ID,
 		key.ID,
@@ -248,7 +259,7 @@ func TestCreateIntConfigValue(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeInteger, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeInteger, true)
 
 	val := "test"
 	cv, err := repo.CreateConfigValue(
@@ -296,8 +307,8 @@ func TestGetConfigValue(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
-	key := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	secondKey := configKeyFixture(t, keyRepo, "secondKey", configkeys.TypeString, true)
+	key := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	secondKey := configKeyFixture(t, keyRepo, svc.ID, "secondKey", configkeys.TypeString, true)
 
 	_, err := repo.CreateConfigValue(context.Background(), NewString(
 		env.ID,
@@ -339,9 +350,9 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -398,9 +409,9 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -426,9 +437,9 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -477,9 +488,9 @@ func TestGetConfiguration(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -512,10 +523,10 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	noChildren := configKeyFixture(t, keyRepo, "noChildren", configkeys.TypeString, false)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	noChildren := configKeyFixture(t, keyRepo, svc.ID, "noChildren", configkeys.TypeString, false)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -549,10 +560,10 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	noChildren := configKeyFixture(t, keyRepo, "noChildren", configkeys.TypeString, false)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	noChildren := configKeyFixture(t, keyRepo, svc.ID, "noChildren", configkeys.TypeString, false)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.
@@ -587,9 +598,9 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 	staging := envFixture(t, envRepo, "staging", &production.ID, svc.ID)
 	dev := envFixture(t, envRepo, "dev", &staging.ID, svc.ID)
 
-	owner := configKeyFixture(t, keyRepo, "owner", configkeys.TypeString, true)
-	minReplicas := configKeyFixture(t, keyRepo, "minReplicas", configkeys.TypeInteger, true)
-	maxReplicas := configKeyFixture(t, keyRepo, "maxReplicas", configkeys.TypeInteger, true)
+	owner := configKeyFixture(t, keyRepo, svc.ID, "owner", configkeys.TypeString, true)
+	minReplicas := configKeyFixture(t, keyRepo, svc.ID, "minReplicas", configkeys.TypeInteger, true)
+	maxReplicas := configKeyFixture(t, keyRepo, svc.ID, "maxReplicas", configkeys.TypeInteger, true)
 
 	// Throw in duplicate settings higher in the parent tree to ensure
 	// inheritance overrides these values.

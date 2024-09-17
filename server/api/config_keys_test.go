@@ -8,25 +8,38 @@ import (
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/configkeys"
+	"github.com/config-source/cdb/services"
 )
 
 func TestListConfigKeys(t *testing.T) {
 	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:        2,
 				Name:      "minReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			3: {
 				ID:        3,
 				Name:      "maxReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
@@ -54,17 +67,25 @@ func TestListConfigKeys(t *testing.T) {
 
 func TestGetConfigKeyByID(t *testing.T) {
 	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -77,17 +98,25 @@ func TestGetConfigKeyByID(t *testing.T) {
 
 func TestGetConfigKeyByIDNotFound(t *testing.T) {
 	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/2", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -144,17 +173,25 @@ func TestCreateConfigKey(t *testing.T) {
 
 func TestGetConfigKeyByName(t *testing.T) {
 	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/owner", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-name/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -167,17 +204,25 @@ func TestGetConfigKeyByName(t *testing.T) {
 
 func TestGetConfigKeyByNameNotFound(t *testing.T) {
 	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
 			1: {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-name/minReplicas", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-name/minReplicas", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 

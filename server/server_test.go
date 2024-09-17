@@ -11,6 +11,7 @@ import (
 	"github.com/config-source/cdb/configkeys"
 	"github.com/config-source/cdb/configvalues"
 	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/services"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
@@ -26,6 +27,7 @@ func testServer(repo *cdb.TestRepository) *http.ServeMux {
 		configvalues.NewService(repo, repo, repo, gateway, true),
 		environments.NewService(repo, gateway),
 		configkeys.NewService(repo, gateway),
+		services.NewServiceService(repo, gateway),
 		"/frontend",
 	)
 
@@ -49,6 +51,7 @@ func TestHealthCheckSuccess(t *testing.T) {
 		configvalues.NewService(repo, repo, repo, gateway, true),
 		environments.NewService(repo, gateway),
 		configkeys.NewService(repo, gateway),
+		services.NewServiceService(repo, gateway),
 		"/frontend",
 	)
 

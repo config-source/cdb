@@ -45,7 +45,8 @@ var getAllConfigValuesForEnvironmentSql string
 var getAllConfigValuesForEnvironmentExceptKeysSql string
 
 func (r *PostgresRepository) CreateConfigValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
-	rows, err := r.pool.Query(
+	created, err := postgresutils.GetOneLax[ConfigValue](
+		r.pool,
 		ctx,
 		createConfigValueSql,
 		cv.EnvironmentID,
@@ -61,12 +62,12 @@ func (r *PostgresRepository) CreateConfigValue(ctx context.Context, cv *ConfigVa
 		return nil, err
 	}
 
-	created, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[ConfigValue])
 	return &created, err
 }
 
 func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
-	rows, err := r.pool.Query(
+	updated, err := postgresutils.GetOneLax[ConfigValue](
+		r.pool,
 		ctx,
 		updateConfigValueSql,
 		cv.EnvironmentID,
@@ -77,26 +78,20 @@ func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *C
 		cv.BoolValue,
 		cv.ID,
 	)
+
 	if err != nil {
-		return nil, err
-	}
+		if errors.Is(err, pgx.ErrNoRows) {
+			return &updated, ErrNotFound
+		}
 
-	updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[ConfigValue])
-	if err == nil {
-		return &updated, err
-	}
+		msg := err.Error()
+		if strings.Contains(msg, "config_values_environment_id_fkey") {
+			return &updated, environments.ErrNotFound
+		}
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		return &updated, ErrNotFound
-	}
-
-	msg := err.Error()
-	if strings.Contains(msg, "config_values_environment_id_fkey") {
-		return &updated, environments.ErrNotFound
-	}
-
-	if strings.Contains(msg, "config_values_config_key_id_fkey") {
-		return &updated, configkeys.ErrNotFound
+		if strings.Contains(msg, "config_values_config_key_id_fkey") {
+			return &updated, configkeys.ErrNotFound
+		}
 	}
 
 	return &updated, err

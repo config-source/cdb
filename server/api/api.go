@@ -62,8 +62,8 @@ func New(
 
 	v1Mux.HandleFunc("POST /api/v1/config-keys", api.CreateConfigKey)
 	v1Mux.HandleFunc("GET /api/v1/config-keys", api.ListConfigKeys)
-	v1Mux.HandleFunc("GET /api/v1/config-keys/by-id/{id}", api.GetConfigKeyByID)
-	v1Mux.HandleFunc("GET /api/v1/config-keys/by-name/{name}", api.GetConfigKeyByName)
+	v1Mux.HandleFunc("GET /api/v1/config-keys/{serviceID}/by-id/{id}", api.GetConfigKeyByID)
+	v1Mux.HandleFunc("GET /api/v1/config-keys/{serviceID}/by-name/{name}", api.GetConfigKeyByName)
 
 	v1Mux.HandleFunc("POST /api/v1/config-values", api.CreateConfigValue)
 	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
@@ -97,6 +97,7 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 		errors.Is(err, auth.ErrUserNotFound),
 		errors.Is(err, environments.ErrNotFound),
 		errors.Is(err, configkeys.ErrNotFound),
+		errors.Is(err, services.ErrNotFound),
 		errors.Is(err, configvalues.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case

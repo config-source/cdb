@@ -74,31 +74,31 @@ func main() {
 		makeSvc("delivery-service"),
 	}
 
-	fmt.Println("Seeding config keys...")
-	clearTable(pool, "config_keys")
-
-	owner, err := keyRepo.CreateConfigKey(ctx, configkeys.New("owner", configkeys.TypeString))
-	fail(err)
-
-	maxReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New("maxReplicas", configkeys.TypeInteger))
-	fail(err)
-
-	minReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New("minReplicas", configkeys.TypeInteger))
-	fail(err)
-
-	sslEnabled, err := keyRepo.CreateConfigKey(ctx, configkeys.New("sslEnabled", configkeys.TypeBoolean))
-	fail(err)
-
-	// Add an unconfigured config key for testing those features which require it.
-	_, err = keyRepo.CreateConfigKey(ctx, configkeys.New("readyForReaping", configkeys.TypeBoolean))
-	fail(err)
-
-	fmt.Println("Done seeding config keys.")
-
 	clearTable(pool, "environments")
 	clearTable(pool, "config_values")
+	clearTable(pool, "config_keys")
 
 	for _, svc := range services {
+		fmt.Printf("Seeding config keys for %s...\n", svc.Name)
+
+		owner, err := keyRepo.CreateConfigKey(ctx, configkeys.New(svc.ID, "owner", configkeys.TypeString))
+		fail(err)
+
+		maxReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New(svc.ID, "maxReplicas", configkeys.TypeInteger))
+		fail(err)
+
+		minReplicas, err := keyRepo.CreateConfigKey(ctx, configkeys.New(svc.ID, "minReplicas", configkeys.TypeInteger))
+		fail(err)
+
+		sslEnabled, err := keyRepo.CreateConfigKey(ctx, configkeys.New(svc.ID, "sslEnabled", configkeys.TypeBoolean))
+		fail(err)
+
+		// Add an unconfigured config key for testing those features which require it.
+		_, err = keyRepo.CreateConfigKey(ctx, configkeys.New(svc.ID, "readyForReaping", configkeys.TypeBoolean))
+		fail(err)
+
+		fmt.Println("Done seeding config keys.")
+
 		fmt.Printf("Seeding environments for %s...\n", svc.Name)
 
 		production, err := envRepo.CreateEnvironment(

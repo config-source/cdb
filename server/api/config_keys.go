@@ -24,7 +24,14 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, id)
+	serviceID, err := strconv.Atoi(r.PathValue("serviceID"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, err)
+		return
+	}
+
+	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, serviceID, id)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -47,7 +54,14 @@ func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, name)
+	serviceID, err := strconv.Atoi(r.PathValue("serviceID"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, err)
+		return
+	}
+
+	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, serviceID, name)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -82,20 +96,20 @@ func (a *API) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var env configkeys.ConfigKey
-	err = decoder.Decode(&env)
+	var configKey configkeys.ConfigKey
+	err = decoder.Decode(&configKey)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		a.sendErr(w, err)
 		return
 	}
 
-	env, err = a.configKeyService.CreateConfigKey(r.Context(), user, env)
+	configKey, err = a.configKeyService.CreateConfigKey(r.Context(), user, configKey)
 	if err != nil {
 		a.sendErr(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	a.sendJson(w, env)
+	a.sendJson(w, configKey)
 }

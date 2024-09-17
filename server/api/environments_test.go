@@ -2,12 +2,14 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/config-source/cdb"
 	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/services"
 )
 
 func TestGetEnvironmentByName(t *testing.T) {
@@ -103,8 +105,14 @@ func TestCreateEnvironment(t *testing.T) {
 
 	_, mux, _ := testAPI(repo, true)
 
+	svc, err := repo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	env := environments.Environment{
-		Name: "production",
+		ServiceID: svc.ID,
+		Name:      "production",
 	}
 
 	marshalled, err := json.Marshal(env)
