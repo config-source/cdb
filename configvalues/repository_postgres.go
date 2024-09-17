@@ -78,17 +78,20 @@ func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *C
 		cv.BoolValue,
 		cv.ID,
 	)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return &updated, ErrNotFound
-	}
 
-	msg := err.Error()
-	if strings.Contains(msg, "config_values_environment_id_fkey") {
-		return &updated, environments.ErrNotFound
-	}
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return &updated, ErrNotFound
+		}
 
-	if strings.Contains(msg, "config_values_config_key_id_fkey") {
-		return &updated, configkeys.ErrNotFound
+		msg := err.Error()
+		if strings.Contains(msg, "config_values_environment_id_fkey") {
+			return &updated, environments.ErrNotFound
+		}
+
+		if strings.Contains(msg, "config_values_config_key_id_fkey") {
+			return &updated, configkeys.ErrNotFound
+		}
 	}
 
 	return &updated, err

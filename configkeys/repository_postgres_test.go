@@ -130,6 +130,7 @@ func TestGetConfigKey(t *testing.T) {
 		configkeys.TypeInteger,
 		true,
 	)
+	configKey1.Service = svc.Name
 	configKeyFixture(
 		t,
 		repo,
@@ -145,7 +146,7 @@ func TestGetConfigKey(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(configKey1, configKey) {
-		t.Fatalf("Got wrong configKeyironment expected %v got %v", configKey1, configKey)
+		t.Fatalf("Got wrong configKey expected %v got %v", configKey1, configKey)
 	}
 }
 
@@ -155,10 +156,18 @@ func TestListConfigKeys(t *testing.T) {
 
 	svc := svcFixture(t, svcRepo, "test")
 
+	ck1 := configKeyFixture(t, repo, svc.ID, "configKey1", configkeys.TypeInteger, true)
+	ck2 := configKeyFixture(t, repo, svc.ID, "configKey2", configkeys.TypeString, true)
+	ck3 := configKeyFixture(t, repo, svc.ID, "configKey3", configkeys.TypeBoolean, true)
+
+	ck1.Service = svc.Name
+	ck2.Service = svc.Name
+	ck3.Service = svc.Name
+
 	configKeys := []configkeys.ConfigKey{
-		configKeyFixture(t, repo, svc.ID, "configKey1", configkeys.TypeInteger, true),
-		configKeyFixture(t, repo, svc.ID, "configKey2", configkeys.TypeString, true),
-		configKeyFixture(t, repo, svc.ID, "configKey3", configkeys.TypeBoolean, true),
+		ck1,
+		ck2,
+		ck3,
 	}
 
 	retrieved, err := repo.ListConfigKeys(context.Background())

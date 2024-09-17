@@ -97,6 +97,7 @@ func (a *API) sendErr(w http.ResponseWriter, err error) {
 		errors.Is(err, auth.ErrUserNotFound),
 		errors.Is(err, environments.ErrNotFound),
 		errors.Is(err, configkeys.ErrNotFound),
+		errors.Is(err, services.ErrNotFound),
 		errors.Is(err, configvalues.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case
