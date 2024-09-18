@@ -10,9 +10,9 @@ const config = {
 		})
 	},
 
-// 	paths: {
-// 		base: '/app'
-// 	},
+	// 	paths: {
+	// 		base: '/app'
+	// 	},
 
 	extensions: ['.svelte', '.md'],
 

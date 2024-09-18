@@ -14,6 +14,10 @@ function backend() {
     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
   fi
 
+  if [[ ! -x $(which goimports) ]]; then
+    go install golang.org/x/tools/cmd/goimports@latest
+  fi
+
   until psql -c "select 1" >/dev/null 2>/dev/null; do
     echo "Waiting for postgres server..."
     sleep 1
