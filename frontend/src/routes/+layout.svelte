@@ -6,36 +6,30 @@
 	config.autoAddCss = false;
 
 	import { page } from '$app/stores';
-	import { user } from '$lib/stores/user';
 	import { goto } from '$app/navigation';
+
+	import { user } from '$lib/stores/user';
+	import { getCurrentUser } from '$lib/client/auth';
 
 	let isLoginPage = false;
 	$: isLoginPage = $page.url.pathname.startsWith('/auth');
 
 	(async () => {
 		if (!isLoginPage && $user.data.Email === undefined) {
-			const res = await fetch('/api/v1/users/me', { credentials: 'include' });
-			if (res.status === 401) {
-				user.set({
-					fetched: true,
-					data: {}
-				});
-
+			const userInfo = await getCurrentUser();
+			if (!userInfo.loggedIn) {
 				return goto('/auth/login');
-			} else if (!res.ok) {
-				return;
 			}
 
-			const data = await res.json();
 			user.set({
 				fetched: true,
-				data: data
+				data: userInfo.user
 			});
 		}
 	})();
 
 	user.subscribe(({ data }) => {
-		if (!$page.url.pathname.startsWith('/auth') && data.fetched && data.Email === undefined) {
+		if (!$page.url.pathname.startsWith('/auth') && data.fetched && data.data.Email === undefined) {
 			return goto('/auth/login');
 		}
 	});

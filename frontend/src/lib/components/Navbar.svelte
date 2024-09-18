@@ -2,29 +2,30 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import { user } from '$lib/stores/user';
+	import * as serviceClient from '$lib/client/services';
 	import { selectedService } from '$lib/stores/selectedService';
 	import { goto } from '$app/navigation';
+	import { logout } from '$lib/client/auth';
+	import { isError } from '$lib/client';
 
 	/** @type string[] */
 	let services = ['All'];
 
 	const fetchServices = async () => {
-		const res = await fetch('/api/v1/services');
-		const data = await res.json();
+		const data = await serviceClient.list();
+		if (isError(data)) return;
 		services = ['All', ...data.map((s) => s.Name)];
 	};
 
 	fetchServices();
 	user.subscribe(() => fetchServices());
 
-	const logout = async () => {
-		const res = await fetch('/api/v1/auth/logout', {
-			method: 'DELETE'
-		});
-		if (res.ok) {
+	const doLogout = async () => {
+		// TODO: handle error scenario
+		if (!isError(await logout())) {
 			user.set({
 				fetched: false,
-				data: {}
+				data: undefined
 			});
 
 			return goto('/auth/login');
@@ -65,7 +66,7 @@
 				<a class="navbar-link"> {$user.data.Email} </a>
 
 				<div class="navbar-dropdown">
-					<a class="navbar-item" on:click={logout}> Log Out </a>
+					<a class="navbar-item" on:click={doLogout}> Log Out </a>
 				</div>
 			</div>
 		</div>

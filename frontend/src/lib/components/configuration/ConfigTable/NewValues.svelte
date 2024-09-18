@@ -6,11 +6,25 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import { createEventDispatcher } from 'svelte';
+	import * as configKeyClient from '$lib/client/config-keys';
+	import { isError } from '$lib/client';
+	import * as envClient from '$lib/client/environments';
 
 	/** @type string[] */
 	export let existingKeys;
 	/** @type string */
 	export let environmentName;
+
+	/** @type App.Environment | undefined */
+	let environment;
+
+	/** @type (envName: string) => Promise<void> */
+	const fetchEnv = async (envName) => {
+		const env = await envClient.getByName(envName);
+		if (isError(env)) return; // TODO: error handling
+		environment = env;
+	};
+	$: fetchEnv(environmentName);
 
 	// Stores all the new configuration values that are being added by the user.
 	/** @type any[] */
@@ -55,7 +69,7 @@
 			configValue.Name = newKey.Name;
 			configValue.ValueType = newKey.ValueType;
 			configValue.ConfigKeyID = newKey.ID;
-			initialiseValue(configValue, null);
+			initialiseValue(configValue);
 
 			dispatch('newKeySelected', { configValue, newKey });
 
@@ -75,14 +89,16 @@
 		return [...existingKeys, ...currentlyConfiguringKeys];
 	};
 
+	/** @type App.ConfigKey[] */
 	let configKeys = [];
-	const fetchConfigKeys = async () => {
-		const res = await fetch('/api/v1/config-keys');
-		if (!res.ok) return; // TODO: error handling.
-		const data = await res.json();
-		configKeys = data;
+	/** @type (serviceID: number) => Promise<void> */
+	const fetchConfigKeys = async (serviceID) => {
+		if (serviceID === 0) return;
+		const keys = await configKeyClient.list(serviceID);
+		if (isError(keys)) return; // TODO: error handling.
+		configKeys = keys;
 	};
-	fetchConfigKeys();
+	$: fetchConfigKeys(environment?.ServiceID ?? 0);
 
 	let canAddValues = true;
 	$: canAddValues = configKeys.length !== existingKeys.length + newValues.length;

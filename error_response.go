@@ -1,7 +1,7 @@
 package cdb
 
 type ErrorResponse struct {
-	Message string `json:"message"`
+	Message string
 }
 
 func (er ErrorResponse) Error() string {

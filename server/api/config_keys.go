@@ -77,7 +77,20 @@ func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user)
+	var serviceIDs []int
+	if svcIDStrings, ok := r.URL.Query()["service"]; ok {
+		serviceIDs = make([]int, len(svcIDStrings))
+		for i, svcIDString := range svcIDStrings {
+			serviceIDs[i], err = strconv.Atoi(svcIDString)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				a.sendErr(w, err)
+				return
+			}
+		}
+	}
+
+	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user, serviceIDs...)
 	if err != nil {
 		a.sendErr(w, err)
 		return

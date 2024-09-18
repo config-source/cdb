@@ -232,3 +232,73 @@ func TestGetConfigKeyByNameNotFound(t *testing.T) {
 		t.Fatalf("Expected status code 404 got: %d %s", rr.Code, rr.Body.String())
 	}
 }
+
+func TestListConfigKeysFilterByService(t *testing.T) {
+	repo := &cdb.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+			2: {
+				ID:   2,
+				Name: "test2",
+			},
+			3: {
+				ID:   3,
+				Name: "test3",
+			},
+		},
+		ConfigKeys: map[int]configkeys.ConfigKey{
+			1: {
+				ID:        1,
+				Name:      "owner",
+				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
+			},
+			2: {
+				ID:        2,
+				Name:      "minReplicas",
+				ValueType: configkeys.TypeInteger,
+				ServiceID: 2,
+				Service:   "test2",
+			},
+			3: {
+				ID:        3,
+				Name:      "maxReplicas",
+				ValueType: configkeys.TypeInteger,
+				ServiceID: 3,
+				Service:   "test3",
+			},
+		},
+	}
+
+	_, mux, _ := testAPI(repo, true)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=2&service=3", nil)
+	rr := httptest.NewRecorder()
+	rr.Body = bytes.NewBuffer([]byte{})
+
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != 200 {
+		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
+	}
+
+	var keys []configkeys.ConfigKey
+	if err := json.NewDecoder(rr.Body).Decode(&keys); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(keys) != 2 {
+		t.Fatalf("Expected 2 config keys got: %v", keys)
+	}
+
+	if keys[0].ServiceID != 2 {
+		t.Fatalf("Expected ServiceID to be 2 got: %v", keys[0])
+	}
+
+	if keys[1].ServiceID != 3 {
+		t.Fatalf("Expected ServiceID to be 3 got: %v", keys[1])
+	}
+}

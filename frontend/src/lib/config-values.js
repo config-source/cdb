@@ -21,6 +21,7 @@ export const getValue = (configValue) => {
 	}
 };
 
+/** @type (configValue: any, newRawValue: number | string | boolean) => void */
 export const updateValue = (configValue, newRawValue) => {
 	// TODO: type guard newValue
 	switch (configValue.ValueType) {

@@ -11,10 +11,10 @@ export async function setConfigValue(environmentName, configValue) {
 
 /** @type (envName: string) => Promise<any[]> */
 export async function fetchConfig(envName) {
-	if (envName === '') return;
+	if (envName === '') return [];
 
 	const res = await fetch(`/api/v1/config-values/${envName}`);
-	if (!res.ok) return;
+	if (!res.ok) return [];
 
 	/** @type any[] */
 	const data = await res.json();
