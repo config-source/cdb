@@ -9,4 +9,5 @@ const (
 	PermissionManageRoles                    Permission = "CAN_MANAGE_ROLES"
 	PermissionManageUsers                    Permission = "CAN_MANAGE_USERS"
 	PermissionManageConfigKeys               Permission = "CAN_MANAGE_CONFIG_KEYS"
+	PermissionManageWebhooks                 Permission = "CAN_MANAGE_WEBHOOKS"
 )

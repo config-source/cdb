@@ -18,6 +18,7 @@ var allPermissions = []auth.Permission{
 	auth.PermissionManageEnvironments,
 	auth.PermissionManageUsers,
 	auth.PermissionManageRoles,
+	auth.PermissionManageWebhooks,
 }
 
 func userFixture(t *testing.T, gw *postgres.Gateway, email string) auth.User {

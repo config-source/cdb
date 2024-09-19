@@ -3,11 +3,13 @@ package webhooks
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"io"
+	"net/http"
 	"text/template"
 
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
+	"github.com/rs/zerolog"
 )
 
 type Service struct {
@@ -32,7 +34,14 @@ func (s *Service) CreateWebhookDefinition(ctx context.Context, webhookDefinition
 	return wh, err
 }
 
-func RunWebhook(ctx context.Context, webhook Definition, env environments.Environment, configValues []configvalues.ConfigValue) error {
+func RunWebhook(
+	ctx context.Context,
+	logger zerolog.Logger,
+	client *http.Client,
+	webhook Definition,
+	env environments.Environment,
+	configValues []configvalues.ConfigValue,
+) error {
 	renderContext := TemplateContext{
 		Environment:   env,
 		Configuration: configValues,
@@ -48,7 +57,35 @@ func RunWebhook(ctx context.Context, webhook Definition, env environments.Enviro
 		return err
 	}
 
-	fmt.Println(renderedContent.String())
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhook.URL, renderedContent)
+	if err != nil {
+		return err
+	}
+
+	if webhook.AuthzHeader != "" {
+		req.Header.Set("Authorization", webhook.AuthzHeader)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if logger.GetLevel() == zerolog.DebugLevel {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		logger.Debug().
+			Bytes("webhookResponseBody", bodyBytes).
+			Str("webhookUrl", webhook.URL).
+			Int("webhookResponseStatusCode", resp.StatusCode).
+			Int("webhookId", webhook.ID).
+			Msg("webhook response")
+	}
 
 	return nil
 }

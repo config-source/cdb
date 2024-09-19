@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/config-source/cdb/internal/settings"
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
@@ -37,13 +39,13 @@ var testWebhookCmd = &cobra.Command{
 			return err
 		}
 
-		config, err := valuesRepo.GetConfiguration(cmd.Context(), env.Name)
+		config, err := valuesRepo.GetConfiguration(cmd.Context(), env.ID)
 		if err != nil {
 			return err
 		}
 
 		for _, wh := range whDefs {
-			err = webhooks.RunWebhook(cmd.Context(), wh, env, config)
+			err = webhooks.RunWebhook(cmd.Context(), logger, http.DefaultClient, wh, env, config)
 			if err != nil {
 				return err
 			}
