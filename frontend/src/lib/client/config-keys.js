@@ -6,7 +6,7 @@ export async function list(...serviceIDs) {
 		for (const serviceID of serviceIDs) {
 			params.append('service', serviceID.toString());
 		}
-		url += params.toString();
+		url += `?${params.toString()}`;
 	}
 
 	const res = await fetch(url);

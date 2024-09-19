@@ -15,7 +15,7 @@
 	$: isLoginPage = $page.url.pathname.startsWith('/auth');
 
 	(async () => {
-		if (!isLoginPage && $user.data.Email === undefined) {
+		if (!isLoginPage && $user.data?.Email === undefined) {
 			const userInfo = await getCurrentUser();
 			if (!userInfo.loggedIn) {
 				return goto('/auth/login');
@@ -28,8 +28,8 @@
 		}
 	})();
 
-	user.subscribe(({ data }) => {
-		if (!$page.url.pathname.startsWith('/auth') && data.fetched && data.data.Email === undefined) {
+	user.subscribe((data) => {
+		if (!$page.url.pathname.startsWith('/auth') && data.fetched && data.data?.Email === undefined) {
 			return goto('/auth/login');
 		}
 	});

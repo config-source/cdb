@@ -71,7 +71,7 @@
 						{env.Service}
 					</td>
 					<td>
-						<a href="/environments/{env.Name}">
+						<a href="/environments/{env.ID}">
 							{env.Name}
 						</a>
 					</td>

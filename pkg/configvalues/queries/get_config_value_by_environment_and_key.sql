@@ -12,4 +12,4 @@ SELECT
 FROM config_values AS cv 
 INNER JOIN environments AS e ON cv.environment_id = e.id
 INNER JOIN config_keys AS ck ON cv.config_key_id = ck.id
-WHERE e.name = $1 AND ck.name = $2;
+WHERE e.id = $1 AND ck.name = $2;

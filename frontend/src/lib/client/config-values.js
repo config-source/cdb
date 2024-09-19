@@ -1,6 +1,6 @@
-/** @type (environmentName: string, configValue: any) => Promise<boolean> */
-export async function setConfigValue(environmentName, configValue) {
-	const res = await fetch(`/api/v1/config-values/${environmentName}/${configValue.Name}`, {
+/** @type (environmentId: string, configValue: any) => Promise<boolean> */
+export async function setConfigValue(environmentId, configValue) {
+	const res = await fetch(`/api/v1/config-values/${environmentId}/${configValue.Name}`, {
 		method: 'POST',
 		body: JSON.stringify(configValue)
 	});
@@ -9,11 +9,11 @@ export async function setConfigValue(environmentName, configValue) {
 	return true;
 }
 
-/** @type (envName: string) => Promise<any[]> */
-export async function fetchConfig(envName) {
-	if (envName === '') return [];
+/** @type (envId: number) => Promise<any[]> */
+export async function fetchConfig(envId) {
+	if (envId === 0) return [];
 
-	const res = await fetch(`/api/v1/config-values/${envName}`);
+	const res = await fetch(`/api/v1/config-values/${envId}`);
 	if (!res.ok) return [];
 
 	/** @type any[] */

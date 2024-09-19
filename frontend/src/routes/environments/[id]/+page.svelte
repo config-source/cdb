@@ -7,7 +7,7 @@
 </script>
 
 <div class="container mt-6">
-	<Breadcrumbs environmentName={data.name} />
-	<Heading size={3}>Configuration for {data.name}</Heading>
-	<ConfigTable environmentName={data.name} />
+	<Breadcrumbs environmentId={data.id} />
+	<Heading size={3}>Configuration for {data.id}</Heading>
+	<ConfigTable environmentId={data.id} />
 </div>

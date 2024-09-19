@@ -10,6 +10,5 @@ SELECT
     cv.bool_value,
     cv.created_at
 FROM config_values AS cv 
-INNER JOIN environments AS e ON cv.environment_id = e.id
 INNER JOIN config_keys AS ck ON cv.config_key_id = ck.id
-WHERE e.name = $1;
+WHERE cv.environment_id = $1;

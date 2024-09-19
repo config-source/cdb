@@ -6,15 +6,15 @@
 	// Stores all the fetched configuration values for this environment.
 	/** @type any[] */
 	export let configuration = [];
-	/** @type string */
-	export let environmentName;
+	/** @type number */
+	export let environmentId;
 
-	/** @type (envName: string) => Promise<void> */
-	const updateConfiguration = async (envName) => {
-		configuration = await fetchConfig(envName);
+	/** @type (envName: number) => Promise<void> */
+	const updateConfiguration = async (envId) => {
+		configuration = await fetchConfig(envId);
 	};
 
-	$: updateConfiguration(environmentName);
+	$: updateConfiguration(environmentId);
 </script>
 
 <table class="table is-fullwidth is-hoverable">
@@ -28,15 +28,15 @@
 		{#each configuration as configValue}
 			<EditableConfigRow
 				{configValue}
-				{environmentName}
-				on:updated={() => updateConfiguration(environmentName)}
+				{environmentId}
+				on:updated={() => updateConfiguration(environmentId)}
 			/>
 		{/each}
 
 		<NewValues
-			{environmentName}
+			{environmentId}
 			existingKeys={configuration.map((cv) => cv.Name)}
-			on:updated={() => updateConfiguration(environmentName)}
+			on:updated={() => updateConfiguration(environmentId)}
 		/>
 	</tbody>
 </table>

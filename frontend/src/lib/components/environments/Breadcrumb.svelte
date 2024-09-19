@@ -1,12 +1,15 @@
 <script>
 	import { isError } from '$lib/client';
-	import { getByID, getByName } from '$lib/client/environments';
+	import { getByID } from '$lib/client/environments';
 
 	/** @type App.Environment | undefined */
 	export let environment = undefined;
 
+	export let environmentId = 0;
+
 	/** @type string */
-	export let environmentName = environment?.Name ?? '';
+	let environmentName = '';
+	$: environmentName = environment?.Name ?? '';
 
 	/** @type number */
 	export let size = 5;
@@ -14,12 +17,12 @@
 	/** @type App.Environment | undefined */
 	let parent;
 
-	/** @type (envName?: string) => Promise<void> */
-	const getParent = async (envName) => {
-		if (!envName || envName === '') return;
+	/** @type (envId?: number) => Promise<void> */
+	const getParent = async (envId) => {
+		if (!envId || envId === 0) return;
 
 		if (!environment) {
-			const self = await getByName(envName);
+			const self = await getByID(envId);
 			if (!isError(self)) {
 				environment = self;
 			}
@@ -34,7 +37,7 @@
 		}
 	};
 
-	$: getParent(environmentName);
+	$: getParent(environmentId);
 </script>
 
 {#if parent}
@@ -43,7 +46,7 @@
 {/if}
 
 {#if environmentName}
-	<a href={`/environments/${environmentName}`} class={`is-size-${size} p-1`}>
+	<a href={`/environments/${environmentId}`} class={`is-size-${size} p-1`}>
 		{environmentName}
 	</a>
 {/if}
