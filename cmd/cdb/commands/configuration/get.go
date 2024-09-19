@@ -8,8 +8,8 @@ import (
 
 	"github.com/config-source/cdb/cmd/cdb/config"
 	"github.com/config-source/cdb/cmd/cdb/table"
-	"github.com/config-source/cdb/configkeys"
-	"github.com/config-source/cdb/configvalues"
+	"github.com/config-source/cdb/pkg/configkeys"
+	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/spf13/cobra"
 )
 

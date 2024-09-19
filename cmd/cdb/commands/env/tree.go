@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/config-source/cdb/cmd/cdb/config"
-	"github.com/config-source/cdb/environments"
+	"github.com/config-source/cdb/pkg/environments"
 	"github.com/spf13/cobra"
 )
 

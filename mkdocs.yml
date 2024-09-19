@@ -3,7 +3,7 @@ site_description: Configuration Database for a DevOps workflow
 site_url: https://config-source.github.io/cdb/
 
 repo_name: config-source/cdb
-repo_url: https://github.com/config-source/cdb/
+repo_url: https://github.com/config-source/cdb/pkg/
 edit_uri: ""
 
 theme:

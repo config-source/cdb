@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/config-source/cdb/auth/postgres"
-	"github.com/config-source/cdb/settings"
+	"github.com/config-source/cdb/internal/settings"
+	"github.com/config-source/cdb/pkg/auth/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"

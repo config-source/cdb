@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/config-source/cdb/auth"
-	authpg "github.com/config-source/cdb/auth/postgres"
-	"github.com/config-source/cdb/configkeys"
-	"github.com/config-source/cdb/configvalues"
-	"github.com/config-source/cdb/environments"
-	"github.com/config-source/cdb/services"
+	"github.com/config-source/cdb/pkg/auth"
+	authpg "github.com/config-source/cdb/pkg/auth/postgres"
+	"github.com/config-source/cdb/pkg/configkeys"
+	"github.com/config-source/cdb/pkg/configvalues"
+	"github.com/config-source/cdb/pkg/environments"
+	"github.com/config-source/cdb/pkg/services"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )

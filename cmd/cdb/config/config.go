@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/chasinglogic/appdirs"
-	"github.com/config-source/cdb/client"
+	"github.com/config-source/cdb/pkg/client"
 	"gopkg.in/yaml.v3"
 )
 
