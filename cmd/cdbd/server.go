@@ -66,7 +66,7 @@ var serverCmd = &cobra.Command{
 
 		envsRepo := environments.NewRepository(logger, pool)
 		keysRepo := configkeys.NewRepository(logger, pool)
-		valuesRepo := configvalues.NewRepository(logger, pool)
+		valuesRepo := configvalues.NewRepository(logger, pool, envsRepo)
 		svcRepo := services.NewRepository(logger, pool)
 		tokenRegistry := auth.NewTokenRegistry(logger, pool)
 

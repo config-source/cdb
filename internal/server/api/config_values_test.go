@@ -55,7 +55,7 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-values/staging", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-values/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -197,7 +197,7 @@ func TestGetConfigurationByKey(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-values/staging/owner", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-values/2/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -275,7 +275,7 @@ func TestSetConfigurationByKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("POST", "/api/v1/config-values/staging/minReplicas", bytes.NewBuffer(marshalled))
+	req := httptest.NewRequest("POST", "/api/v1/config-values/2/minReplicas", bytes.NewBuffer(marshalled))
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 

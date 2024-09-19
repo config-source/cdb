@@ -199,10 +199,10 @@ func keyAlreadyInSet(values []configvalues.ConfigValue, newValue configvalues.Co
 	return false
 }
 
-func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName string) ([]configvalues.ConfigValue, error) {
+func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentID int) ([]configvalues.ConfigValue, error) {
 	values := make([]configvalues.ConfigValue, 0)
 
-	env, err := tr.GetEnvironmentByName(ctx, environmentName)
+	env, err := tr.GetEnvironment(ctx, environmentID)
 	if err != nil {
 		return values, err
 	}
@@ -226,7 +226,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 			return values, err
 		}
 
-		parentValues, err := tr.GetConfiguration(ctx, parent.Name)
+		parentValues, err := tr.GetConfiguration(ctx, parent.ID)
 		if err != nil {
 			return values, err
 		}
@@ -243,8 +243,8 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentName 
 	return values, nil
 }
 
-func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName, key string) (*configvalues.ConfigValue, error) {
-	cv, err := tr.GetConfigurationValue(ctx, environmentName, key)
+func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentID int, key string) (*configvalues.ConfigValue, error) {
+	cv, err := tr.GetConfigurationValue(ctx, environmentID, key)
 	if cv != nil && cv.Inherited {
 		return nil, configvalues.ErrNotFound
 	}
@@ -252,8 +252,8 @@ func (tr *TestRepository) GetConfigValueByEnvAndKey(ctx context.Context, environ
 	return cv, err
 }
 
-func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*configvalues.ConfigValue, error) {
-	configValues, err := tr.GetConfiguration(ctx, environmentName)
+func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (*configvalues.ConfigValue, error) {
+	configValues, err := tr.GetConfiguration(ctx, environmentID)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +265,18 @@ func (tr *TestRepository) GetConfigurationValue(ctx context.Context, environment
 	}
 
 	return nil, configvalues.ErrNotFound
+}
+
+func (tr *TestRepository) GetConfigurationValueByID(ctx context.Context, id int) (*configvalues.ConfigValue, error) {
+	if tr.Error != nil {
+		return &configvalues.ConfigValue{}, tr.Error
+	}
+
+	if cv, ok := tr.ConfigValues[id]; ok {
+		return cv, nil
+	}
+
+	return &configvalues.ConfigValue{}, environments.ErrNotFound
 }
 
 func (tr *TestRepository) ListServices(ctx context.Context, includeSensitive bool) ([]services.Service, error) {

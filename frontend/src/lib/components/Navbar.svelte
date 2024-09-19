@@ -63,7 +63,7 @@
 			</div>
 
 			<div class="navbar-item has-dropdown is-hoverable">
-				<a class="navbar-link"> {$user.data.Email} </a>
+				<a class="navbar-link"> {$user.data?.Email} </a>
 
 				<div class="navbar-dropdown">
 					<a class="navbar-item" on:click={doLogout}> Log Out </a>

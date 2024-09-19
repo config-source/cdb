@@ -52,7 +52,7 @@ func main() {
 	envRepo := environments.NewRepository(logger, pool)
 	keyRepo := configkeys.NewRepository(logger, pool)
 	svcRepo := services.NewRepository(logger, pool)
-	valueRepo := configvalues.NewRepository(logger, pool)
+	valueRepo := configvalues.NewRepository(logger, pool, envRepo)
 
 	ctx := context.Background()
 

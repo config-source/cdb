@@ -15,14 +15,16 @@ import (
 )
 
 type PostgresRepository struct {
-	pool *pgxpool.Pool
-	log  zerolog.Logger
+	pool    *pgxpool.Pool
+	log     zerolog.Logger
+	envRepo environments.Repository
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *PostgresRepository {
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool, envRepo environments.Repository) Repository {
 	return &PostgresRepository{
-		log:  log,
-		pool: pool,
+		log:     log,
+		pool:    pool,
+		envRepo: envRepo,
 	}
 }
 
@@ -97,12 +99,12 @@ func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *C
 	return &updated, err
 }
 
-func (r *PostgresRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentName string, key string) (*ConfigValue, error) {
+func (r *PostgresRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
 	cv, err := postgresutils.GetOne[ConfigValue](
 		r.pool,
 		ctx,
 		getConfigValueByEnvironmentAndKeySql,
-		environmentName,
+		environmentID,
 		key,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -120,67 +122,62 @@ func getAllKeys(values []ConfigValue) []string {
 	return keys
 }
 
-func (r *PostgresRepository) getPromotesToName(ctx context.Context, envName string) (*string, error) {
-	var promotesToName *string
-	err := r.pool.QueryRow(
-		ctx,
-		"SELECT name FROM environments WHERE id = (SELECT promotes_to_id FROM environments WHERE name = $1)",
-		envName,
-	).Scan(&promotesToName)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return promotesToName, err
+func getConfigurationRecursively(ctx context.Context, r *PostgresRepository, environmentID int, excludedKeys []string) ([]ConfigValue, error) {
+	env, err := r.envRepo.GetEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, err
 	}
 
-	return promotesToName, nil
-}
-
-func getConfigurationRecursively(ctx context.Context, r *PostgresRepository, environmentName string, excludedKeys []string) ([]ConfigValue, error) {
-	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentName, excludedKeys)
+	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentExceptKeysSql, environmentID, excludedKeys)
 	if err != nil {
 		return immediateValues, err
 	}
 
 	for idx := range immediateValues {
 		immediateValues[idx].Inherited = true
-		immediateValues[idx].InheritedFrom = environmentName
+		immediateValues[idx].InheritedFrom = env.Name
 	}
 
-	promotesToName, err := r.getPromotesToName(ctx, environmentName)
-	if err != nil {
-		return immediateValues, err
-	}
-
-	if promotesToName != nil {
-		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, append(excludedKeys, getAllKeys(immediateValues)...))
+	if env.PromotesToID != nil {
+		parentValues, err := getConfigurationRecursively(ctx, r, *env.PromotesToID, append(excludedKeys, getAllKeys(immediateValues)...))
 		return append(immediateValues, parentValues...), err
 	}
 
 	return immediateValues, nil
 }
 
-func (r *PostgresRepository) GetConfiguration(ctx context.Context, environmentName string) ([]ConfigValue, error) {
-	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentSql, environmentName)
+func (r *PostgresRepository) GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error) {
+	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentSql, environmentID)
 	if err != nil {
 		return immediateValues, err
 	}
 
-	promotesToName, _ := r.getPromotesToName(ctx, environmentName)
-	if promotesToName != nil {
-		parentValues, err := getConfigurationRecursively(ctx, r, *promotesToName, getAllKeys(immediateValues))
+	env, err := r.envRepo.GetEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	if env.PromotesToID != nil {
+		parentValues, err := getConfigurationRecursively(ctx, r, *env.PromotesToID, getAllKeys(immediateValues))
 		return append(immediateValues, parentValues...), err
 	}
 
 	return immediateValues, nil
 }
 
-func (r *PostgresRepository) GetConfigurationValue(ctx context.Context, environmentName, key string) (*ConfigValue, error) {
-	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentName, key)
+func (r *PostgresRepository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
+	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentID, key)
 	if errors.Is(err, ErrNotFound) {
-		promotesToName, _ := r.getPromotesToName(ctx, environmentName)
-		if promotesToName != nil {
-			cv, err := r.GetConfigurationValue(ctx, *promotesToName, key)
+		env, err := r.envRepo.GetEnvironment(ctx, environmentID)
+		if err != nil {
+			return nil, err
+		}
+
+		if env.PromotesToID != nil {
+			parent, err := r.envRepo.GetEnvironment(ctx, *env.PromotesToID)
+			cv, err := r.GetConfigurationValue(ctx, parent.ID, key)
 			cv.Inherited = true
-			cv.InheritedFrom = *promotesToName
+			cv.InheritedFrom = parent.Name
 			return cv, err
 		}
 

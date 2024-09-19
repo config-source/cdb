@@ -7,12 +7,12 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let configValue;
-	export let environmentName;
+	export let environmentId;
 	export let editing = false;
 
 	const dispatch = createEventDispatcher();
-	const saveEdit = (envName, configValue) => async () => {
-		if (await setConfigValue(envName, configValue)) {
+	const saveEdit = (envId, configValue) => async () => {
+		if (await setConfigValue(envId, configValue)) {
 			editing = false;
 			dispatch('updated', { value: configValue });
 		}
@@ -39,7 +39,7 @@
 	</td>
 	<td class="buttons is-centered">
 		{#if editing}
-			<button class="button is-success" on:click={saveEdit(environmentName, configValue)}>
+			<button class="button is-success" on:click={saveEdit(environmentId, configValue)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faCheck} />
 				</span>

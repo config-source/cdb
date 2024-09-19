@@ -64,13 +64,13 @@ func (svc *Service) canConfigureEnvironment(
 func (svc *Service) SetConfigurationValue(
 	ctx context.Context,
 	actor auth.User,
-	envName string,
+	envID int,
 	key string,
 	cv *ConfigValue,
 ) (*ConfigValue, error) {
-	env, err := svc.environRepo.GetEnvironmentByName(ctx, envName)
+	env, err := svc.environRepo.GetEnvironment(ctx, envID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get environment by name: %s", err)
+		return nil, fmt.Errorf("failed to get environment by id: %s", err)
 	}
 
 	if authErr := svc.canConfigureEnvironment(ctx, actor, env); authErr != nil {
@@ -107,7 +107,7 @@ func (svc *Service) SetConfigurationValue(
 	}
 
 	var result *ConfigValue
-	alreadySet, err := svc.repo.GetConfigValueByEnvAndKey(ctx, envName, key)
+	alreadySet, err := svc.repo.GetConfigValueByEnvAndKey(ctx, envID, key)
 	if err != nil {
 		result, err = svc.repo.CreateConfigValue(ctx, cv)
 	} else {
@@ -159,10 +159,10 @@ func (svc *Service) CreateConfigValue(
 // proof for it and to simplify things so that the API struct never needs to
 // talk to a repository directly.
 
-func (svc *Service) GetConfiguration(ctx context.Context, actor auth.User, envName string) ([]ConfigValue, error) {
-	return svc.repo.GetConfiguration(ctx, envName)
+func (svc *Service) GetConfiguration(ctx context.Context, actor auth.User, envID int) ([]ConfigValue, error) {
+	return svc.repo.GetConfiguration(ctx, envID)
 }
 
-func (svc *Service) GetConfigurationValue(ctx context.Context, actor auth.User, envName, key string) (*ConfigValue, error) {
-	return svc.repo.GetConfigurationValue(ctx, envName, key)
+func (svc *Service) GetConfigurationValue(ctx context.Context, actor auth.User, envID int, key string) (*ConfigValue, error) {
+	return svc.repo.GetConfigurationValue(ctx, envID, key)
 }

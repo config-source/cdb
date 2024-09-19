@@ -61,7 +61,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 	cv, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
-		"staging",
+		2,
 		"minReplicas",
 		&configvalues.ConfigValue{
 			ValueType: configkeys.TypeInteger,
@@ -133,7 +133,7 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 	_, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
-		"staging",
+		2,
 		"minReplicas",
 		&configvalues.ConfigValue{
 			ValueType: configkeys.TypeInteger,
@@ -192,7 +192,7 @@ func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
 	_, err := service.SetConfigurationValue(
 		context.Background(),
 		auth.User{},
-		"staging",
+		2,
 		"maxReplicas",
 		&configvalues.ConfigValue{
 			ValueType: configkeys.TypeString,

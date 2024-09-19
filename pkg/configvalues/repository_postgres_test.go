@@ -15,7 +15,7 @@ import (
 )
 
 func initTestDB(t *testing.T) (
-	*PostgresRepository,
+	Repository,
 	*environments.PostgresRepository,
 	*configkeys.PostgresRepository,
 	*services.PostgresRepository,
@@ -26,10 +26,10 @@ func initTestDB(t *testing.T) (
 	tr, pool := postgresutils.InitTestDB(t)
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 
-	repo := NewRepository(logger, pool)
 	envRepo := environments.NewRepository(logger, pool)
 	keyRepo := configkeys.NewRepository(logger, pool)
 	svcRepo := services.NewRepository(logger, pool)
+	repo := NewRepository(logger, pool, envRepo)
 
 	return repo, envRepo, keyRepo, svcRepo, tr
 }
@@ -328,7 +328,7 @@ func TestGetConfigValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	retrieved, err := repo.GetConfigurationValue(context.Background(), env.Name, key.Name)
+	retrieved, err := repo.GetConfigurationValue(context.Background(), env.ID, key.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -364,7 +364,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 	stagingInherited := createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
 	productionInherited := createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
-	setDirectlyValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, setDirectly.Name)
+	setDirectlyValue, err := repo.GetConfigurationValue(context.Background(), dev.ID, setDirectly.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -373,7 +373,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 		t.Fatalf("\n\tExpected\n\t\t%+v\n\tGot\n\t\t%+v", setDirectly, setDirectlyValue)
 	}
 
-	stagingValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, stagingInherited.Name)
+	stagingValue, err := repo.GetConfigurationValue(context.Background(), dev.ID, stagingInherited.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -386,7 +386,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 		t.Fatalf("Expected staging inherited value to be marked as such: %t\n", stagingValue.Inherited)
 	}
 
-	productionValue, err := repo.GetConfigurationValue(context.Background(), dev.Name, productionInherited.Name)
+	productionValue, err := repo.GetConfigurationValue(context.Background(), dev.ID, productionInherited.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -422,7 +422,7 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 	createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
 	createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
-	_, err := repo.GetConfigurationValue(context.Background(), dev.Name, "notfound")
+	_, err := repo.GetConfigurationValue(context.Background(), dev.ID, "notfound")
 	if err != ErrNotFound {
 		t.Fatalf("Expected: %s Got: %s", ErrNotFound, err)
 	}
@@ -450,13 +450,13 @@ func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
 	createInheritedConfigValue(t, repo, staging.Name, NewInt(staging.ID, maxReplicas.ID, 50))
 	createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE"))
 
-	_, err := repo.GetConfigurationValue(context.Background(), "notFound", "notfound")
-	if !errors.Is(err, ErrNotFound) {
+	_, err := repo.GetConfigurationValue(context.Background(), 1000, "notfound")
+	if !errors.Is(err, environments.ErrNotFound) {
 		t.Fatalf("Expected: %s Got: %s", environments.ErrNotFound, err)
 	}
 }
 
-func createConfigValue(t *testing.T, repo *PostgresRepository, cv *ConfigValue) *ConfigValue {
+func createConfigValue(t *testing.T, repo Repository, cv *ConfigValue) *ConfigValue {
 	created, err := repo.CreateConfigValue(context.Background(), cv)
 	if err != nil {
 		t.Fatal(err)
@@ -472,7 +472,7 @@ func createConfigValue(t *testing.T, repo *PostgresRepository, cv *ConfigValue) 
 	return retrieved
 }
 
-func createInheritedConfigValue(t *testing.T, repo *PostgresRepository, parentName string, cv *ConfigValue) *ConfigValue {
+func createInheritedConfigValue(t *testing.T, repo Repository, parentName string, cv *ConfigValue) *ConfigValue {
 	created := createConfigValue(t, repo, cv)
 	created.Inherited = true
 	created.InheritedFrom = parentName
@@ -504,7 +504,7 @@ func TestGetConfiguration(t *testing.T) {
 		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -541,7 +541,7 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -579,7 +579,7 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -614,7 +614,7 @@ func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
 		*createInheritedConfigValue(t, repo, production.Name, NewString(production.ID, owner.ID, "SRE")),
 	}
 
-	retrieved, err := repo.GetConfiguration(context.Background(), dev.Name)
+	retrieved, err := repo.GetConfiguration(context.Background(), dev.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

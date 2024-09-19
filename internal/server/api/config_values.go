@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/pkg/configvalues"
@@ -16,15 +17,21 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	environmentName := r.PathValue("environment")
-	configKey := r.PathValue("key")
-	if environmentName == "" || configKey == "" {
+	environmentID, err := strconv.Atoi(r.PathValue("environment"))
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("environment or key were empty"))
+		a.sendErr(w, err)
 		return
 	}
 
-	cv, err := a.configValueService.GetConfigurationValue(r.Context(), user, environmentName, configKey)
+	configKey := r.PathValue("key")
+	if configKey == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, errors.New("key was empty"))
+		return
+	}
+
+	cv, err := a.configValueService.GetConfigurationValue(r.Context(), user, environmentID, configKey)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -40,11 +47,17 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	environmentName := r.PathValue("environment")
-	configKey := r.PathValue("key")
-	if environmentName == "" || configKey == "" {
+	environmentID, err := strconv.Atoi(r.PathValue("environment"))
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("environment or key were empty"))
+		a.sendErr(w, err)
+		return
+	}
+
+	configKey := r.PathValue("key")
+	if configKey == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, errors.New("key was empty"))
 		return
 	}
 
@@ -62,7 +75,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	cv, err := a.configValueService.SetConfigurationValue(
 		r.Context(),
 		user,
-		environmentName,
+		environmentID,
 		configKey,
 		newConfigValue,
 	)
@@ -109,14 +122,14 @@ func (a *API) GetConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	environmentName := r.PathValue("environment")
-	if environmentName == "" {
+	environmentID, err := strconv.Atoi(r.PathValue("environment"))
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("environment must not be blank"))
+		a.sendErr(w, err)
 		return
 	}
 
-	cv, err := a.configValueService.GetConfiguration(r.Context(), user, environmentName)
+	cv, err := a.configValueService.GetConfiguration(r.Context(), user, environmentID)
 	if err != nil {
 		a.sendErr(w, err)
 		return

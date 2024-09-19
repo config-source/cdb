@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/config-source/cdb/pkg/postgresutils"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -42,7 +44,9 @@ func (g *Gateway) Register(ctx context.Context, email, password string) (auth.Us
 
 func (g *Gateway) Login(ctx context.Context, email, password string) (auth.User, error) {
 	user, err := postgresutils.GetOne[auth.User](g.pool, ctx, getUserByEmailSql, email)
-	if err != nil {
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
+		return auth.User{}, auth.ErrUserNotFound
+	} else if err != nil {
 		return auth.User{}, err
 	}
 
@@ -61,7 +65,12 @@ func (g *Gateway) CreateUser(ctx context.Context, newUser auth.User) (auth.User,
 
 func (g *Gateway) GetUser(ctx context.Context, userID auth.UserID) (auth.User, error) {
 	// TODO: return user not found as appropriate
-	return postgresutils.GetOne[auth.User](g.pool, ctx, getUserByIDSql, userID)
+	user, err := postgresutils.GetOne[auth.User](g.pool, ctx, getUserByIDSql, userID)
+	if err != nil && errors.Is(err, pgx.ErrNoRows) {
+		return auth.User{}, auth.ErrUserNotFound
+	}
+
+	return user, err
 }
 
 func (g *Gateway) DeleteUser(ctx context.Context, userID auth.UserID) error {

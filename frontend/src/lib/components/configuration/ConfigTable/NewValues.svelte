@@ -12,19 +12,19 @@
 
 	/** @type string[] */
 	export let existingKeys;
-	/** @type string */
-	export let environmentName;
+	/** @type number */
+	export let environmentId;
 
 	/** @type App.Environment | undefined */
 	let environment;
 
-	/** @type (envName: string) => Promise<void> */
-	const fetchEnv = async (envName) => {
-		const env = await envClient.getByName(envName);
+	/** @type (envName: number) => Promise<void> */
+	const fetchEnv = async (envId) => {
+		const env = await envClient.getByID(envId);
 		if (isError(env)) return; // TODO: error handling
 		environment = env;
 	};
-	$: fetchEnv(environmentName);
+	$: fetchEnv(environmentId);
 
 	// Stores all the new configuration values that are being added by the user.
 	/** @type any[] */
