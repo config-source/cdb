@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/config-source/cdb/pkg/configkeys"
@@ -85,7 +86,7 @@ func TestGetConfigKeyByID(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-id/1", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -128,13 +129,21 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo := &testutils.TestRepository{}
+	repo := &testutils.TestRepository{
+		Services: map[int]services.Service{
+			1: {
+				ID:   1,
+				Name: "test",
+			},
+		},
+	}
 
 	_, mux, _ := testAPI(repo, true)
 
 	configKey := configkeys.ConfigKey{
 		Name:      "owner",
 		ValueType: configkeys.TypeString,
+		ServiceID: 1,
 	}
 
 	marshalled, err := json.Marshal(configKey)
@@ -191,7 +200,7 @@ func TestGetConfigKeyByName(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-name/owner", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/test/by-name/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -275,7 +284,7 @@ func TestListConfigKeysFilterByService(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=2&service=3", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=test2&service=test3", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -294,11 +303,9 @@ func TestListConfigKeysFilterByService(t *testing.T) {
 		t.Fatalf("Expected 2 config keys got: %v", keys)
 	}
 
-	if keys[0].ServiceID != 2 {
-		t.Fatalf("Expected ServiceID to be 2 got: %v", keys[0])
-	}
-
-	if keys[1].ServiceID != 3 {
-		t.Fatalf("Expected ServiceID to be 3 got: %v", keys[1])
+	for _, key := range keys {
+		if !slices.Contains([]int{2, 3}, key.ServiceID) {
+			t.Fatalf("Expected ServiceID to be 2 or 3 got: %v", keys[0])
+		}
 	}
 }

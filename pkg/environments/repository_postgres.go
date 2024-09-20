@@ -16,7 +16,7 @@ type PostgresRepository struct {
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *PostgresRepository {
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) Repository {
 	return &PostgresRepository{
 		log:  log,
 		pool: pool,

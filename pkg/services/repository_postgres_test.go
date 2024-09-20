@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*services.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*services.PostgresRepository, *postgresutils.TestDatabase) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)

@@ -16,7 +16,7 @@ type PostgresRepository struct {
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *PostgresRepository {
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) Repository {
 	return &PostgresRepository{
 		log:  log,
 		pool: pool,
@@ -57,8 +57,8 @@ func (r *PostgresRepository) CreateConfigKey(ctx context.Context, ck ConfigKey) 
 	)
 }
 
-func (r *PostgresRepository) GetConfigKey(ctx context.Context, serviceID int, id int) (ConfigKey, error) {
-	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByIDSql, serviceID, id)
+func (r *PostgresRepository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
+	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
 	}
@@ -66,8 +66,8 @@ func (r *PostgresRepository) GetConfigKey(ctx context.Context, serviceID int, id
 	return key, err
 }
 
-func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceID int, name string) (ConfigKey, error) {
-	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByNameSql, serviceID, name)
+func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error) {
+	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByNameSql, serviceName, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
 	}
@@ -76,9 +76,9 @@ func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceID i
 
 }
 
-func (r *PostgresRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error) {
-	if serviceIDs != nil {
-		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeysByService, serviceIDs)
+func (r *PostgresRepository) ListConfigKeys(ctx context.Context, serviceNames ...string) ([]ConfigKey, error) {
+	if serviceNames != nil {
+		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeysByService, serviceNames)
 	} else {
 		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeys)
 	}

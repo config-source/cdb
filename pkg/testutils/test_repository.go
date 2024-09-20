@@ -23,6 +23,20 @@ type TestRepository struct {
 	ConfigValues map[int]*configvalues.ConfigValue
 }
 
+type MegaRepository interface {
+	configvalues.Repository
+	environments.Repository
+	services.Repository
+	configkeys.Repository
+}
+
+func New() MegaRepository {
+	return &TestRepository{
+		IsHealthy: true,
+		Error:     nil,
+	}
+}
+
 func (tr *TestRepository) Healthy(ctx context.Context) bool {
 	return tr.IsHealthy
 }
@@ -46,13 +60,13 @@ func (tr *TestRepository) ListEnvironments(ctx context.Context, includeSensitive
 	return envs, nil
 }
 
-func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, name string) (environments.Environment, error) {
+func (tr *TestRepository) GetEnvironmentByName(ctx context.Context, serviceName, name string) (environments.Environment, error) {
 	if tr.Error != nil {
 		return environments.Environment{}, tr.Error
 	}
 
 	for _, env := range tr.Environments {
-		if env.Name == name {
+		if env.Name == name && env.Service == serviceName {
 			return env, nil
 		}
 	}
@@ -106,29 +120,38 @@ func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck configkeys.Con
 
 	ck.ID = len(tr.ConfigKeys) + 1
 	ck.CreatedAt = time.Now()
+	if ck.Service == "" {
+		svc, err := tr.GetService(ctx, ck.ServiceID)
+		if err != nil {
+			return ck, err
+		}
+
+		ck.Service = svc.Name
+	}
+
 	tr.ConfigKeys[ck.ID] = ck
 	return ck, nil
 }
 
-func (tr *TestRepository) GetConfigKey(ctx context.Context, serviceID int, id int) (configkeys.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKey(ctx context.Context, id int) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
 		return configkeys.ConfigKey{}, tr.Error
 	}
 
-	if ck, ok := tr.ConfigKeys[id]; ok && ck.ServiceID == serviceID {
+	if ck, ok := tr.ConfigKeys[id]; ok {
 		return ck, nil
 	}
 
 	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
-func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, serviceID int, name string) (configkeys.ConfigKey, error) {
+func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, serviceName, name string) (configkeys.ConfigKey, error) {
 	if tr.Error != nil {
 		return configkeys.ConfigKey{}, tr.Error
 	}
 
 	for _, ck := range tr.ConfigKeys {
-		if ck.Name == name && ck.ServiceID == serviceID {
+		if ck.Name == name && ck.Service == serviceName {
 			return ck, nil
 		}
 	}
@@ -136,11 +159,11 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, serviceID int,
 	return configkeys.ConfigKey{}, configkeys.ErrNotFound
 }
 
-func (tr *TestRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]configkeys.ConfigKey, error) {
+func (tr *TestRepository) ListConfigKeys(ctx context.Context, serviceNames ...string) ([]configkeys.ConfigKey, error) {
 	keys := make([]configkeys.ConfigKey, 0)
 
 	for _, ck := range tr.ConfigKeys {
-		if serviceIDs == nil || slices.Contains(serviceIDs, ck.ServiceID) {
+		if serviceNames == nil || slices.Contains(serviceNames, ck.Service) {
 			keys = append(keys, ck)
 		}
 	}
@@ -149,12 +172,12 @@ func (tr *TestRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int)
 }
 
 func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
-	env, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
+	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
 	}
 
-	_, err = tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
+	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return cv, err
 	}
@@ -170,12 +193,12 @@ func (tr *TestRepository) CreateConfigValue(ctx context.Context, cv *configvalue
 }
 
 func (tr *TestRepository) UpdateConfigurationValue(ctx context.Context, cv *configvalues.ConfigValue) (*configvalues.ConfigValue, error) {
-	env, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
+	_, err := tr.GetEnvironment(ctx, cv.EnvironmentID)
 	if err != nil {
 		return cv, err
 	}
 
-	_, err = tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
+	_, err = tr.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return cv, err
 	}
@@ -209,7 +232,7 @@ func (tr *TestRepository) GetConfiguration(ctx context.Context, environmentID in
 
 	for _, cv := range tr.ConfigValues {
 		if cv.EnvironmentID == env.ID {
-			ck, err := tr.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
+			ck, err := tr.GetConfigKey(ctx, cv.ConfigKeyID)
 			if err != nil {
 				return values, err
 			}

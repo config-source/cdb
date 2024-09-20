@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*environments.PostgresRepository, *services.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (environments.Repository, services.Repository, *postgresutils.TestDatabase) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -29,7 +29,7 @@ func initTestDB(t *testing.T) (*environments.PostgresRepository, *services.Postg
 
 func envFixture(
 	t *testing.T,
-	repo *environments.PostgresRepository,
+	repo environments.Repository,
 	name string,
 	promotesToID *int,
 	serviceID int,
@@ -46,7 +46,7 @@ func envFixture(
 	return env
 }
 
-func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+func svcFixture(t *testing.T, repo services.Repository, name string) services.Service {
 	svc, err := repo.CreateService(context.Background(), services.Service{
 		Name: name,
 	})
@@ -128,7 +128,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 	env1.Service = svc.Name
 	envFixture(t, repo, "env2", nil, svc.ID)
 
-	env, err := repo.GetEnvironmentByName(context.Background(), env1.Name)
+	env, err := repo.GetEnvironmentByName(context.Background(), svc.Name, env1.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
 	repo, _, tr := initTestDB(t)
 	defer tr.Cleanup()
 
-	_, err := repo.GetEnvironmentByName(context.Background(), "dev")
+	_, err := repo.GetEnvironmentByName(context.Background(), "service", "dev")
 	if err == nil {
 		t.Fatal("Expected an error but got none!")
 	}

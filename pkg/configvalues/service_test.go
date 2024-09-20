@@ -72,7 +72,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 		t.Fatalf("Failed to set configuration value: %s", err)
 	}
 
-	newKey, err := repo.GetConfigKeyByName(context.Background(), 1, "minReplicas")
+	newKey, err := repo.GetConfigKeyByName(context.Background(), "test", "minReplicas")
 	if err != nil {
 		t.Fatal(err)
 	}

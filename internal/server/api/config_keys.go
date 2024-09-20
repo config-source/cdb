@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -24,14 +23,7 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceID, err := strconv.Atoi(r.PathValue("serviceID"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
-		return
-	}
-
-	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, serviceID, id)
+	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, id)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -48,20 +40,9 @@ func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := r.PathValue("name")
-	if name == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("name must be provided"))
-		return
-	}
+	serviceName := r.PathValue("serviceName")
 
-	serviceID, err := strconv.Atoi(r.PathValue("serviceID"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
-		return
-	}
-
-	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, serviceID, name)
+	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, serviceName, name)
 	if err != nil {
 		a.sendErr(w, err)
 		return
@@ -77,20 +58,9 @@ func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var serviceIDs []int
-	if svcIDStrings, ok := r.URL.Query()["service"]; ok {
-		serviceIDs = make([]int, len(svcIDStrings))
-		for i, svcIDString := range svcIDStrings {
-			serviceIDs[i], err = strconv.Atoi(svcIDString)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				a.sendErr(w, err)
-				return
-			}
-		}
-	}
+	serviceNames := r.URL.Query()["service"]
 
-	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user, serviceIDs...)
+	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user, serviceNames...)
 	if err != nil {
 		a.sendErr(w, err)
 		return

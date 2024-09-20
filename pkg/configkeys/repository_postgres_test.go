@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *services.PostgresRepository, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (configkeys.Repository, services.Repository, *postgresutils.TestDatabase) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
@@ -29,7 +29,7 @@ func initTestDB(t *testing.T) (*configkeys.PostgresRepository, *services.Postgre
 	return repo, svcRepo, tr
 }
 
-func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+func svcFixture(t *testing.T, repo services.Repository, name string) services.Service {
 	svc, err := repo.CreateService(context.Background(), services.Service{
 		Name: name,
 	})
@@ -40,7 +40,14 @@ func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) se
 	return svc
 }
 
-func configKeyFixture(t *testing.T, repo *configkeys.PostgresRepository, svcID int, name string, valueType configkeys.ValueType, canPropagate bool) configkeys.ConfigKey {
+func configKeyFixture(
+	t *testing.T,
+	repo configkeys.Repository,
+	svcID int,
+	name string,
+	valueType configkeys.ValueType,
+	canPropagate bool,
+) configkeys.ConfigKey {
 	ck, err := repo.CreateConfigKey(
 		context.Background(),
 		configkeys.NewWithPropagation(
@@ -140,7 +147,7 @@ func TestGetConfigKey(t *testing.T) {
 		true,
 	)
 
-	configKey, err := repo.GetConfigKey(context.Background(), svc.ID, configKey1.ID)
+	configKey, err := repo.GetConfigKey(context.Background(), configKey1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,10 +162,11 @@ func TestListConfigKeys(t *testing.T) {
 	defer tr.Cleanup()
 
 	svc := svcFixture(t, svcRepo, "test")
+	svc2 := svcFixture(t, svcRepo, "test2")
 
 	ck1 := configKeyFixture(t, repo, svc.ID, "configKey1", configkeys.TypeInteger, true)
 	ck2 := configKeyFixture(t, repo, svc.ID, "configKey2", configkeys.TypeString, true)
-	ck3 := configKeyFixture(t, repo, svc.ID, "configKey3", configkeys.TypeBoolean, true)
+	ck3 := configKeyFixture(t, repo, svc2.ID, "configKey3", configkeys.TypeBoolean, true)
 
 	ck1.Service = svc.Name
 	ck2.Service = svc.Name
@@ -167,10 +175,9 @@ func TestListConfigKeys(t *testing.T) {
 	configKeys := []configkeys.ConfigKey{
 		ck1,
 		ck2,
-		ck3,
 	}
 
-	retrieved, err := repo.ListConfigKeys(context.Background(), svc.ID)
+	retrieved, err := repo.ListConfigKeys(context.Background(), svc.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

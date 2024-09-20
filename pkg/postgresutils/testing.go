@@ -22,7 +22,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-type TestRepository struct {
+type TestDatabase struct {
 	conn      *pgx.Conn
 	pool      *pgxpool.Pool
 	testName  string
@@ -73,7 +73,7 @@ var migrationPath = findMigrationPath()
 // TestRepository.Cleanup() after calling Start.
 //
 // Use TestRepository.TestDBURL to connect to this new database.
-func (tr *TestRepository) Start(testName string) error {
+func (tr *TestDatabase) Start(testName string) error {
 	port := os.Getenv("PGPORT")
 	if port == "" {
 		port = "5432"
@@ -126,7 +126,7 @@ func (tr *TestRepository) Start(testName string) error {
 }
 
 // Cleanup deletes the test database.
-func (tr *TestRepository) Cleanup() {
+func (tr *TestDatabase) Cleanup() {
 	_, err := tr.conn.Exec(context.Background(), fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", tr.testName))
 	if err != nil {
 		panic(err)
@@ -137,11 +137,11 @@ func (tr *TestRepository) Cleanup() {
 	}
 }
 
-func InitTestDB(t *testing.T) (*TestRepository, *pgxpool.Pool) {
+func InitTestDB(t *testing.T) (*TestDatabase, *pgxpool.Pool) {
 	t.Parallel()
 	t.Helper()
 
-	tr := TestRepository{}
+	tr := TestDatabase{}
 	err := tr.Start(t.Name())
 	if err != nil {
 		t.Fatal(err)

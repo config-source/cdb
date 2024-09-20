@@ -14,16 +14,24 @@ import (
 
 func TestGetEnvironmentByName(t *testing.T) {
 	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
+		Services: map[int]services.Service{
 			1: {
 				ID:   1,
-				Name: "production",
+				Name: "test",
+			},
+		},
+		Environments: map[int]environments.Environment{
+			1: {
+				ID:        1,
+				Name:      "production",
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/environments/by-name/production", nil)
+	req := httptest.NewRequest("GET", "/api/v1/environments/test/by-name/production", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 

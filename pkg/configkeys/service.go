@@ -62,29 +62,29 @@ func (svc *Service) hasReadPermissions(ctx context.Context, actor auth.User) err
 	return nil
 }
 
-func (svc *Service) GetConfigKeyByName(ctx context.Context, actor auth.User, serviceID int, name string) (ConfigKey, error) {
+func (svc *Service) GetConfigKeyByName(ctx context.Context, actor auth.User, serviceName, name string) (ConfigKey, error) {
 	authErr := svc.hasReadPermissions(ctx, actor)
 	if authErr != nil {
 		return ConfigKey{}, authErr
 	}
 
-	return svc.repo.GetConfigKeyByName(ctx, serviceID, name)
+	return svc.repo.GetConfigKeyByName(ctx, serviceName, name)
 }
 
-func (svc *Service) GetConfigKeyByID(ctx context.Context, actor auth.User, serviceID int, id int) (ConfigKey, error) {
+func (svc *Service) GetConfigKeyByID(ctx context.Context, actor auth.User, id int) (ConfigKey, error) {
 	authErr := svc.hasReadPermissions(ctx, actor)
 	if authErr != nil {
 		return ConfigKey{}, authErr
 	}
 
-	return svc.repo.GetConfigKey(ctx, serviceID, id)
+	return svc.repo.GetConfigKey(ctx, id)
 }
 
-func (svc *Service) ListConfigKeys(ctx context.Context, actor auth.User, serviceIDs ...int) ([]ConfigKey, error) {
+func (svc *Service) ListConfigKeys(ctx context.Context, actor auth.User, serviceNames ...string) ([]ConfigKey, error) {
 	authErr := svc.hasReadPermissions(ctx, actor)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	return svc.repo.ListConfigKeys(ctx, serviceIDs...)
+	return svc.repo.ListConfigKeys(ctx, serviceNames...)
 }

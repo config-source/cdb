@@ -10,6 +10,7 @@ import (
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
+	"github.com/config-source/cdb/pkg/services"
 	"github.com/config-source/cdb/pkg/testutils"
 )
 
@@ -224,15 +225,25 @@ func TestGetConfigurationByKey(t *testing.T) {
 func TestSetConfigurationByKey(t *testing.T) {
 	promotesToID := 1
 	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
+		Services: map[int]services.Service{
 			1: {
 				ID:   1,
-				Name: "production",
+				Name: "test",
+			},
+		},
+		Environments: map[int]environments.Environment{
+			1: {
+				ID:        1,
+				Name:      "production",
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:           2,
 				Name:         "staging",
 				PromotesToID: &promotesToID,
+				ServiceID:    1,
+				Service:      "test",
 			},
 		},
 		ConfigKeys: map[int]configkeys.ConfigKey{
@@ -240,11 +251,15 @@ func TestSetConfigurationByKey(t *testing.T) {
 				ID:        1,
 				Name:      "owner",
 				ValueType: configkeys.TypeString,
+				ServiceID: 1,
+				Service:   "test",
 			},
 			2: {
 				ID:        2,
 				Name:      "maxReplicas",
 				ValueType: configkeys.TypeInteger,
+				ServiceID: 1,
+				Service:   "test",
 			},
 		},
 	}

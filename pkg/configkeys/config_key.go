@@ -86,8 +86,8 @@ func (ck ConfigKey) String() string {
 type Repository interface {
 	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
 
-	GetConfigKey(ctx context.Context, serviceID int, id int) (ConfigKey, error)
-	GetConfigKeyByName(ctx context.Context, serviceID int, name string) (ConfigKey, error)
+	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
+	GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error)
 
-	ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error)
+	ListConfigKeys(ctx context.Context, serviceNames ...string) ([]ConfigKey, error)
 }

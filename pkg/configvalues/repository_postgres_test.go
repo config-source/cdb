@@ -16,10 +16,10 @@ import (
 
 func initTestDB(t *testing.T) (
 	Repository,
-	*environments.PostgresRepository,
-	*configkeys.PostgresRepository,
-	*services.PostgresRepository,
-	*postgresutils.TestRepository,
+	environments.Repository,
+	configkeys.Repository,
+	services.Repository,
+	*postgresutils.TestDatabase,
 ) {
 	t.Helper()
 
@@ -36,7 +36,7 @@ func initTestDB(t *testing.T) (
 
 func envFixture(
 	t *testing.T,
-	repo *environments.PostgresRepository,
+	repo environments.Repository,
 	name string,
 	promotesToID *int,
 	serviceID int,
@@ -53,7 +53,7 @@ func envFixture(
 	return env
 }
 
-func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
+func svcFixture(t *testing.T, repo services.Repository, name string) services.Service {
 	svc, err := repo.CreateService(context.Background(), services.Service{
 		Name: name,
 	})
@@ -66,7 +66,7 @@ func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) se
 
 func configKeyFixture(
 	t *testing.T,
-	repo *configkeys.PostgresRepository,
+	repo configkeys.Repository,
 	svcID int,
 	name string,
 	valueType configkeys.ValueType,

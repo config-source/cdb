@@ -79,7 +79,7 @@ func (svc *Service) SetConfigurationValue(
 
 	cv.EnvironmentID = env.ID
 
-	ck, err := svc.configKeyRepo.GetConfigKeyByName(ctx, env.ServiceID, key)
+	ck, err := svc.configKeyRepo.GetConfigKeyByName(ctx, env.Service, key)
 	shouldCreate := errors.Is(err, configkeys.ErrNotFound) && svc.DynamicConfigKeys
 	if shouldCreate {
 		if cv.ValueType == 0 {
@@ -136,7 +136,7 @@ func (svc *Service) CreateConfigValue(
 		return ConfigValue{}, authErr
 	}
 
-	ck, err := svc.configKeyRepo.GetConfigKey(ctx, env.ServiceID, cv.ConfigKeyID)
+	ck, err := svc.configKeyRepo.GetConfigKey(ctx, cv.ConfigKeyID)
 	if err != nil {
 		return ConfigValue{}, err
 	}

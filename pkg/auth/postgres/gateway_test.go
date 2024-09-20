@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*pg.Gateway, *postgresutils.TestRepository) {
+func initTestDB(t *testing.T) (*pg.Gateway, *postgresutils.TestDatabase) {
 	t.Helper()
 
 	tr, pool := postgresutils.InitTestDB(t)
