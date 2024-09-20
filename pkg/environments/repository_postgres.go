@@ -59,8 +59,8 @@ func (r *PostgresRepository) GetEnvironment(ctx context.Context, id int) (Enviro
 	return env, err
 }
 
-func (r *PostgresRepository) GetEnvironmentByName(ctx context.Context, name string) (Environment, error) {
-	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByNameSql, name)
+func (r *PostgresRepository) GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error) {
+	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByNameSql, serviceName, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, ErrNotFound
 	}

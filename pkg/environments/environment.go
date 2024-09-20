@@ -42,7 +42,7 @@ type Repository interface {
 	CreateEnvironment(context.Context, Environment) (Environment, error)
 
 	GetEnvironment(ctx context.Context, id int) (Environment, error)
-	GetEnvironmentByName(ctx context.Context, name string) (Environment, error)
+	GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error)
 
 	ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/config-source/cdb/cmd/cdb/config"
 	"github.com/config-source/cdb/pkg/environments"
@@ -11,9 +12,14 @@ import (
 )
 
 var promotesTo string
+var service string
 
-func getPromotesToID() int {
-	env, err := config.Client.GetEnvironmentByNameOrID(promotesTo)
+func getPromotesToID(ctx context.Context) int {
+	if id, err := strconv.ParseUint(promotesTo, 10, 64); err == nil {
+		return int(id)
+	}
+
+	env, err := config.Client.GetEnvironmentByName(ctx, service, promotesTo)
 	if err == nil {
 		return env.ID
 	}
@@ -30,7 +36,7 @@ var envCreateCmd = &cobra.Command{
 		}
 
 		if promotesTo != "" {
-			promotesToID := getPromotesToID()
+			promotesToID := getPromotesToID(cmd.Context())
 			if promotesToID == 0 {
 				return errors.New("unable to identify the environment you want to promote to, is the name correct?")
 			}
@@ -49,6 +55,8 @@ var envCreateCmd = &cobra.Command{
 }
 
 func init() {
+	envCreateCmd.Flags().StringVarP(&service, "service", "s", "", "Which service this environment belongs to")
 	envCreateCmd.Flags().StringVarP(&promotesTo, "promotes-to", "p", "", "What environment this promotes to, accepts an environment name or ID.")
+	envCreateCmd.MarkFlagRequired("service")
 	Command.AddCommand(envCreateCmd)
 }

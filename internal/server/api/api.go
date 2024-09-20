@@ -48,7 +48,7 @@ func New(
 	// v1 routes
 	v1Mux := http.NewServeMux()
 
-	v1Mux.HandleFunc("GET /api/v1/environments/by-name/{name}", api.GetEnvironmentByName)
+	v1Mux.HandleFunc("GET /api/v1/environments/{serviceName}/by-name/{name}", api.GetEnvironmentByName)
 	v1Mux.HandleFunc("GET /api/v1/environments/by-id/{id}", api.GetEnvironmentByID)
 	v1Mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
 	v1Mux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)

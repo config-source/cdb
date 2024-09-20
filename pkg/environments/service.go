@@ -66,8 +66,8 @@ func (svc *Service) singleRetrievalPermissionChecks(ctx context.Context, actor a
 	return env, retrievalErr
 }
 
-func (svc *Service) GetEnvironmentByName(ctx context.Context, actor auth.User, name string) (Environment, error) {
-	env, err := svc.repo.GetEnvironmentByName(ctx, name)
+func (svc *Service) GetEnvironmentByName(ctx context.Context, actor auth.User, serviceName, name string) (Environment, error) {
+	env, err := svc.repo.GetEnvironmentByName(ctx, serviceName, name)
 	return svc.singleRetrievalPermissionChecks(
 		ctx,
 		actor,

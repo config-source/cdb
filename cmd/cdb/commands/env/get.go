@@ -10,10 +10,11 @@ import (
 )
 
 var envGetCmd = &cobra.Command{
-	Use:   "get <environment-name>",
+	Use:   "get <service-name> <environment-name>",
 	Short: "Get environment information by name",
+	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		env, err := config.Client.GetEnvironmentByName(context.Background(), args[0])
+		env, err := config.Client.GetEnvironmentByName(context.Background(), args[0], args[1])
 		if err != nil {
 			return err
 		}

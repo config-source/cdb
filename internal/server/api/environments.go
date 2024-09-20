@@ -24,7 +24,14 @@ func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env, err := a.envService.GetEnvironmentByName(r.Context(), user, name)
+	serviceName := r.PathValue("serviceName")
+	if serviceName == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, errors.New("serviceName missing from url"))
+		return
+	}
+
+	env, err := a.envService.GetEnvironmentByName(r.Context(), user, serviceName, name)
 	if err != nil {
 		a.sendErr(w, err)
 		return
