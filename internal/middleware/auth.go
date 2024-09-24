@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
 
+	"github.com/config-source/cdb/internal/apiutils"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/rs/zerolog"
 )
@@ -38,8 +38,7 @@ func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []
 			if header != "" {
 				if !strings.HasPrefix(header, AuthorizationHeaderPrefix) {
 					w.WriteHeader(http.StatusBadRequest)
-					// nolint:errcheck
-					w.Write([]byte("Malformed Authorization header."))
+					apiutils.SendErr(log, w, errors.New("malformed authorization header"))
 					return
 				}
 
@@ -73,8 +72,7 @@ func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []
 			if err != nil {
 				log.Err(err).Msg("invalid token")
 				w.WriteHeader(http.StatusBadRequest)
-				// nolint:errcheck
-				w.Write([]byte("invalid token"))
+				apiutils.SendErr(log, w, err)
 				return
 			}
 
@@ -97,10 +95,7 @@ func AuthenticationRequired(log zerolog.Logger, userSvc *auth.UserService, signi
 				}
 
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Header().Add("Content-Type", "application/json")
-				if err := json.NewEncoder(w).Encode(struct{ Message string }{Message: "forbidden"}); err != nil {
-					log.Err(err).Msg("failed to encode a payload")
-				}
+				apiutils.SendErr(log, w, auth.ErrUnauthorized)
 			},
 		),
 	)

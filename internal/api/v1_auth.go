@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
 )
 
@@ -14,7 +14,7 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-func (a *API) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
+func (a *V1) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
 	tokens, err := auth.GenerateTokens(a.tokenSigningKey, user)
 	if err != nil {
 		a.sendErr(w, err)
@@ -44,7 +44,7 @@ func (a *API) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
 	a.sendJson(w, tokens)
 }
 
-func (a *API) Login(w http.ResponseWriter, r *http.Request) {
+func (a *V1) Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
@@ -65,7 +65,7 @@ func (a *API) Login(w http.ResponseWriter, r *http.Request) {
 	a.doLogin(w, r, user)
 }
 
-func (a *API) Register(w http.ResponseWriter, r *http.Request) {
+func (a *V1) Register(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
@@ -86,7 +86,7 @@ func (a *API) Register(w http.ResponseWriter, r *http.Request) {
 	a.doLogin(w, r, user)
 }
 
-func (a *API) Logout(w http.ResponseWriter, r *http.Request) {
+func (a *V1) Logout(w http.ResponseWriter, r *http.Request) {
 	authCookies := []string{
 		middleware.IDTokenCookieName,
 		middleware.AccessTokenCookieName,
@@ -131,7 +131,7 @@ func (a *API) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *API) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -141,7 +141,7 @@ func (a *API) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, user)
 }
 
-func (a *API) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
+func (a *V1) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -157,7 +157,7 @@ func (a *API) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, token)
 }
 
-func (a *API) ListAPITokens(w http.ResponseWriter, r *http.Request) {
+func (a *V1) ListAPITokens(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)

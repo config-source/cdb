@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/environments"
 )
 
-func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -40,7 +40,7 @@ func (a *API) GetEnvironmentByName(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, env)
 }
 
-func (a *API) GetEnvironmentByID(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetEnvironmentByID(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -63,7 +63,7 @@ func (a *API) GetEnvironmentByID(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, env)
 }
 
-func (a *API) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
+func (a *V1) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -91,7 +91,7 @@ func (a *API) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, env)
 }
 
-func (a *API) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -107,7 +107,7 @@ func (a *API) GetEnvironmentTree(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, trees)
 }
 
-func (a *API) ListEnvironments(w http.ResponseWriter, r *http.Request) {
+func (a *V1) ListEnvironments(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)

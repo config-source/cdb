@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/services"
 )
 
-func (a *API) GetServiceByName(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetServiceByName(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -33,7 +33,7 @@ func (a *API) GetServiceByName(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, svc)
 }
 
-func (a *API) GetServiceByID(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetServiceByID(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -56,7 +56,7 @@ func (a *API) GetServiceByID(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, svc)
 }
 
-func (a *API) CreateService(w http.ResponseWriter, r *http.Request) {
+func (a *V1) CreateService(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -84,7 +84,7 @@ func (a *API) CreateService(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, svc)
 }
 
-func (a *API) ListServices(w http.ResponseWriter, r *http.Request) {
+func (a *V1) ListServices(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)

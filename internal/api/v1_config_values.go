@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/configvalues"
 )
 
-func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -40,7 +40,7 @@ func (a *API) GetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, cv)
 }
 
-func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
+func (a *V1) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -87,7 +87,7 @@ func (a *API) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, cv)
 }
 
-func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
+func (a *V1) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -115,7 +115,7 @@ func (a *API) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, newConfigValue)
 }
 
-func (a *API) GetConfiguration(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetConfiguration(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)

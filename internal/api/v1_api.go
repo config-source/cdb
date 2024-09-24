@@ -1,11 +1,10 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/apiutils"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
@@ -14,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type API struct {
+type V1 struct {
 	log             zerolog.Logger
 	tokenSigningKey []byte
 
@@ -25,7 +24,7 @@ type API struct {
 	configKeyService   *configkeys.Service
 }
 
-func New(
+func NewV1(
 	log zerolog.Logger,
 	tokenSigningKey []byte,
 	userService *auth.UserService,
@@ -33,8 +32,8 @@ func New(
 	envService *environments.Service,
 	configKeyService *configkeys.Service,
 	svcService *services.ServiceService,
-) (*API, http.Handler) {
-	api := &API{
+) (*V1, http.Handler) {
+	api := &V1{
 		log:             log,
 		tokenSigningKey: tokenSigningKey,
 
@@ -82,41 +81,10 @@ func New(
 	return api, apiMux
 }
 
-func (a *API) sendJson(w http.ResponseWriter, payload interface{}) {
-	w.Header().Add("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(payload)
-	if err != nil {
-		a.log.Err(err).Msg("failed to encode a payload")
-	}
+func (a *V1) sendJson(w http.ResponseWriter, payload interface{}) {
+	apiutils.SendJSON(a.log, w, payload)
 }
 
-func (a *API) sendErr(w http.ResponseWriter, err error) {
-	switch {
-	case
-		errors.Is(err, auth.ErrUserNotFound),
-		errors.Is(err, environments.ErrNotFound),
-		errors.Is(err, configkeys.ErrNotFound),
-		errors.Is(err, services.ErrNotFound),
-		errors.Is(err, configvalues.ErrNotFound):
-		w.WriteHeader(http.StatusNotFound)
-	case
-		errors.Is(err, configvalues.ErrNotValid),
-		errors.Is(err, configvalues.ErrAlreadySet),
-		errors.Is(err, auth.ErrPublicRegisterDisabled),
-		errors.Is(err, auth.ErrEmailInUse):
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.Is(err, auth.ErrUnauthorized),
-		errors.Is(err, auth.ErrInvalidPassword):
-		w.WriteHeader(http.StatusForbidden)
-	case errors.Is(err, auth.ErrUnauthenticated):
-		w.WriteHeader(http.StatusUnauthorized)
-	// This is safe because subsequent calls to WriteHeader are ignored so
-	// callers can set the status code before calling errorResponse but if they
-	// haven't we want to send a 500.
-	default:
-		a.log.Err(err).Msg("unhandled error")
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	a.sendJson(w, NewErrorResponse(err.Error()))
+func (a *V1) sendErr(w http.ResponseWriter, err error) {
+	apiutils.SendErr(a.log, w, err)
 }

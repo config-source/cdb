@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/config-source/cdb/internal/server"
-	"github.com/config-source/cdb/internal/server/middleware"
 	"github.com/config-source/cdb/internal/settings"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/config-source/cdb/pkg/auth/postgres"
@@ -99,7 +98,6 @@ var serverCmd = &cobra.Command{
 			svcService,
 			settings.FrontendLocation(),
 		)
-		server = middleware.AccessLog(logger, server)
 
 		httpServer := &http.Server{Addr: settings.ListenAddr(), Handler: server}
 

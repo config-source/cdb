@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
@@ -20,11 +20,11 @@ import (
 func testAPI(
 	repo *testutils.TestRepository,
 	alwaysAuthd bool,
-) (*API, http.Handler, *auth.TestGateway) {
+) (*V1, http.Handler, *auth.TestGateway) {
 	gateway := auth.NewTestGateway()
 	tokenSigningKey := []byte("test key")
 
-	api, mux := New(
+	api, mux := NewV1(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		tokenSigningKey,
 		auth.NewTestServiceWithGateway(gateway),

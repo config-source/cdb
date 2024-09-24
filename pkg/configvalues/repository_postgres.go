@@ -175,6 +175,10 @@ func (r *PostgresRepository) GetConfigurationValue(ctx context.Context, environm
 
 		if env.PromotesToID != nil {
 			parent, err := r.envRepo.GetEnvironment(ctx, *env.PromotesToID)
+			if err != nil {
+				return nil, err
+			}
+
 			cv, err := r.GetConfigurationValue(ctx, parent.ID, key)
 			cv.Inherited = true
 			cv.InheritedFrom = parent.Name

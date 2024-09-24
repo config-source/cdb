@@ -5,7 +5,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/config-source/cdb/internal/server/api"
+	"github.com/config-source/cdb/internal/api"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
@@ -17,9 +18,9 @@ import (
 )
 
 type Server struct {
-	mux *http.ServeMux
-	api *api.API
-	ui  http.Handler
+	handler http.Handler
+	apiV1   *api.V1
+	ui      http.Handler
 }
 
 func New(
@@ -45,7 +46,7 @@ func New(
 		frontendHandler = http.FileServer(http.Dir(frontendLocation))
 	}
 
-	apiServer, apiMux := api.New(
+	apiServer, apiMux := api.NewV1(
 		log,
 		tokenSigningKey,
 		userService,
@@ -71,12 +72,12 @@ func New(
 	mux.Handle("/", frontendHandler)
 
 	return &Server{
-		mux: mux,
-		api: apiServer,
-		ui:  frontendHandler,
+		handler: middleware.AccessLog(log, mux),
+		apiV1:   apiServer,
+		ui:      frontendHandler,
 	}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	s.handler.ServeHTTP(w, r)
 }

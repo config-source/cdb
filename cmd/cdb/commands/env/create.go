@@ -57,6 +57,6 @@ var envCreateCmd = &cobra.Command{
 func init() {
 	envCreateCmd.Flags().StringVarP(&service, "service", "s", "", "Which service this environment belongs to")
 	envCreateCmd.Flags().StringVarP(&promotesTo, "promotes-to", "p", "", "What environment this promotes to, accepts an environment name or ID.")
-	envCreateCmd.MarkFlagRequired("service")
+	envCreateCmd.MarkFlagRequired("service") // nolint:errcheck
 	Command.AddCommand(envCreateCmd)
 }

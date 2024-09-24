@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/configkeys"
 )
 
-func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -32,7 +32,7 @@ func (a *API) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, ck)
 }
 
-func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
+func (a *V1) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -51,7 +51,7 @@ func (a *API) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, ck)
 }
 
-func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
+func (a *V1) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)
@@ -69,7 +69,7 @@ func (a *API) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, cks)
 }
 
-func (a *API) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
+func (a *V1) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
 		a.sendErr(w, err)

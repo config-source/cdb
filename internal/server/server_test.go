@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func testServer(repo *testutils.TestRepository) *http.ServeMux {
+func testServer(repo *testutils.TestRepository) http.Handler {
 	gateway := auth.NewTestGateway()
 
 	server := New(
@@ -31,7 +31,7 @@ func testServer(repo *testutils.TestRepository) *http.ServeMux {
 		"/frontend",
 	)
 
-	return server.mux
+	return server.handler
 }
 
 func TestHealthCheckSuccess(t *testing.T) {
@@ -58,7 +58,7 @@ func TestHealthCheckSuccess(t *testing.T) {
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	server.mux.ServeHTTP(rr, req)
+	server.handler.ServeHTTP(rr, req)
 
 	if rr.Code != 200 {
 		t.Fatalf("Expected 200 status code got: %d", rr.Code)

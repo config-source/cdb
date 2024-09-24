@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/config-source/cdb/internal/server/middleware"
+	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
 	"github.com/rs/zerolog"
 )
