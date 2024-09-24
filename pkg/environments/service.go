@@ -156,3 +156,31 @@ func (svc *Service) GetEnvironmentTree(ctx context.Context, actor auth.User) ([]
 
 	return trees, nil
 }
+
+func (svc *Service) UpdateEnvironment(ctx context.Context, actor auth.User, env Environment) (Environment, error) {
+	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
+	if err != nil {
+		return Environment{}, err
+	}
+
+	if !canManageEnvironments {
+		return Environment{}, auth.ErrUnauthorized
+	}
+
+	updated, err := svc.repo.UpdateEnvironment(ctx, env)
+	updated.Service = env.Service
+	return updated, err
+}
+
+func (svc *Service) DeleteEnvironment(ctx context.Context, actor auth.User, id int) error {
+	canManageEnvironments, err := svc.auth.HasPermission(ctx, actor, auth.PermissionManageEnvironments)
+	if err != nil {
+		return err
+	}
+
+	if !canManageEnvironments {
+		return auth.ErrUnauthorized
+	}
+
+	return svc.repo.DeleteEnvironment(ctx, id)
+}

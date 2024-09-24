@@ -52,6 +52,8 @@ func NewV1(
 	v1Mux.HandleFunc("GET /api/v1/environments/tree", api.GetEnvironmentTree)
 	v1Mux.HandleFunc("GET /api/v1/environments", api.ListEnvironments)
 	v1Mux.HandleFunc("POST /api/v1/environments", api.CreateEnvironment)
+	v1Mux.HandleFunc("PUT /api/v1/environments/{id}", api.UpdateEnvironment)
+	v1Mux.HandleFunc("DELETE /api/v1/environments/{id}", api.DeleteEnvironment)
 
 	v1Mux.HandleFunc("GET /api/v1/services/by-name/{name}", api.GetServiceByName)
 	v1Mux.HandleFunc("GET /api/v1/services/by-id/{id}", api.GetServiceByID)

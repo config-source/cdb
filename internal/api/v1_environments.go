@@ -122,3 +122,66 @@ func (a *V1) ListEnvironments(w http.ResponseWriter, r *http.Request) {
 
 	a.sendJson(w, environs)
 }
+
+func (a *V1) UpdateEnvironment(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, err)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	var env environments.Environment
+	err = decoder.Decode(&env)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, err)
+		return
+	}
+
+	if env.ID != id {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, errors.New("cannot change id of environment"))
+		return
+	}
+
+	updated, err := a.envService.UpdateEnvironment(r.Context(), user, env)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	a.sendJson(w, updated)
+}
+
+func (a *V1) DeleteEnvironment(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, err)
+		return
+	}
+
+	err = a.envService.DeleteEnvironment(r.Context(), user, id)
+	if err != nil {
+		a.sendErr(w, err)
+		return
+	}
+
+	w.Write([]byte{})
+}
