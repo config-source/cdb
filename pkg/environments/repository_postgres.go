@@ -38,6 +38,12 @@ var listEnvironmentsSql string
 //go:embed queries/list_nonsensitive_environments.sql
 var listNonsensitiveEnvironmentsSql string
 
+//go:embed queries/update_environment.sql
+var updateEnvironmentSql string
+
+//go:embed queries/delete_environment.sql
+var deleteEnvironmentSql string
+
 func (r *PostgresRepository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
 	return postgresutils.GetOneLax[Environment](
 		r.pool,
@@ -77,4 +83,21 @@ func (r *PostgresRepository) ListEnvironments(ctx context.Context, includeSensit
 	envs, err := postgresutils.GetAll[Environment](r.pool, ctx, sql)
 	r.log.Debug().Int("envCount", len(envs)).Msg("retrieved environments")
 	return envs, err
+}
+
+func (r *PostgresRepository) UpdateEnvironment(ctx context.Context, env Environment) (Environment, error) {
+	return postgresutils.GetOneLax[Environment](
+		r.pool,
+		ctx,
+		updateEnvironmentSql,
+		env.ID,
+		env.Name,
+		env.PromotesToID,
+		env.Sensitive,
+	)
+}
+
+func (r *PostgresRepository) DeleteEnvironment(ctx context.Context, id int) error {
+	_, err := r.pool.Exec(ctx, deleteEnvironmentSql, id)
+	return err
 }

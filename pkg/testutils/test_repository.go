@@ -113,6 +113,22 @@ func (tr *TestRepository) CreateEnvironment(ctx context.Context, env environment
 	return env, nil
 }
 
+func (tr *TestRepository) UpdateEnvironment(ctx context.Context, env environments.Environment) (environments.Environment, error) {
+	if toUpdate, ok := tr.Environments[env.ID]; ok {
+		toUpdate.Name = env.Name
+		toUpdate.PromotesToID = env.PromotesToID
+		toUpdate.Sensitive = env.Sensitive
+		return toUpdate, tr.Error
+	} else {
+		return env, environments.ErrNotFound
+	}
+}
+
+func (tr *TestRepository) DeleteEnvironment(ctx context.Context, id int) error {
+	delete(tr.Environments, id)
+	return tr.Error
+}
+
 func (tr *TestRepository) CreateConfigKey(ctx context.Context, ck configkeys.ConfigKey) (configkeys.ConfigKey, error) {
 	if tr.ConfigKeys == nil {
 		tr.ConfigKeys = make(map[int]configkeys.ConfigKey)

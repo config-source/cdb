@@ -45,6 +45,10 @@ type Repository interface {
 	GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error)
 
 	ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error)
+
+	UpdateEnvironment(ctx context.Context, env Environment) (Environment, error)
+
+	DeleteEnvironment(ctx context.Context, id int) error
 }
 
 type Tree struct {

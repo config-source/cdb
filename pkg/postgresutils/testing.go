@@ -127,14 +127,18 @@ func (tr *TestDatabase) Start(testName string) error {
 
 // Cleanup deletes the test database.
 func (tr *TestDatabase) Cleanup() {
+	if tr.pool != nil {
+		fmt.Println("Closing connection pool to:", tr.testName)
+		tr.pool.Close()
+	}
+
+	fmt.Println("Cleaning up database:", tr.testName)
 	_, err := tr.conn.Exec(context.Background(), fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", tr.testName))
 	if err != nil {
 		panic(err)
 	}
 
-	if tr.pool != nil {
-		tr.pool.Close()
-	}
+	fmt.Println("Cleanup complete for", tr.testName)
 }
 
 func InitTestDB(t *testing.T) (*TestDatabase, *pgxpool.Pool) {

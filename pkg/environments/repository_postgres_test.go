@@ -2,6 +2,7 @@ package environments_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -149,5 +150,53 @@ func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
 
 	if err != environments.ErrNotFound {
 		t.Fatalf("Expected an ErrEnvNotFound got: %s", err)
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	repo, svcRepo, tr := initTestDB(t)
+	defer tr.Cleanup()
+
+	svc := svcFixture(t, svcRepo, "svc1")
+
+	env1 := envFixture(t, repo, "env1", nil, svc.ID)
+	env2 := envFixture(t, repo, "env2", &env1.ID, svc.ID)
+	updated := environments.Environment{
+		ID:           env2.ID,
+		Name:         "updated",
+		PromotesToID: nil,
+		Sensitive:    true,
+		ServiceID:    svc.ID,
+		CreatedAt:    env2.CreatedAt,
+	}
+
+	result, err := repo.UpdateEnvironment(context.Background(), updated)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(updated, result) {
+		t.Errorf("expected: %v got: %v", updated, result)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	repo, svcRepo, tr := initTestDB(t)
+	defer tr.Cleanup()
+
+	svc := svcFixture(t, svcRepo, "svc1")
+
+	env1 := envFixture(t, repo, "env1", nil, svc.ID)
+	env2 := envFixture(t, repo, "env2", &env1.ID, svc.ID)
+
+	err := repo.DeleteEnvironment(context.Background(), env2.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = repo.GetEnvironment(context.Background(), env2.ID)
+
+	if !errors.Is(err, environments.ErrNotFound) {
+		t.Errorf("expected: %s got: %s", environments.ErrNotFound, err)
 	}
 }
