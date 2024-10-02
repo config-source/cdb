@@ -141,7 +141,7 @@ func (tr *TestDatabase) Cleanup() {
 	fmt.Println("Cleanup complete for", tr.testName)
 }
 
-func InitTestDB(t *testing.T) (*TestDatabase, *pgxpool.Pool) {
+func InitTestDB(t *testing.T) *pgxpool.Pool {
 	t.Parallel()
 	t.Helper()
 
@@ -156,5 +156,6 @@ func InitTestDB(t *testing.T) (*TestDatabase, *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 
-	return &tr, tr.pool
+	t.Cleanup(tr.Cleanup)
+	return tr.pool
 }

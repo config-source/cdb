@@ -10,16 +10,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*services.PostgresRepository, *postgresutils.TestDatabase) {
+func initTestDB(t *testing.T) *services.PostgresRepository {
 	t.Helper()
 
-	tr, pool := postgresutils.InitTestDB(t)
+	pool := postgresutils.InitTestDB(t)
 	repo := services.NewRepository(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		pool,
 	)
 
-	return repo, tr
+	return repo
 }
 
 func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) services.Service {
@@ -34,8 +34,7 @@ func svcFixture(t *testing.T, repo *services.PostgresRepository, name string) se
 }
 
 func TestCreateService(t *testing.T) {
-	repo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo := initTestDB(t)
 
 	svc, err := repo.CreateService(context.Background(), services.Service{
 		Name: "mat",
@@ -54,8 +53,7 @@ func TestCreateService(t *testing.T) {
 }
 
 func TestGetService(t *testing.T) {
-	repo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo := initTestDB(t)
 
 	svcFixture(t, repo, "svc1")
 	svc2 := svcFixture(t, repo, "svc2")
@@ -71,8 +69,7 @@ func TestGetService(t *testing.T) {
 }
 
 func TestGetServiceReturnsErrsvcNotFound(t *testing.T) {
-	repo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo := initTestDB(t)
 
 	_, err := repo.GetService(context.Background(), 1)
 	if err == nil {
@@ -85,8 +82,7 @@ func TestGetServiceReturnsErrsvcNotFound(t *testing.T) {
 }
 
 func TestGetServiceByName(t *testing.T) {
-	repo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo := initTestDB(t)
 
 	svc1 := svcFixture(t, repo, "svc1")
 	svcFixture(t, repo, "svc2")
@@ -102,8 +98,7 @@ func TestGetServiceByName(t *testing.T) {
 }
 
 func TestGetServiceByNameReturnsErrsvcNotFound(t *testing.T) {
-	repo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo := initTestDB(t)
 
 	_, err := repo.GetServiceByName(context.Background(), "dev")
 	if err == nil {

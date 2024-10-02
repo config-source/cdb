@@ -12,10 +12,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (environments.Repository, services.Repository, *postgresutils.TestDatabase) {
+func initTestDB(t *testing.T) (environments.Repository, services.Repository) {
 	t.Helper()
 
-	tr, pool := postgresutils.InitTestDB(t)
+	pool := postgresutils.InitTestDB(t)
 	repo := environments.NewRepository(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		pool,
@@ -25,7 +25,7 @@ func initTestDB(t *testing.T) (environments.Repository, services.Repository, *po
 		pool,
 	)
 
-	return repo, svcRepo, tr
+	return repo, svcRepo
 }
 
 func envFixture(
@@ -59,8 +59,7 @@ func svcFixture(t *testing.T, repo services.Repository, name string) services.Se
 }
 
 func TestCreateEnvironment(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 
@@ -86,8 +85,7 @@ func TestCreateEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironment(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 
@@ -106,8 +104,7 @@ func TestGetEnvironment(t *testing.T) {
 }
 
 func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
-	repo, _, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, _ := initTestDB(t)
 
 	_, err := repo.GetEnvironment(context.Background(), 1)
 	if err == nil {
@@ -120,8 +117,7 @@ func TestGetEnvironmentReturnsErrEnvNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByName(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 
@@ -140,8 +136,7 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
-	repo, _, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, _ := initTestDB(t)
 
 	_, err := repo.GetEnvironmentByName(context.Background(), "service", "dev")
 	if err == nil {
@@ -154,8 +149,7 @@ func TestGetEnvironmentByNameReturnsErrEnvNotFound(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 
@@ -181,8 +175,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 

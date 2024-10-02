@@ -12,10 +12,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (configkeys.Repository, services.Repository, *postgresutils.TestDatabase) {
+func initTestDB(t *testing.T) (configkeys.Repository, services.Repository) {
 	t.Helper()
 
-	tr, pool := postgresutils.InitTestDB(t)
+	pool := postgresutils.InitTestDB(t)
 
 	repo := configkeys.NewRepository(
 		zerolog.New(nil).Level(zerolog.Disabled),
@@ -26,7 +26,7 @@ func initTestDB(t *testing.T) (configkeys.Repository, services.Repository, *post
 		pool,
 	)
 
-	return repo, svcRepo, tr
+	return repo, svcRepo
 }
 
 func svcFixture(t *testing.T, repo services.Repository, name string) services.Service {
@@ -65,8 +65,7 @@ func configKeyFixture(
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "test")
 	ck, err := repo.CreateConfigKey(context.Background(), configkeys.New(
@@ -125,8 +124,7 @@ func TestCreateConfigKey(t *testing.T) {
 }
 
 func TestGetConfigKey(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "test")
 	configKey1 := configKeyFixture(
@@ -158,8 +156,7 @@ func TestGetConfigKey(t *testing.T) {
 }
 
 func TestListConfigKeys(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "test")
 	svc2 := svcFixture(t, svcRepo, "test2")
@@ -188,8 +185,7 @@ func TestListConfigKeys(t *testing.T) {
 }
 
 func TestListConfigKeysNoService(t *testing.T) {
-	repo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, svcRepo := initTestDB(t)
 
 	svc1 := svcFixture(t, svcRepo, "test1")
 	svc2 := svcFixture(t, svcRepo, "test2")

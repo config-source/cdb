@@ -11,8 +11,7 @@ import (
 )
 
 func TestRegister(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	user, err := gateway.Register(context.Background(), "test@example.com", "Test123!@")
 	if err != nil {
@@ -33,8 +32,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterDuplicateEmail(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	_, err := gateway.Register(context.Background(), "test@example.com", "Test123!@")
 	if err != nil {
@@ -52,8 +50,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	_, err := gateway.Register(context.Background(), "test@example.com", "Test123!@")
 	if err != nil {
@@ -79,8 +76,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	user, err := gateway.CreateUser(
 		context.Background(),
@@ -104,8 +100,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	user, err := gateway.CreateUser(
 		context.Background(),
@@ -142,8 +137,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	user, err := gateway.CreateUser(
 		context.Background(),
@@ -165,8 +159,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	expected := make([]auth.User, 3)
 	for i := range 3 {

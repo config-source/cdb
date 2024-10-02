@@ -19,11 +19,10 @@ func initTestDB(t *testing.T) (
 	environments.Repository,
 	configkeys.Repository,
 	services.Repository,
-	*postgresutils.TestDatabase,
 ) {
 	t.Helper()
 
-	tr, pool := postgresutils.InitTestDB(t)
+	pool := postgresutils.InitTestDB(t)
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 
 	envRepo := environments.NewRepository(logger, pool)
@@ -31,7 +30,7 @@ func initTestDB(t *testing.T) (
 	svcRepo := services.NewRepository(logger, pool)
 	repo := NewRepository(logger, pool, envRepo)
 
-	return repo, envRepo, keyRepo, svcRepo, tr
+	return repo, envRepo, keyRepo, svcRepo
 }
 
 func envFixture(
@@ -89,8 +88,7 @@ func configKeyFixture(
 }
 
 func TestCreateConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -137,8 +135,7 @@ func TestCreateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -188,8 +185,7 @@ func TestUpdateConfigValue(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -210,8 +206,7 @@ func TestUpdateConfigValueReturnsErrConfigValueNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -232,8 +227,7 @@ func TestUpdateConfigValueReturnsErrConfigKeyNotFound(t *testing.T) {
 }
 
 func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -254,8 +248,7 @@ func TestUpdateConfigValueReturnsErrEnvironmentNotFound(t *testing.T) {
 }
 
 func TestCreateIntConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -302,8 +295,7 @@ func TestCreateIntConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValue(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	env := envFixture(t, envRepo, "cdb", nil, svc.ID)
@@ -342,8 +334,7 @@ func TestGetConfigValue(t *testing.T) {
 }
 
 func TestGetConfigValueInheritsValues(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -401,8 +392,7 @@ func TestGetConfigValueInheritsValues(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -429,8 +419,7 @@ func TestGetConfigValueReturnsCorrectErrorForValueNotFound(t *testing.T) {
 }
 
 func TestGetConfigValueReturnsCorrectErrorForEnvNotFound(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -480,8 +469,7 @@ func createInheritedConfigValue(t *testing.T, repo Repository, parentName string
 }
 
 func TestGetConfiguration(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -515,8 +503,7 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -552,8 +539,7 @@ func TestGetConfigurationDoesntPropagateKeysWhichDoNot(t *testing.T) {
 }
 
 func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)
@@ -590,8 +576,7 @@ func TestGetConfigurationShowsCanPropagateFalseKeysSetOnBaseEnvironment(t *testi
 }
 
 func TestGetConfigurationMarksInheritedValuesAsSuch(t *testing.T) {
-	repo, envRepo, keyRepo, svcRepo, tr := initTestDB(t)
-	defer tr.Cleanup()
+	repo, envRepo, keyRepo, svcRepo := initTestDB(t)
 
 	svc := svcFixture(t, svcRepo, "svc1")
 	production := envFixture(t, envRepo, "production", nil, svc.ID)

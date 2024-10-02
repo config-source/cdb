@@ -8,14 +8,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (*pg.Gateway, *postgresutils.TestDatabase) {
+func initTestDB(t *testing.T) *pg.Gateway {
 	t.Helper()
 
-	tr, pool := postgresutils.InitTestDB(t)
+	pool := postgresutils.InitTestDB(t)
 	repo := pg.NewGateway(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		pool,
 	)
 
-	return repo, tr
+	return repo
 }

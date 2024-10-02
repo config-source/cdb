@@ -52,8 +52,7 @@ func operatorFixture(t *testing.T, gw *postgres.Gateway) auth.User {
 }
 
 func TestAdminHasAllPermission(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	ctx := context.Background()
@@ -72,8 +71,7 @@ func TestAdminHasAllPermission(t *testing.T) {
 }
 
 func TestOperatorHasConfigurePermissions(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	operator := operatorFixture(t, gateway)
 	ctx := context.Background()
@@ -95,8 +93,7 @@ func TestOperatorHasConfigurePermissions(t *testing.T) {
 }
 
 func TestHasPermissionWithMultiplePermissions(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	operator := operatorFixture(t, gateway)
 	ctx := context.Background()
@@ -117,8 +114,7 @@ func TestHasPermissionWithMultiplePermissions(t *testing.T) {
 }
 
 func TestAssignRoleToUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
@@ -140,8 +136,7 @@ func TestAssignRoleToUser(t *testing.T) {
 }
 
 func TestAssignNonExistentRoleToUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
@@ -154,8 +149,7 @@ func TestAssignNonExistentRoleToUser(t *testing.T) {
 }
 
 func TestAssignRoleToUserRequiresManageUserPermission(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	operator := operatorFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
@@ -168,8 +162,7 @@ func TestAssignRoleToUserRequiresManageUserPermission(t *testing.T) {
 }
 
 func TestRemoveRoleFromUser(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
@@ -196,8 +189,7 @@ func TestRemoveRoleFromUser(t *testing.T) {
 }
 
 func TestRemoveNonExistentRoleFromUserReturnsError(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
@@ -210,8 +202,7 @@ func TestRemoveNonExistentRoleFromUserReturnsError(t *testing.T) {
 }
 
 func TestGetPermissionsForAdministratorRole(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	ctx := context.Background()
@@ -240,8 +231,7 @@ func TestGetPermissionsForAdministratorRole(t *testing.T) {
 }
 
 func TestGetPermissionsForOperatorRole(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	ctx := context.Background()
@@ -261,8 +251,7 @@ func TestGetPermissionsForOperatorRole(t *testing.T) {
 }
 
 func TestRemovePermissionsFromRole(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	ctx := context.Background()
@@ -293,8 +282,7 @@ func TestRemovePermissionsFromRole(t *testing.T) {
 }
 
 func TestAddPermissionsToRole(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	ctx := context.Background()
@@ -338,8 +326,7 @@ func TestAddPermissionsToRole(t *testing.T) {
 }
 
 func TestCreateRole(t *testing.T) {
-	gateway, tr := initTestDB(t)
-	defer tr.Cleanup()
+	gateway := initTestDB(t)
 
 	admin := adminFixture(t, gateway)
 	unassignedUser := userFixture(t, gateway, "user@example.com")
