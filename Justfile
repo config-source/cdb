@@ -1,5 +1,8 @@
 alias dev-server := up
 
+default:
+    @just --list
+
 ci: fmt lint test
 
 fmt:
