@@ -9,7 +9,7 @@
 	import { isError } from '$lib/client';
 
 	/** @type string[] */
-	let services = ['All'];
+	let services = $state(['All']);
 
 	const fetchServices = async () => {
 		const data = await serviceClient.list();
@@ -55,7 +55,7 @@
 
 				<div class="navbar-dropdown">
 					{#each services as service}
-						<a class="navbar-item" on:click={() => selectedService.set(service)}>
+						<a class="navbar-item" onclick={() => selectedService.set(service)}>
 							{service}
 						</a>
 					{/each}
@@ -66,7 +66,7 @@
 				<a class="navbar-link"> {$user.data?.Email} </a>
 
 				<div class="navbar-dropdown">
-					<a class="navbar-item" on:click={doLogout}> Log Out </a>
+					<a class="navbar-item" onclick={doLogout}> Log Out </a>
 				</div>
 			</div>
 		</div>

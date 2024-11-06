@@ -10,9 +10,15 @@
 
 	import { user } from '$lib/stores/user';
 	import { getCurrentUser } from '$lib/client/auth';
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [children]
+	 */
 
-	let isLoginPage = false;
-	$: isLoginPage = $page.url.pathname.startsWith('/auth');
+	/** @type {Props} */
+	let { children } = $props();
+
+	let isLoginPage = $derived($page.url.pathname.startsWith('/auth'));
 
 	(async () => {
 		if (!isLoginPage && $user.data?.Email === undefined) {
@@ -39,4 +45,4 @@
 	<Navbar />
 {/if}
 
-<slot />
+{@render children?.()}

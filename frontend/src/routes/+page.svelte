@@ -1,4 +1,5 @@
 <script>
+	// TODO: Svelte 5 this component
 	import Heading from '$lib/components/utility/Heading.svelte';
 	import { selectedService } from '$lib/stores/selectedService';
 
@@ -63,10 +64,13 @@
 	</div>
 	<table class="table is-fullwidth is-hoverable">
 		<thead>
-			<th>Service</th>
-			<th>Name</th>
-			<th>Promotes To</th>
+			<tr>
+				<th>Service</th>
+				<th>Name</th>
+				<th>Promotes To</th>
+			</tr>
 		</thead>
+
 		<tbody>
 			{#each filteredEnvironments as env}
 				<tr>

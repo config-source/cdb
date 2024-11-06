@@ -2,8 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { ValueType } from '$lib/config-values';
 
-	export let valueType;
-	export let value;
+	let { valueType, value } = $props();
 
 	const dispatch = createEventDispatcher();
 	const onUpdate = ({ target }) => {
@@ -21,11 +20,11 @@
 </script>
 
 {#if valueType === ValueType.STRING}
-	<input class="input" type="text" {value} on:change={onUpdate} />
+	<input class="input" type="text" {value} onchange={onUpdate} />
 {:else if valueType === ValueType.BOOLEAN}
-	<input type="checkbox" checked={value} on:change={onUpdate} />
+	<input type="checkbox" checked={value} onchange={onUpdate} />
 {:else if valueType === ValueType.INTEGER}
-	<input class="input" type="number" {value} step="1" pattern="\d+" on:change={onUpdate} />
+	<input class="input" type="number" {value} step="1" pattern="\d+" onchange={onUpdate} />
 {:else if valueType === ValueType.FLOAT}
-	<input class="input" type="number" {value} step="0.01" pattern="\d+\.\d+" on:change={onUpdate} />
+	<input class="input" type="number" {value} step="0.01" pattern="\d+\.\d+" onchange={onUpdate} />
 {/if}

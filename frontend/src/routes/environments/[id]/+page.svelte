@@ -5,28 +5,29 @@
 	import { isError } from '$lib/client';
 	import { getByID } from '$lib/client/environments';
 
-	export let data;
+	/**
+	 * @typedef Props
+	 * @property {{id: string}} data
+	 */
+
+	/** @type {Props} */
+	let { data } = $props();
 
 	/** @type number */
-	let environmentId = 0;
-	$: environmentId = parseInt(data.id, 10);
+	let environmentId = $derived(parseInt(data.id, 10));
 
-	/** @type App.Environment */
-	let environment;
-
-	$: {
-		getByID(environmentId).then((e) => {
-			if (isError(e)) {
-				// TODO: handle error
-			} else {
-				environment = e;
-			}
-		});
-	}
+	let env = $derived.by(async () => {
+		const res = await getByID(environmentId);
+		if (isError(res)) throw new Error(res.Message);
+		return res;
+	});
 </script>
 
 <div class="container mt-6">
-	<Breadcrumbs {environment} />
-	<Heading size={3}>Configuration for {environment?.Name}</Heading>
+	{#await env then environment}
+		<Breadcrumbs {environment} />
+		<Heading size={3}>Configuration for {environment.Name}</Heading>
+	{/await}
+
 	<ConfigTable {environmentId} />
 </div>

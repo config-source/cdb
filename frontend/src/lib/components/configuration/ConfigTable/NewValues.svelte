@@ -10,25 +10,25 @@
 	import { isError } from '$lib/client';
 	import * as envClient from '$lib/client/environments';
 
-	/** @type string[] */
-	export let existingKeys;
-	/** @type number */
-	export let environmentId;
+	/**
+	 * @typedef {Object} Props
+	 * @property {any[]} existingKeys
+	 * @property {number} environmentId
+	 */
 
-	/** @type App.Environment | undefined */
-	let environment;
+	/** @type {Props} */
+	let { existingKeys, environmentId } = $props();
 
-	/** @type (envName: number) => Promise<void> */
-	const fetchEnv = async (envId) => {
-		const env = await envClient.getByID(envId);
-		if (isError(env)) return; // TODO: error handling
-		environment = env;
-	};
-	$: fetchEnv(environmentId);
+	/** @type Promise<App.Environment> */
+	let environment = $derived.by(async () => {
+		const env = await envClient.getByID(environmentId);
+		if (isError(env)) throw new Error(env.Message); // TODO: error handling
+		return env;
+	});
 
 	// Stores all the new configuration values that are being added by the user.
 	/** @type any[] */
-	let newValues = [];
+	let newValues = $state([]);
 
 	const dispatch = createEventDispatcher();
 
@@ -50,8 +50,9 @@
 
 	/** @type (idx: number) => () => void */
 	const saveNewConfigValue = (idx) => async () => {
+		const { Name } = await environment;
 		const configValue = newValues[idx];
-		const successful = await setConfigValue(environmentName, configValue);
+		const successful = await setConfigValue(Name, configValue);
 		if (successful) {
 			// Remove the config value from the list.
 			removeNewConfigValue(idx)();
@@ -89,26 +90,25 @@
 		return [...existingKeys, ...currentlyConfiguringKeys];
 	};
 
-	/** @type App.ConfigKey[] */
-	let configKeys = [];
-	/** @type (serviceID: number) => Promise<void> */
-	const fetchConfigKeys = async (serviceID) => {
-		if (serviceID === 0) return;
-		const keys = await configKeyClient.list(serviceID);
-		if (isError(keys)) return; // TODO: error handling.
-		configKeys = keys;
-	};
-	$: fetchConfigKeys(environment?.ServiceID ?? 0);
+	/** @type Promise<App.ConfigKey[]> */
+	let configKeys = $derived.by(async () => {
+		const { ServiceID } = await environment;
+		if (ServiceID === 0) return [];
 
-	let canAddValues = true;
-	$: canAddValues = configKeys.length !== existingKeys.length + newValues.length;
+		const keys = await configKeyClient.list(ServiceID);
+		if (isError(keys)) throw new Error(keys.Message); // TODO: error handling.
+		return keys;
+	});
 
-	let buttonTitle = '';
-	$: {
-		buttonTitle = canAddValues
+	let canAddValues = $derived.by(
+		async () => (await configKeys).length !== existingKeys.length + newValues.length
+	);
+
+	let buttonTitle = $derived.by(async () =>
+		(await canAddValues)
 			? 'Add new configuration value'
-			: 'All available keys are already configured or being configured!';
-	}
+			: 'All available keys are already configured or being configured!'
+	);
 </script>
 
 {#each newValues as newValue, i}
@@ -132,12 +132,12 @@
 		</td>
 		<td></td>
 		<td class="buttons is-centered">
-			<button class="button is-success" on:click={saveNewConfigValue(i)}>
+			<button class="button is-success" onclick={saveNewConfigValue(i)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faCheck} />
 				</span>
 			</button>
-			<button class="button is-danger" on:click={removeNewConfigValue(i)}>
+			<button class="button is-danger" onclick={removeNewConfigValue(i)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faTrash} />
 				</span>
@@ -151,15 +151,17 @@
 	<td></td>
 	<td></td>
 	<td class="buttons is-centered">
-		<button
-			class="button is-success"
-			title={buttonTitle}
-			disabled={!canAddValues}
-			on:click={addNewConfigValue}
-		>
-			<span class="icon">
-				<FontAwesomeIcon icon={faPlus} />
-			</span>
-		</button>
+		{#await buttonTitle then title}
+			<button
+				{title}
+				class="button is-success"
+				disabled={!canAddValues}
+				onclick={addNewConfigValue}
+			>
+				<span class="icon">
+					<FontAwesomeIcon icon={faPlus} />
+				</span>
+			</button>
+		{/await}
 	</td>
 </tr>

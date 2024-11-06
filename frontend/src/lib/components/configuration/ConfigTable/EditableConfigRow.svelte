@@ -6,9 +6,15 @@
 	import { faPencil, faX, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import { createEventDispatcher } from 'svelte';
 
-	export let configValue;
-	export let environmentId;
-	export let editing = false;
+	/**
+	 * @typedef {Object} Props
+	 * @property {any} configValue
+	 * @property {any} environmentId
+	 * @property {boolean} [editing]
+	 */
+
+	/** @type {Props} */
+	let { configValue, environmentId, editing = $bindable(false) } = $props();
 
 	const dispatch = createEventDispatcher();
 	const saveEdit = (envId, configValue) => async () => {
@@ -39,19 +45,19 @@
 	</td>
 	<td class="buttons is-centered">
 		{#if editing}
-			<button class="button is-success" on:click={saveEdit(environmentId, configValue)}>
+			<button class="button is-success" onclick={saveEdit(environmentId, configValue)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faCheck} />
 				</span>
 			</button>
 
-			<button class="button is-danger" on:click={() => (editing = false)}>
+			<button class="button is-danger" onclick={() => (editing = false)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faX} />
 				</span>
 			</button>
 		{:else}
-			<button class="button" on:click={() => (editing = true)}>
+			<button class="button" onclick={() => (editing = true)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faPencil} />
 				</span>

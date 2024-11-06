@@ -2,19 +2,23 @@
 	import { goto } from '$app/navigation';
 	import Heading from '$lib/components/utility/Heading.svelte';
 
-	/** @type string */
-	export let title;
-	/** @type string */
-	export let errorMessage = '';
-	/** @type (email: string, password: string) => void */
-	export let onSubmit;
+	/**
+	 * @typedef {Object} Props
+	 * @property {string} title
+	 * @property {string} [errorMessage]
+	 * @property {undefined | ((email: string, password: string) => unknown)} onSubmit
+	 */
 
-	let email = '';
-	let password = '';
-	let isLogin = false;
-	$: isLogin = title === 'Login';
+	/** @type {Props} */
+	let { title, errorMessage = '', onSubmit } = $props();
 
-	const handleSubmit = () => {
+	let email = $state('');
+	let password = $state('');
+	let isLogin = $derived(title === 'Login');
+
+	/** @type (event: Event) => void */
+	const handleSubmit = (event) => {
+		event.preventDefault();
 		onSubmit && onSubmit(email, password);
 	};
 </script>
@@ -23,7 +27,7 @@
 	<Heading size={4}>{title}</Heading>
 </div>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form onsubmit={handleSubmit}>
 	{#if errorMessage != ''}
 		<div class="field">
 			{errorMessage}
@@ -68,7 +72,7 @@
 		<div class="control">
 			<button
 				class="button is-link"
-				on:click={() => goto(isLogin ? '/auth/register' : '/auth/login')}
+				onclick={() => goto(isLogin ? '/auth/register' : '/auth/login')}
 			>
 				{isLogin ? 'Need an account?' : 'Already have an account?'}
 			</button>

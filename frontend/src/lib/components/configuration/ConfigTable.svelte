@@ -3,40 +3,44 @@
 	import NewValues from './ConfigTable/NewValues.svelte';
 	import { fetchConfig } from '$lib/client/config-values';
 
+	/**
+	 * @typedef Props
+	 * @property {number} environmentId
+	 */
+
+	/** @type {Props} */
+	let { environmentId } = $props();
+
 	// Stores all the fetched configuration values for this environment.
-	/** @type any[] */
-	export let configuration = [];
-	/** @type number */
-	export let environmentId;
-
-	/** @type (envName: number) => Promise<void> */
-	const updateConfiguration = async (envId) => {
-		configuration = await fetchConfig(envId);
-	};
-
-	$: updateConfiguration(environmentId);
+	/** @type Promise<any[]> */
+	let configuration = $derived(fetchConfig(environmentId));
 </script>
 
 <table class="table is-fullwidth is-hoverable">
 	<thead>
-		<th>Key</th>
-		<th>Value</th>
-		<th>Inherited From</th>
-		<th></th>
+		<tr>
+			<th>Key</th>
+			<th>Value</th>
+			<th>Inherited From</th>
+			<th></th>
+		</tr>
 	</thead>
-	<tbody>
-		{#each configuration as configValue}
-			<EditableConfigRow
-				{configValue}
-				{environmentId}
-				on:updated={() => updateConfiguration(environmentId)}
-			/>
-		{/each}
 
-		<NewValues
-			{environmentId}
-			existingKeys={configuration.map((cv) => cv.Name)}
-			on:updated={() => updateConfiguration(environmentId)}
-		/>
+	<tbody>
+		{#await configuration then items}
+			{#each items as configValue}
+				<EditableConfigRow
+					{configValue}
+					{environmentId}
+					on:updated={() => (environmentId = environmentId)}
+				/>
+			{/each}
+
+			<NewValues
+				{environmentId}
+				existingKeys={items.map((i) => i.Name)}
+				on:updated={() => (environmentId = environmentId)}
+			/>
+		{/await}
 	</tbody>
 </table>

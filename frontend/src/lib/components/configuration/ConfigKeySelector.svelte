@@ -1,15 +1,24 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 
-	export let excludedKeys;
-	export let preSelectedName;
+	/**
+	 * @typedef {Object} Props
+	 * @property {App.ConfigKey[]} excludedKeys
+	 * @property {string} preSelectedName
+	 */
 
-	let configKeys = [];
-	let selectedKey;
+	/** @type {Props} */
+	let { excludedKeys, preSelectedName } = $props();
+
+	/** @type App.ConfigKey[] */
+	let configKeys = $state([]);
+	/** @type App.ConfigKey | undefined */
+	let selectedKey = $state();
 
 	const dispatch = createEventDispatcher();
 	const onUpdate = () => dispatch('updated', { value: selectedKey });
 
+	// TODO: should be scoped to the current service
 	fetch('/api/v1/config-keys')
 		.then((r) => r.json())
 		.then((keys) => {
@@ -25,7 +34,7 @@
 		});
 </script>
 
-<select bind:value={selectedKey} on:change={onUpdate}>
+<select bind:value={selectedKey} onchange={onUpdate}>
 	{#each configKeys as key}
 		<option value={key}>
 			{key.Name}

@@ -1,8 +1,7 @@
 <script>
 	import Breadcrumb from './Breadcrumb.svelte';
 
-	export let environment;
-	export let size = undefined;
+	let { environment, size = undefined } = $props();
 </script>
 
 <div class="is-flex-direction-row is-flex">

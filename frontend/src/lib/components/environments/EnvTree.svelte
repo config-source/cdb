@@ -1,12 +1,19 @@
 <script>
+	import EnvTree from './EnvTree.svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { selectedEnvTreeNode } from '$lib/stores/selectedEnvTreeNode';
 
-	export let envTree;
-	export let depth = 0;
+	/**
+	 * @typedef {Object} Props
+	 * @property {any} envTree
+	 * @property {number} [depth]
+	 */
+
+	/** @type {Props} */
+	let { envTree, depth = 0 } = $props();
 	const thisEnvironment = envTree.Env;
 
-	let active = $selectedEnvTreeNode === thisEnvironment.Name;
+	let active = $state($selectedEnvTreeNode === thisEnvironment.Name);
 	selectedEnvTreeNode.subscribe((name) => (active = name === thisEnvironment.Name));
 
 	const dispatch = createEventDispatcher();
@@ -31,7 +38,7 @@
 		<button
 			type="button"
 			class={`level-item button ${active ? 'is-primary' : 'is-outline'}`}
-			on:click={onSelect}
+			onclick={onSelect}
 		>
 			{envTree.Env.Name}
 		</button>
@@ -39,5 +46,5 @@
 </div>
 
 {#each envTree.Children as child}
-	<svelte:self envTree={child} depth={depth + 1} on:envSelected />
+	<EnvTree envTree={child} depth={depth + 1} on:envSelected />
 {/each}

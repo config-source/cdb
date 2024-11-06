@@ -1,6 +1,13 @@
 <script>
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [children]
+	 */
+
+	/** @type {Props} */
+	let { children } = $props();
 	/** @type number */
-	let height;
+	let height = $state();
 </script>
 
 <svelte:window bind:innerHeight={height} />
@@ -10,7 +17,7 @@
 	class="is-flex is-flex-direction-row is-align-content-center is-justify-content-center is-align-items-center is-flex-grow-1"
 >
 	<div>
-		<slot />
+		{@render children?.()}
 	</div>
 </div>
 

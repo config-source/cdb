@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { user } from '$lib/stores/user';
 
-	let errorMessage = '';
+	let errorMessage = $state('');
 
 	/** @type (email: string, password: string) => Promise<void> */
 	const onSubmit = async (email, password) => {

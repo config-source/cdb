@@ -1,9 +1,9 @@
-/** @type (...serviceNames: string[]) => Promise<App.Response<App.ConfigKey[]>> */
-export async function list(...serviceNames) {
+/** @type (...serviceNamesOrIDs: (string | number)[]) => Promise<App.Response<App.ConfigKey[]>> */
+export async function list(...serviceNamesOrIDs) {
 	let url = '/api/v1/config-keys';
-	if (serviceNames.length > 0) {
+	if (serviceNamesOrIDs.length > 0) {
 		const params = new URLSearchParams();
-		for (const serviceID of serviceNames) {
+		for (const serviceID of serviceNamesOrIDs) {
 			params.append('service', serviceID.toString());
 		}
 		url += `?${params.toString()}`;
