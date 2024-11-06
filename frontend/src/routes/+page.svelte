@@ -2,7 +2,9 @@
 	import Heading from '$lib/components/utility/Heading.svelte';
 	import { selectedService } from '$lib/stores/selectedService';
 
+	/** @type App.Environment[] */
 	let environments = [];
+	/** @type App.Environment[] */
 	let filteredEnvironments = [];
 	let query = '';
 
@@ -28,6 +30,7 @@
 
 	selectedService.subscribe(() => filterEnvironments());
 
+	/** @type (id: number) => string */
 	const getNameFromId = (id) => {
 		const env = environments.find((env) => env.ID === id);
 		if (env) {
