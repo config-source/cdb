@@ -13,20 +13,20 @@ import (
 func (a *V1) GetServiceByName(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	name := r.PathValue("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("name missing from url"))
+		a.sendErr(w, r, errors.New("name missing from url"))
 		return
 	}
 
 	svc, err := a.svcService.GetServiceByName(r.Context(), user, name)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -36,20 +36,20 @@ func (a *V1) GetServiceByName(w http.ResponseWriter, r *http.Request) {
 func (a *V1) GetServiceByID(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	svc, err := a.svcService.GetServiceByID(r.Context(), user, id)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (a *V1) GetServiceByID(w http.ResponseWriter, r *http.Request) {
 func (a *V1) CreateService(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -70,13 +70,13 @@ func (a *V1) CreateService(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&svc)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	svc, err = a.svcService.CreateService(r.Context(), user, svc)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -87,13 +87,13 @@ func (a *V1) CreateService(w http.ResponseWriter, r *http.Request) {
 func (a *V1) ListServices(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	svcirons, err := a.svcService.ListServices(r.Context(), user)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 

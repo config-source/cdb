@@ -284,7 +284,7 @@ func TestListConfigKeysFilterByService(t *testing.T) {
 	}
 
 	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=test2&service=test3", nil)
+	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=2&service=3", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 

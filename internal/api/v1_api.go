@@ -87,6 +87,6 @@ func (a *V1) sendJson(w http.ResponseWriter, payload interface{}) {
 	apiutils.SendJSON(a.log, w, payload)
 }
 
-func (a *V1) sendErr(w http.ResponseWriter, err error) {
-	apiutils.SendErr(a.log, w, err)
+func (a *V1) sendErr(w http.ResponseWriter, r *http.Request, err error) {
+	apiutils.SendErr(a.log, w, r, err)
 }

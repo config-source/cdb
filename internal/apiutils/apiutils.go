@@ -13,6 +13,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type StatusRecorder struct {
+	http.ResponseWriter
+	Status int
+}
+
+func (r *StatusRecorder) WriteHeader(status int) {
+	if r.Status != 0 {
+		return
+	}
+
+	r.Status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func (r *StatusRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
+}
+
 type ErrorResponse struct {
 	Message string
 }
@@ -35,7 +53,7 @@ func SendJSON(log zerolog.Logger, w http.ResponseWriter, payload interface{}) {
 	}
 }
 
-func SendErr(log zerolog.Logger, w http.ResponseWriter, err error) {
+func SendErr(log zerolog.Logger, w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case
 		errors.Is(err, auth.ErrUserNotFound),
@@ -59,8 +77,14 @@ func SendErr(log zerolog.Logger, w http.ResponseWriter, err error) {
 	// callers can set the status code before calling errorResponse but if they
 	// haven't we want to send a 500.
 	default:
-		log.Err(err).Msg("unhandled error")
-		w.WriteHeader(http.StatusInternalServerError)
+		if w.(*StatusRecorder).Status == 0 {
+			log.Error().
+				Err(err).
+				Str("method", r.Method).
+				Str("url", r.URL.Path).
+				Msg("unhandled error")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 
 	SendJSON(log, w, NewErrorResponse(err.Error()))

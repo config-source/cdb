@@ -12,20 +12,20 @@ import (
 func (a *V1) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	ck, err := a.configKeyService.GetConfigKeyByID(r.Context(), user, id)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -35,7 +35,7 @@ func (a *V1) GetConfigKeyByID(w http.ResponseWriter, r *http.Request) {
 func (a *V1) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (a *V1) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 
 	ck, err := a.configKeyService.GetConfigKeyByName(r.Context(), user, serviceName, name)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -54,15 +54,24 @@ func (a *V1) GetConfigKeyByName(w http.ResponseWriter, r *http.Request) {
 func (a *V1) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
-	serviceNames := r.URL.Query()["service"]
+	services := r.URL.Query()["service"]
+	serviceIDs := make([]int, len(services))
+	for i, svc := range services {
+		var err error
+		serviceIDs[i], err = strconv.Atoi(svc)
+		if err != nil {
+			a.sendErr(w, r, err)
+			return
+		}
+	}
 
-	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user, serviceNames...)
+	cks, err := a.configKeyService.ListConfigKeys(r.Context(), user, serviceIDs...)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -72,7 +81,7 @@ func (a *V1) ListConfigKeys(w http.ResponseWriter, r *http.Request) {
 func (a *V1) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -83,13 +92,13 @@ func (a *V1) CreateConfigKey(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&configKey)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	configKey, err = a.configKeyService.CreateConfigKey(r.Context(), user, configKey)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 

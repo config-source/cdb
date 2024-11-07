@@ -17,7 +17,7 @@ type Credentials struct {
 func (a *V1) doLogin(w http.ResponseWriter, r *http.Request, user auth.User) {
 	tokens, err := auth.GenerateTokens(a.tokenSigningKey, user)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -52,13 +52,13 @@ func (a *V1) Login(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	user, err := a.userService.Login(r.Context(), creds.Email, creds.Password)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -73,13 +73,13 @@ func (a *V1) Register(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	user, err := a.userService.Register(r.Context(), creds.Email, creds.Password)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (a *V1) Logout(w http.ResponseWriter, r *http.Request) {
 	if refreshToken == "" {
 		cookie, err := r.Cookie(middleware.RefreshTokenCookieName)
 		if err != nil && !errors.Is(err, http.ErrNoCookie) {
-			a.sendErr(w, err)
+			a.sendErr(w, r, err)
 			return
 		} else if err == nil {
 			refreshToken = cookie.Value
@@ -106,7 +106,7 @@ func (a *V1) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if refreshToken == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		a.sendErr(w, errors.New("no refresh token supplied"))
+		a.sendErr(w, r, errors.New("no refresh token supplied"))
 		return
 	}
 
@@ -127,14 +127,14 @@ func (a *V1) Logout(w http.ResponseWriter, r *http.Request) {
 
 	err := a.userService.Logout(r.Context(), refreshToken)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 	}
 }
 
 func (a *V1) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -144,13 +144,13 @@ func (a *V1) GetLoggedInUser(w http.ResponseWriter, r *http.Request) {
 func (a *V1) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	token, err := a.userService.IssueAPIToken(r.Context(), a.tokenSigningKey, user)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
@@ -160,13 +160,13 @@ func (a *V1) IssueAPIToken(w http.ResponseWriter, r *http.Request) {
 func (a *V1) ListAPITokens(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 
 	tokens, err := a.userService.ListAPITokens(r.Context(), user)
 	if err != nil {
-		a.sendErr(w, err)
+		a.sendErr(w, r, err)
 		return
 	}
 

@@ -38,7 +38,7 @@ func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []
 			if header != "" {
 				if !strings.HasPrefix(header, AuthorizationHeaderPrefix) {
 					w.WriteHeader(http.StatusBadRequest)
-					apiutils.SendErr(log, w, errors.New("malformed authorization header"))
+					apiutils.SendErr(log, w, r, errors.New("malformed authorization header"))
 					return
 				}
 
@@ -72,7 +72,7 @@ func Authentication(log zerolog.Logger, userSvc *auth.UserService, signingKey []
 			if err != nil {
 				log.Err(err).Msg("invalid token")
 				w.WriteHeader(http.StatusBadRequest)
-				apiutils.SendErr(log, w, err)
+				apiutils.SendErr(log, w, r, err)
 				return
 			}
 
@@ -95,7 +95,7 @@ func AuthenticationRequired(log zerolog.Logger, userSvc *auth.UserService, signi
 				}
 
 				w.WriteHeader(http.StatusUnauthorized)
-				apiutils.SendErr(log, w, auth.ErrUnauthorized)
+				apiutils.SendErr(log, w, r, auth.ErrUnauthorized)
 			},
 		),
 	)

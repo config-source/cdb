@@ -4,31 +4,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/config-source/cdb/internal/apiutils"
 	"github.com/rs/zerolog"
 )
-
-type StatusRecorder struct {
-	http.ResponseWriter
-	Status int
-}
-
-func (r *StatusRecorder) WriteHeader(status int) {
-	if r.Status != 0 {
-		return
-	}
-
-	r.Status = status
-	r.ResponseWriter.WriteHeader(status)
-}
-
-func (r *StatusRecorder) Unwrap() http.ResponseWriter {
-	return r.ResponseWriter
-}
 
 func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			wr := &StatusRecorder{ResponseWriter: w, Status: 200}
+			wr := &apiutils.StatusRecorder{ResponseWriter: w, Status: 200}
 
 			startTime := time.Now()
 			next.ServeHTTP(wr, r)
