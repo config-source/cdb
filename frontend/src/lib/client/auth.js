@@ -1,3 +1,5 @@
+import { isError } from '.';
+
 /** @type () => Promise<App.CurrentUserInfo> */
 export async function getCurrentUser() {
 	const res = await fetch('/api/v1/users/me', { credentials: 'include' });
@@ -19,8 +21,17 @@ export async function login(email, password) {
 		method: 'POST',
 		body: JSON.stringify({ Email: email, Password: password })
 	});
+	const data = await res.json();
+	if (isError(data)) {
+		return data;
+	}
 
-	return res.json();
+	const info = await getCurrentUser();
+	if (info.user) {
+		return info.user;
+	}
+
+	return { Message: 'log in failed' };
 }
 
 /** @type (email: string, password: string) => Promise<App.Response<App.User>> */
