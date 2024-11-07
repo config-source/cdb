@@ -27,8 +27,11 @@
 {#await promotesTo then parent}
 	{#if parent}
 		<Breadcrumb environment={parent} {size} />
-		<span class={`is-size-${size} p-1`}> / </span>
+	{:else}
+		<a href="/" class={`is-size-${size} p-1`}> Environments </a>
 	{/if}
+
+	<span class={`is-size-${size} p-1`}> / </span>
 {/await}
 
 <a href={`/environments/${environment.ID}`} class={`is-size-${size} p-1`}>
