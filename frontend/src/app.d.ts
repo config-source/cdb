@@ -2,11 +2,11 @@
 // for information about these interfaces
 declare global {
 	namespace App {
-		interface Error {
+		interface ApiError {
 			Message: string;
 		}
 
-		type Response<T> = T | Error;
+		type Response<T> = T | ApiError;
 
 		interface User {
 			Email: string;
@@ -43,4 +43,4 @@ declare global {
 	}
 }
 
-export {};
+export { };
