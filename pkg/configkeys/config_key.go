@@ -89,5 +89,5 @@ type Repository interface {
 	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
 	GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error)
 
-	ListConfigKeys(ctx context.Context, serviceNames ...string) ([]ConfigKey, error)
+	ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error)
 }

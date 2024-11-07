@@ -80,11 +80,11 @@ func (svc *Service) GetConfigKeyByID(ctx context.Context, actor auth.User, id in
 	return svc.repo.GetConfigKey(ctx, id)
 }
 
-func (svc *Service) ListConfigKeys(ctx context.Context, actor auth.User, serviceNames ...string) ([]ConfigKey, error) {
+func (svc *Service) ListConfigKeys(ctx context.Context, actor auth.User, serviceIDs ...int) ([]ConfigKey, error) {
 	authErr := svc.hasReadPermissions(ctx, actor)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	return svc.repo.ListConfigKeys(ctx, serviceNames...)
+	return svc.repo.ListConfigKeys(ctx, serviceIDs...)
 }

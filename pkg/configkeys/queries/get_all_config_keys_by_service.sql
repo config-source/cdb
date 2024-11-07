@@ -3,4 +3,4 @@ SELECT
     services.name as service_name 
 FROM config_keys
 INNER JOIN services ON services.id = config_keys.service_id
-WHERE services.name = ANY($1);
+WHERE services.id = ANY($1);

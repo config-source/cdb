@@ -115,12 +115,15 @@
 	<tr>
 		<td>
 			<div class="select">
-				<!-- Exclude config keys that are already configured directly on this environment. -->
-				<ConfigKeySelector
-					excludedKeys={getExcludedConfigKeys()}
-					preSelectedName={newValue.Name}
-					on:updated={updateValueWithNewKey(newValue)}
-				/>
+				{#await environment then env}
+					<!-- Exclude config keys that are already configured directly on this environment. -->
+					<ConfigKeySelector
+						service={[env.ServiceID]}
+						excludedKeys={getExcludedConfigKeys()}
+						preSelectedName={newValue.Name}
+						on:updated={updateValueWithNewKey(newValue)}
+					/>
+				{/await}
 			</div>
 		</td>
 		<td>
