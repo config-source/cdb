@@ -67,7 +67,7 @@ func New(
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 
-		w.Write([]byte{}) // nolint:errcheck
+		w.Write(nil) // nolint:errcheck
 	})
 	mux.Handle("/", frontendHandler)
 

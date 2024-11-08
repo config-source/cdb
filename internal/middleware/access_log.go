@@ -11,7 +11,7 @@ import (
 func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			wr := &apiutils.StatusRecorder{ResponseWriter: w, Status: 200}
+			wr := apiutils.NewStatusRecorder(w)
 
 			startTime := time.Now()
 			next.ServeHTTP(wr, r)

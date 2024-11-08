@@ -183,5 +183,5 @@ func (a *V1) DeleteEnvironment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte{})
+	a.sendJson(w, nil)
 }

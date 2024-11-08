@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -15,24 +14,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
-
-func testServer(repo *testutils.TestRepository) http.Handler {
-	gateway := auth.NewTestGateway()
-
-	server := New(
-		zerolog.New(nil).Level(zerolog.Disabled),
-		[]byte("test key"),
-		nil,
-		auth.NewTestServiceWithGateway(gateway),
-		configvalues.NewService(repo, repo, repo, gateway, true),
-		environments.NewService(repo, gateway),
-		configkeys.NewService(repo, gateway),
-		services.NewServiceService(repo, gateway),
-		"/frontend",
-	)
-
-	return server.handler
-}
 
 func TestHealthCheckSuccess(t *testing.T) {
 	gateway := auth.NewTestGateway()
@@ -70,7 +51,22 @@ func TestHealthCheckFailure(t *testing.T) {
 		IsHealthy: false,
 	}
 
-	mux := testServer(repo)
+	gateway := auth.NewTestGateway()
+	gateway.IsHealthy = false
+	userService := auth.NewTestServiceWithGateway(gateway)
+
+	mux := New(
+		zerolog.New(nil).Level(zerolog.Disabled),
+		[]byte("test key"),
+		nil,
+		userService,
+		configvalues.NewService(repo, repo, repo, gateway, true),
+		environments.NewService(repo, gateway),
+		configkeys.NewService(repo, gateway),
+		services.NewServiceService(repo, gateway),
+		"/frontend",
+	)
+
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 

@@ -18,6 +18,12 @@ type StatusRecorder struct {
 	Status int
 }
 
+func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
+	return &StatusRecorder{
+		ResponseWriter: w,
+	}
+}
+
 func (r *StatusRecorder) WriteHeader(status int) {
 	if r.Status != 0 {
 		return
@@ -77,13 +83,16 @@ func SendErr(log zerolog.Logger, w http.ResponseWriter, r *http.Request, err err
 	// callers can set the status code before calling errorResponse but if they
 	// haven't we want to send a 500.
 	default:
-		if w.(*StatusRecorder).Status == 0 {
-			log.Error().
-				Err(err).
-				Str("method", r.Method).
-				Str("url", r.URL.Path).
-				Msg("unhandled error")
-			w.WriteHeader(http.StatusInternalServerError)
+		switch v := w.(type) {
+		case *StatusRecorder:
+			if v.Status == 0 {
+				log.Error().
+					Err(err).
+					Str("method", r.Method).
+					Str("url", r.URL.Path).
+					Msg("unhandled error")
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	}
 

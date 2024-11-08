@@ -77,7 +77,7 @@ func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceName
 }
 
 func (r *PostgresRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error) {
-	if serviceIDs != nil {
+	if len(serviceIDs) > 0 {
 		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeysByService, serviceIDs)
 	} else {
 		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeys)

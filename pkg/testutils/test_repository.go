@@ -178,8 +178,9 @@ func (tr *TestRepository) GetConfigKeyByName(ctx context.Context, serviceName, n
 func (tr *TestRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]configkeys.ConfigKey, error) {
 	keys := make([]configkeys.ConfigKey, 0)
 
+	allKeys := len(serviceIDs) == 0
 	for _, ck := range tr.ConfigKeys {
-		if serviceIDs == nil || slices.Contains(serviceIDs, ck.ServiceID) {
+		if allKeys || slices.Contains(serviceIDs, ck.ServiceID) {
 			keys = append(keys, ck)
 		}
 	}

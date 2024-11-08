@@ -174,7 +174,7 @@ func TestListConfigKeys(t *testing.T) {
 		ck2,
 	}
 
-	retrieved, err := repo.ListConfigKeys(context.Background(), svc.Name)
+	retrieved, err := repo.ListConfigKeys(context.Background(), svc.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
