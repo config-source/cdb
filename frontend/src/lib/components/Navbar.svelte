@@ -51,22 +51,25 @@
 
 		<div class="navbar-end">
 			<div class="navbar-item has-dropdown is-hoverable">
-				<a class="navbar-link"> Service: {$selectedService} </a>
+				<button class="navbar-link button is-white"> Service: {$selectedService} </button>
 
 				<div class="navbar-dropdown">
 					{#each services as service}
-						<a class="navbar-item" onclick={() => selectedService.set(service)}>
+						<button
+							class="navbar-item button is-white"
+							onclick={() => selectedService.set(service)}
+						>
 							{service}
-						</a>
+						</button>
 					{/each}
 				</div>
 			</div>
 
 			<div class="navbar-item has-dropdown is-hoverable">
-				<a class="navbar-link"> {$user.data?.Email} </a>
+				<button class="navbar-link button is-white"> {$user.data?.Email} </button>
 
 				<div class="navbar-dropdown">
-					<a class="navbar-item" onclick={doLogout}> Log Out </a>
+					<button class="navbar-item button is-white" onclick={doLogout}> Log Out </button>
 				</div>
 			</div>
 		</div>
@@ -88,5 +91,20 @@ happens.
 
 	.navbar-spacer {
 		height: 53px;
+	}
+
+	/* 
+	* Bulma doesn't like that we use button tags instead of a tags, but a11y doesn't
+	* like having a tags with no href. So this just patches in the hover behaviour of
+	* a tags for our buttons in the navbar dropdown.
+	*/
+	.navbar-dropdown .navbar-item.button {
+		display: block;
+		width: 100%;
+		text-align: left;
+	}
+	.navbar-dropdown .navbar-item.button:hover {
+		--bulma-navbar-item-background-l-delta: var(--bulma-navbar-item-hover-background-l-delta);
+		--bulma-navbar-item-background-a: 1;
 	}
 </style>
