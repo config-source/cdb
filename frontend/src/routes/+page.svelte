@@ -1,37 +1,34 @@
 <script>
-	// TODO: Svelte 5 this component
 	import Heading from '$lib/components/utility/Heading.svelte';
 	import { selectedService } from '$lib/stores/selectedService';
 
 	/** @type App.Environment[] */
-	let environments = [];
-	/** @type App.Environment[] */
-	let filteredEnvironments = [];
-	let query = '';
+	let environments = $state([]);
+	let query = $state('');
 
-	const filterEnvironments = () => {
-		if (query === '') {
-			filteredEnvironments = environments;
-		} else {
-			filteredEnvironments = environments
-				.filter(
-					(env) =>
-						env.Name.toLowerCase().includes(query.toLowerCase()) ||
-						env.Service.toLowerCase().includes(query.toLowerCase())
-				)
-				// TODO: prioritise things that match the name over things that match the
-				// service if both match the query.
-				.sort((a, b) => a.Name.localeCompare(b.Name));
-		}
+	/** @type App.Environment[] */
+	let filteredEnvironments = $derived.by(() => {
+		let results =
+			query === ''
+				? environments
+				: environments
+						.filter(
+							(env) =>
+								env.Name.toLowerCase().includes(query.toLowerCase()) ||
+								env.Service.toLowerCase().includes(query.toLowerCase())
+						)
+						// TODO: prioritise things that match the name over things that match the
+						// service if both match the query.
+						.sort((a, b) => a.Name.localeCompare(b.Name));
 
 		if ($selectedService !== 'All') {
-			filteredEnvironments = filteredEnvironments.filter((env) => env.Service === $selectedService);
+			return results.filter((env) => env.Service === $selectedService);
 		}
-	};
 
-	selectedService.subscribe(() => filterEnvironments());
+		return results;
+	});
 
-	/** @type (id: number) => string */
+	/** @type (id?: number) => string */
 	const getNameFromId = (id) => {
 		const env = environments.find((env) => env.ID === id);
 		if (env) {
@@ -45,7 +42,6 @@
 		.then((res) => res.json())
 		.then((data) => {
 			environments = data;
-			filteredEnvironments = data;
 		});
 </script>
 
@@ -58,7 +54,6 @@
 				type="text"
 				placeholder="Filter environments by name"
 				bind:value={query}
-				on:keyup={filterEnvironments}
 			/>
 		</div>
 	</div>
