@@ -31,11 +31,7 @@
 	/** @type (id?: number) => string */
 	const getNameFromId = (id) => {
 		const env = environments.find((env) => env.ID === id);
-		if (env) {
-			return env.Name;
-		}
-
-		return '';
+		return env?.Name ?? '';
 	};
 
 	fetch('/api/v1/environments')
