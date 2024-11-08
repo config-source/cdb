@@ -13,7 +13,11 @@
 
 	// Stores all the fetched configuration values for this environment.
 	/** @type Promise<any[]> */
-	let configuration = $derived(fetchConfig(environmentId));
+	let configuration = $state(new Promise((resolve) => resolve([])));
+
+	$effect(() => {
+		configuration = fetchConfig(environmentId);
+	});
 </script>
 
 <table class="table is-fullwidth is-hoverable">
@@ -32,14 +36,14 @@
 				<EditableConfigRow
 					{configValue}
 					{environmentId}
-					on:updated={() => (environmentId = environmentId)}
+					on:updated={() => (configuration = fetchConfig(environmentId))}
 				/>
 			{/each}
 
 			<NewValues
 				{environmentId}
 				existingKeys={items.map((i) => i.Name)}
-				on:updated={() => (environmentId = environmentId)}
+				on:updated={() => (configuration = fetchConfig(environmentId))}
 			/>
 		{/await}
 	</tbody>

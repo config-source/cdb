@@ -50,9 +50,9 @@
 
 	/** @type (idx: number) => () => void */
 	const saveNewConfigValue = (idx) => async () => {
-		const { Name } = await environment;
+		const { ID } = await environment;
 		const configValue = newValues[idx];
-		const successful = await setConfigValue(Name, configValue);
+		const successful = await setConfigValue(ID, configValue);
 		if (successful) {
 			// Remove the config value from the list.
 			removeNewConfigValue(idx)();
@@ -96,7 +96,10 @@
 		if (ServiceID === 0) return [];
 
 		const keys = await configKeyClient.list(ServiceID);
-		if (isError(keys)) throw new Error(keys.Message); // TODO: error handling.
+		if (isError(keys)) {
+			throw new Error(keys.Message); // TODO: error handling.
+		}
+
 		return keys;
 	});
 
