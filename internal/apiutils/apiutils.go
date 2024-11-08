@@ -15,7 +15,7 @@ import (
 
 type StatusRecorder struct {
 	http.ResponseWriter
-	Status int
+	status int
 }
 
 func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
@@ -25,16 +25,24 @@ func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
 }
 
 func (r *StatusRecorder) WriteHeader(status int) {
-	if r.Status != 0 {
+	if r.status != 0 {
 		return
 	}
 
-	r.Status = status
+	r.status = status
 	r.ResponseWriter.WriteHeader(status)
 }
 
 func (r *StatusRecorder) Unwrap() http.ResponseWriter {
 	return r.ResponseWriter
+}
+
+func (r *StatusRecorder) Status() int {
+	if r.status == 0 {
+		return 200
+	}
+
+	return r.status
 }
 
 type ErrorResponse struct {

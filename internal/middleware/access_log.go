@@ -18,14 +18,14 @@ func AccessLog(log zerolog.Logger, next http.Handler) http.Handler {
 			responseTime := time.Since(startTime)
 
 			accessLog := log.Info()
-			if wr.Status >= 400 {
+			if wr.Status() >= 400 {
 				accessLog = log.Error()
 			}
 
 			accessLog.
 				Str("url", r.URL.String()).
 				Str("method", r.Method).
-				Int("statusCode", wr.Status).
+				Int("statusCode", wr.Status()).
 				Dur("responseTimeMilliseconds", responseTime).
 				Msg("request served")
 		},
