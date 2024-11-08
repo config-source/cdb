@@ -1,4 +1,4 @@
-/** @type (environmentId: string, configValue: any) => Promise<boolean> */
+/** @type (environmentId: number, configValue: any) => Promise<boolean> */
 export async function setConfigValue(environmentId, configValue) {
 	const res = await fetch(`/api/v1/config-values/${environmentId}/${configValue.Name}`, {
 		method: 'POST',
