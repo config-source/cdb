@@ -122,6 +122,40 @@ func (svc *Service) SetConfigurationValue(
 	return result, err
 }
 
+func (svc *Service) SetConfigurationValues(
+	ctx context.Context,
+	actor auth.User,
+	envID int,
+	values []*ConfigValue,
+) ([]*ConfigValue, error) {
+	results := make([]*ConfigValue, 0, len(values))
+
+	for _, value := range values {
+		// Inherited values shouldn't be updated this way but should be returned
+		// to the client.
+		if value.Inherited {
+			results = append(results, value)
+			continue
+		}
+
+		cv, err := svc.SetConfigurationValue(
+			ctx,
+			actor,
+			envID,
+			value.Name,
+			value,
+		)
+		if err != nil {
+			return results, err
+		}
+
+		results = append(results, cv)
+	}
+
+	return results, nil
+
+}
+
 func (svc *Service) CreateConfigValue(
 	ctx context.Context,
 	actor auth.User,

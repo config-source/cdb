@@ -93,7 +93,7 @@ func SendErr(log zerolog.Logger, w http.ResponseWriter, r *http.Request, err err
 	default:
 		switch v := w.(type) {
 		case *StatusRecorder:
-			if v.Status == 0 {
+			if v.Status() == 0 {
 				log.Error().
 					Err(err).
 					Str("method", r.Method).

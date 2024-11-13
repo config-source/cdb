@@ -4,7 +4,7 @@
 	import ConfigValueInput from '../ConfigValueInput.svelte';
 	import ConfigKeySelector from '../ConfigKeySelector.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+	import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import { createEventDispatcher } from 'svelte';
 	import * as configKeyClient from '$lib/client/config-keys';
 	import { isError } from '$lib/client';
@@ -115,7 +115,7 @@
 </script>
 
 {#each newValues as newValue, i}
-	<tr>
+	<tr class="is-editing">
 		<td>
 			<div class="select">
 				{#await environment then env}
@@ -138,11 +138,6 @@
 		</td>
 		<td></td>
 		<td class="buttons is-centered">
-			<button class="button is-success" onclick={saveNewConfigValue(i)}>
-				<span class="icon">
-					<FontAwesomeIcon icon={faCheck} />
-				</span>
-			</button>
 			<button class="button is-danger" onclick={removeNewConfigValue(i)}>
 				<span class="icon">
 					<FontAwesomeIcon icon={faTrash} />
@@ -152,7 +147,7 @@
 	</tr>
 {/each}
 
-<tr>
+<tr class="is-editing">
 	<td></td>
 	<td></td>
 	<td></td>

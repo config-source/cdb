@@ -9,6 +9,17 @@ export async function setConfigValue(environmentId, configValue) {
 	return true;
 }
 
+/** @type (environmentId: number, configValue: any) => Promise<App.Response<any[]>> */
+export async function setConfigValues(environmentId, configValues) {
+	const res = await fetch(`/api/v1/config-values/${environmentId}`, {
+		method: 'POST',
+		body: JSON.stringify(configValues)
+	});
+
+	if (!res.ok) return [];
+	return await res.json();
+}
+
 /** @type (envId: number) => Promise<any[]> */
 export async function fetchConfig(envId) {
 	if (envId === 0) return [];

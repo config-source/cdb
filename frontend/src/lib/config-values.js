@@ -53,6 +53,10 @@ export const updateValue = (configValue, newRawValue) => {
 			console.error(configValue);
 			throw new Error(`Somehow reached unreachable code!`);
 	}
+
+	// Remove inheritance info if present.
+	configValue.Inherited = undefined;
+	configValue.InheritedFrom = undefined;
 };
 
 /** initialiseValue takes a freshly made configValue which has a ValueType field and

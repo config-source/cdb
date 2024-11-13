@@ -87,6 +87,45 @@ func (a *V1) SetConfigurationValue(w http.ResponseWriter, r *http.Request) {
 	a.sendJson(w, cv)
 }
 
+func (a *V1) SetConfigurationValues(w http.ResponseWriter, r *http.Request) {
+	user, err := middleware.GetUser(r)
+	if err != nil {
+		a.sendErr(w, r, err)
+		return
+	}
+
+	environmentID, err := strconv.Atoi(r.PathValue("environment"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, r, err)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	var newConfigValues []*configvalues.ConfigValue
+	err = decoder.Decode(&newConfigValues)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		a.sendErr(w, r, err)
+		return
+	}
+
+	cv, err := a.configValueService.SetConfigurationValues(
+		r.Context(),
+		user,
+		environmentID,
+		newConfigValues,
+	)
+	if err != nil {
+		a.sendErr(w, r, err)
+		return
+	}
+
+	a.sendJson(w, cv)
+}
+
 func (a *V1) CreateConfigValue(w http.ResponseWriter, r *http.Request) {
 	user, err := middleware.GetUser(r)
 	if err != nil {

@@ -69,6 +69,7 @@ func NewV1(
 	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}/{key}", api.GetConfigurationValue)
 	v1Mux.HandleFunc("POST /api/v1/config-values/{environment}/{key}", api.SetConfigurationValue)
 	v1Mux.HandleFunc("GET /api/v1/config-values/{environment}", api.GetConfiguration)
+	v1Mux.HandleFunc("POST /api/v1/config-values/{environment}", api.SetConfigurationValues)
 
 	v1Mux.HandleFunc("GET /api/v1/users/me", api.GetLoggedInUser)
 	v1Mux.HandleFunc("POST /api/v1/auth/api-tokens", api.IssueAPIToken)
