@@ -269,4 +269,29 @@ func main() {
 		time.Now(),
 	)
 	fail(err)
+
+	legacySvc := services[0]
+	legacyProd, err := envRepo.GetEnvironmentByName(ctx, legacySvc.Name, "production")
+	fail(err)
+
+	rand.Seed(time.Now().UnixNano())
+
+	fmt.Println("Seeding 3000 config keys and values for legacy-service...")
+	for i := range 3000 {
+		dummy, err := keyRepo.CreateConfigKey(ctx, configkeys.New(legacySvc.ID, fmt.Sprintf("DUMMY_KEY_%d", i), configkeys.TypeString))
+		fail(err)
+
+		length := 16
+		b := make([]byte, length+2)
+		rand.Read(b)
+		value := fmt.Sprintf("%x", b)[2 : length+2]
+
+		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
+			legacyProd.ID,
+			dummy.ID,
+			value,
+		))
+		fail(err)
+	}
+	fmt.Println("Done seeding 3000 config keys and values for legacy-service.")
 }

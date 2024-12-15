@@ -6,7 +6,7 @@
 	 * @typedef {Object} Props
 	 * @property {string} title
 	 * @property {string} [errorMessage]
-	 * @property {undefined | ((email: string, password: string) => unknown)} onSubmit
+	 * @property {(email: string, password: string) => unknown} [onSubmit]
 	 */
 
 	/** @type {Props} */
