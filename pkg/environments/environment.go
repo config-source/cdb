@@ -1,7 +1,6 @@
 package environments
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -36,19 +35,6 @@ func (e Environment) String() string {
 		e.Name,
 		promotesToID,
 	)
-}
-
-type Repository interface {
-	CreateEnvironment(context.Context, Environment) (Environment, error)
-
-	GetEnvironment(ctx context.Context, id int) (Environment, error)
-	GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error)
-
-	ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error)
-
-	UpdateEnvironment(ctx context.Context, env Environment) (Environment, error)
-
-	DeleteEnvironment(ctx context.Context, id int) error
 }
 
 type Tree struct {

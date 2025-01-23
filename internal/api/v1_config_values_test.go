@@ -11,51 +11,59 @@ import (
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
 func TestGetConfiguration(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	production, err := tc.environmentRepo.CreateEnvironment(context.Background(), environments.Environment{Name: "production", ServiceID: svc.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	staging, err := tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{
+			Name:         "staging",
+			ServiceID:    svc.ID,
+			PromotesToID: &production.ID,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+		{
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc.ID,
+		},
+	})
+
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewString(1, 1, "SRE"),
-		configvalues.NewInt(1, 2, 100),
-		configvalues.NewInt(2, 2, 10),
+		configvalues.NewString(production.ID, keys[0].ID, "SRE"),
+		configvalues.NewInt(production.ID, keys[1].ID, 100),
+		configvalues.NewInt(staging.ID, keys[1].ID, 10),
 	}
 
 	for _, cv := range fixtures {
-		_, err := repo.CreateConfigValue(context.Background(), cv)
+		_, err := tc.valueRepo.CreateConfigValue(context.Background(), cv)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-values/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -95,34 +103,36 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestCreateConfigValue(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
+	production, err := tc.environmentRepo.CreateEnvironment(context.Background(), environments.Environment{Name: "production", ServiceID: svc.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+	})[0]
 
 	val := "test"
-	env := configvalues.ConfigValue{
+	value := configvalues.ConfigValue{
 		Name:          "owner",
 		ValueType:     configkeys.TypeString,
-		EnvironmentID: 1,
-		ConfigKeyID:   1,
+		EnvironmentID: production.ID,
+		ConfigKeyID:   key.ID,
 		StrValue:      &val,
 	}
 
-	marshalled, err := json.Marshal(env)
+	marshalled, err := json.Marshal(value)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,61 +153,70 @@ func TestCreateConfigValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if created.Name != env.Name {
-		t.Fatalf("Expected name to be %s got: %s", env.Name, created.Name)
+	if created.Name != value.Name {
+		t.Errorf("Expected name to be '%s' got: '%s'", value.Name, created.Name)
 	}
 
 	if created.CreatedAt.IsZero() {
-		t.Fatal("Expected CreatedAt to not be zero value.")
+		t.Error("Expected CreatedAt to not be zero value.")
 	}
 
 	if created.ID == 0 {
-		t.Fatal("Expected ID to not be zero.")
+		t.Error("Expected ID to not be zero.")
 	}
 }
 
 func TestGetConfigurationByKey(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	production, err := tc.environmentRepo.CreateEnvironment(context.Background(), environments.Environment{Name: "production", ServiceID: svc.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	staging, err := tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{
+			Name:         "staging",
+			ServiceID:    svc.ID,
+			PromotesToID: &production.ID,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+		{
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc.ID,
+		},
+	})
+
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewString(1, 1, "SRE"),
-		configvalues.NewInt(1, 2, 100),
-		configvalues.NewInt(2, 2, 10),
+		configvalues.NewString(production.ID, keys[0].ID, "SRE"),
+		configvalues.NewInt(production.ID, keys[1].ID, 100),
+		configvalues.NewInt(staging.ID, keys[1].ID, 10),
 	}
 
 	for _, cv := range fixtures {
-		_, err := repo.CreateConfigValue(context.Background(), cv)
+		_, err := tc.valueRepo.CreateConfigValue(context.Background(), cv)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/config-values/2/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -223,61 +242,55 @@ func TestGetConfigurationByKey(t *testing.T) {
 }
 
 func TestSetConfigurationByKey(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:        1,
-				Name:      "production",
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-				ServiceID:    1,
-				Service:      "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	production, err := tc.environmentRepo.CreateEnvironment(context.Background(), environments.Environment{Name: "production", ServiceID: svc.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	staging, err := tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{
+			Name:         "staging",
+			ServiceID:    svc.ID,
+			PromotesToID: &production.ID,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+		{
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc.ID,
+		},
+	})
+
 	fixtures := []*configvalues.ConfigValue{
-		configvalues.NewString(1, 1, "SRE"),
-		configvalues.NewInt(1, 2, 100),
-		configvalues.NewInt(2, 2, 10),
+		configvalues.NewString(production.ID, keys[0].ID, "SRE"),
+		configvalues.NewInt(production.ID, keys[1].ID, 100),
+		configvalues.NewInt(staging.ID, keys[1].ID, 10),
 	}
 
 	for _, cv := range fixtures {
-		_, err := repo.CreateConfigValue(context.Background(), cv)
+		_, err := tc.valueRepo.CreateConfigValue(context.Background(), cv)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-
-	_, mux, _ := testAPI(repo, true)
 
 	val := 10
 	env := configvalues.ConfigValue{

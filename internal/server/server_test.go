@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"net/http/httptest"
 	"testing"
 
@@ -9,30 +8,31 @@ import (
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
+	"github.com/config-source/cdb/pkg/postgresutils"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
 func TestHealthCheckSuccess(t *testing.T) {
 	gateway := auth.NewTestGateway()
 
-	pool, err := pgxpool.New(context.Background(), "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	pool := postgresutils.InitTestDB(t)
+	repoLogger := zerolog.New(nil).Level(zerolog.Disabled)
 
-	repo := &testutils.TestRepository{}
+	svcRepo := services.NewRepository(repoLogger, pool)
+	envRepo := environments.NewRepository(repoLogger, pool)
+	keyRepo := configkeys.NewRepository(repoLogger, pool)
+	valueRepo := configvalues.NewRepository(repoLogger, pool, envRepo)
+
 	server := New(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		[]byte("test key"),
 		pool,
 		auth.NewTestServiceWithGateway(gateway),
-		configvalues.NewService(repo, repo, repo, gateway, true),
-		environments.NewService(repo, gateway),
-		configkeys.NewService(repo, gateway),
-		services.NewServiceService(repo, gateway),
+		configvalues.NewService(valueRepo, envRepo, keyRepo, gateway, true),
+		environments.NewService(envRepo, gateway),
+		configkeys.NewService(keyRepo, gateway),
+		services.NewServiceService(svcRepo, gateway),
 		"/frontend",
 	)
 
@@ -47,30 +47,36 @@ func TestHealthCheckSuccess(t *testing.T) {
 }
 
 func TestHealthCheckFailure(t *testing.T) {
-	repo := &testutils.TestRepository{
-		IsHealthy: false,
-	}
-
 	gateway := auth.NewTestGateway()
 	gateway.IsHealthy = false
 	userService := auth.NewTestServiceWithGateway(gateway)
 
-	mux := New(
+	pool := postgresutils.InitTestDB(t)
+	repoLogger := zerolog.New(nil).Level(zerolog.Disabled)
+
+	svcRepo := services.NewRepository(repoLogger, pool)
+	envRepo := environments.NewRepository(repoLogger, pool)
+	keyRepo := configkeys.NewRepository(repoLogger, pool)
+	valueRepo := configvalues.NewRepository(repoLogger, pool, envRepo)
+
+	server := New(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		[]byte("test key"),
-		nil,
+		pool,
 		userService,
-		configvalues.NewService(repo, repo, repo, gateway, true),
-		environments.NewService(repo, gateway),
-		configkeys.NewService(repo, gateway),
-		services.NewServiceService(repo, gateway),
+		configvalues.NewService(valueRepo, envRepo, keyRepo, gateway, true),
+		environments.NewService(envRepo, gateway),
+		configkeys.NewService(keyRepo, gateway),
+		services.NewServiceService(svcRepo, gateway),
 		"/frontend",
 	)
+
+	pool.Close()
 
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	mux.ServeHTTP(rr, req)
+	server.ServeHTTP(rr, req)
 
 	if rr.Code == 200 {
 		t.Fatalf("Expected non-200 status code got: %d", rr.Code)

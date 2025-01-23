@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func initTestDB(t *testing.T) (environments.Repository, services.Repository) {
+func initTestDB(t *testing.T) (*environments.Repository, *services.Repository) {
 	t.Helper()
 
 	pool := postgresutils.InitTestDB(t)
@@ -30,7 +30,7 @@ func initTestDB(t *testing.T) (environments.Repository, services.Repository) {
 
 func envFixture(
 	t *testing.T,
-	repo environments.Repository,
+	repo *environments.Repository,
 	name string,
 	promotesToID *int,
 	serviceID int,
@@ -47,7 +47,7 @@ func envFixture(
 	return env
 }
 
-func svcFixture(t *testing.T, repo services.Repository, name string) services.Service {
+func svcFixture(t *testing.T, repo *services.Repository, name string) services.Service {
 	svc, err := repo.CreateService(context.Background(), services.Service{
 		Name: name,
 	})

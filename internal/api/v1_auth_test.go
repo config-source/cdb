@@ -10,7 +10,6 @@ import (
 
 	"github.com/config-source/cdb/internal/middleware"
 	"github.com/config-source/cdb/pkg/auth"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
 func getCookieValue(cookies []*http.Cookie, cookieName string) string {
@@ -24,9 +23,9 @@ func getCookieValue(cookies []*http.Cookie, cookieName string) string {
 }
 
 func TestLogin(t *testing.T) {
-	repo := &testutils.TestRepository{}
+	tc, mux := testAPI(t, true)
+	gateway := tc.gateway
 
-	_, mux, gateway := testAPI(repo, true)
 	_, err := gateway.CreateUser(context.Background(), auth.User{
 		Email:    "test@example.com",
 		Password: "Testing123!@",
@@ -91,9 +90,8 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	repo := &testutils.TestRepository{}
-
-	_, mux, gateway := testAPI(repo, true)
+	tc, mux := testAPI(t, true)
+	gateway := tc.gateway
 
 	creds := Credentials{
 		Email:    "test@example.com",
@@ -164,12 +162,10 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterWhenPublicRegistrationDisabled(t *testing.T) {
-	repo := &testutils.TestRepository{}
-
-	api, mux, gateway := testAPI(repo, true)
-	api.userService = auth.NewUserService(
-		gateway,
-		gateway,
+	tc, mux := testAPI(t, true)
+	tc.api.userService = auth.NewUserService(
+		tc.gateway,
+		tc.gateway,
 		&auth.TokenRegistry{},
 		false,
 		"",

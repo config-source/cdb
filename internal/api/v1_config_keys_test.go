@@ -2,50 +2,56 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"slices"
 	"testing"
 
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
-func TestListConfigKeys(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "minReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			3: {
-				ID:        3,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
+func createKeys(t *testing.T, tc TestContext, keys []configkeys.ConfigKey) []configkeys.ConfigKey {
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "keyHolder"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
+	newKeys := make([]configkeys.ConfigKey, len(keys))
+	for idx, key := range keys {
+		if key.ServiceID == 0 {
+			key.ServiceID = svc.ID
+		}
+
+		newKeys[idx], err = tc.keyRepo.CreateConfigKey(context.Background(), key)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return newKeys
+}
+
+func TestListConfigKeys(t *testing.T) {
+	tc, mux := testAPI(t, true)
+
+	createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+		},
+		{
+			Name:      "minReplicas",
+			ValueType: configkeys.TypeInteger,
+		},
+		{
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+		},
+	})
+
 	req := httptest.NewRequest("GET", "/api/v1/config-keys", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -67,26 +73,17 @@ func TestListConfigKeys(t *testing.T) {
 }
 
 func TestGetConfigKeyByID(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
-	}
+	tc, mux := testAPI(t, true)
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/by-id/1", nil)
+	keys := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+		},
+	})
+	key := keys[0]
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/config-keys/by-id/%d", key.ID), nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -95,29 +92,35 @@ func TestGetConfigKeyByID(t *testing.T) {
 	if rr.Code != 200 {
 		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
 	}
+
+	var got configkeys.ConfigKey
+	if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+
+	if got.ID != key.ID {
+		t.Errorf("Expected ID %d got %d", key.ID, got.ID)
+	}
 }
 
 func TestGetConfigKeyByIDNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-id/2", nil)
+	keys := createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+	})
+	key := keys[0]
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/config-keys/%d/by-id/%d", svc.ID, key.ID+1), nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -129,21 +132,17 @@ func TestGetConfigKeyByIDNotFound(t *testing.T) {
 }
 
 func TestCreateConfigKey(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-	}
+	tc, mux := testAPI(t, true)
 
-	_, mux, _ := testAPI(repo, true)
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	configKey := configkeys.ConfigKey{
 		Name:      "owner",
 		ValueType: configkeys.TypeString,
-		ServiceID: 1,
+		ServiceID: svc.ID,
 	}
 
 	marshalled, err := json.Marshal(configKey)
@@ -168,39 +167,29 @@ func TestCreateConfigKey(t *testing.T) {
 	}
 
 	if created.Name != configKey.Name {
-		t.Fatalf("Expected name to be %s got: %s", configKey.Name, created.Name)
+		t.Errorf("Expected name to be %s got: %s", configKey.Name, created.Name)
 	}
 
 	if created.CreatedAt.IsZero() {
-		t.Fatal("Expected CreatedAt to not be zero value.")
+		t.Error("Expected CreatedAt to not be zero value.")
 	}
 
 	if created.ID == 0 {
-		t.Fatal("Expected ID to not be zero.")
+		t.Error("Expected ID to not be zero.")
 	}
 }
 
 func TestGetConfigKeyByName(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
-	}
+	tc, mux := testAPI(t, true)
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys/test/by-name/owner", nil)
+	createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+		},
+	})
+
+	req := httptest.NewRequest("GET", "/api/v1/config-keys/keyHolder/by-name/owner", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -212,25 +201,15 @@ func TestGetConfigKeyByName(t *testing.T) {
 }
 
 func TestGetConfigKeyByNameNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
-	}
+	tc, mux := testAPI(t, true)
 
-	_, mux, _ := testAPI(repo, true)
+	createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+		},
+	})
+
 	req := httptest.NewRequest("GET", "/api/v1/config-keys/1/by-name/minReplicas", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -243,48 +222,47 @@ func TestGetConfigKeyByNameNotFound(t *testing.T) {
 }
 
 func TestListConfigKeysFilterByService(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-			2: {
-				ID:   2,
-				Name: "test2",
-			},
-			3: {
-				ID:   3,
-				Name: "test3",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "minReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 2,
-				Service:   "test2",
-			},
-			3: {
-				ID:        3,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 3,
-				Service:   "test3",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc1, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test1"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/config-keys?service=2&service=3", nil)
+	svc2, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	svc3, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test3"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	createKeys(t, tc, []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc1.ID,
+		},
+		{
+			Name:      "minReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc2.ID,
+		},
+		{
+			ID:        3,
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc3.ID,
+		},
+	})
+
+	req := httptest.NewRequest(
+		"GET",
+		fmt.Sprintf("/api/v1/config-keys?service=%d&service=%d", svc2.ID, svc3.ID),
+		nil,
+	)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -304,8 +282,8 @@ func TestListConfigKeysFilterByService(t *testing.T) {
 	}
 
 	for _, key := range keys {
-		if !slices.Contains([]int{2, 3}, key.ServiceID) {
-			t.Fatalf("Expected ServiceID to be 2 or 3 got: %v", keys[0])
+		if !slices.Contains([]int{svc2.ID, svc3.ID}, key.ServiceID) {
+			t.Fatalf("Expected ServiceID to be %d or %d got: %v", svc2.ID, svc3.ID, keys[0])
 		}
 	}
 }
