@@ -13,16 +13,16 @@ import (
 type Service struct {
 	DynamicConfigKeys bool
 
-	repo          Repository
-	environRepo   environments.Repository
-	configKeyRepo configkeys.Repository
+	repo          *Repository
+	environRepo   *environments.Repository
+	configKeyRepo *configkeys.Repository
 	auth          auth.AuthorizationGateway
 }
 
 func NewService(
-	repo Repository,
-	environRepo environments.Repository,
-	configKeyRepo configkeys.Repository,
+	repo *Repository,
+	environRepo *environments.Repository,
+	configKeyRepo *configkeys.Repository,
 	auth auth.AuthorizationGateway,
 	dynamicConfigKeys bool,
 ) *Service {
@@ -175,6 +175,7 @@ func (svc *Service) CreateConfigValue(
 		return ConfigValue{}, err
 	}
 
+	cv.Name = ck.Name
 	cv.ValueType = ck.ValueType
 	if err := cv.Valid(); err != nil {
 		return ConfigValue{}, err

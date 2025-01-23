@@ -11,13 +11,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type PostgresRepository struct {
+type Repository struct {
 	pool *pgxpool.Pool
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) Repository {
-	return &PostgresRepository{
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *Repository {
+	return &Repository{
 		log:  log,
 		pool: pool,
 	}
@@ -44,7 +44,7 @@ var updateEnvironmentSql string
 //go:embed queries/delete_environment.sql
 var deleteEnvironmentSql string
 
-func (r *PostgresRepository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
+func (r *Repository) CreateEnvironment(ctx context.Context, env Environment) (Environment, error) {
 	return postgresutils.GetOneLax[Environment](
 		r.pool,
 		ctx,
@@ -56,7 +56,7 @@ func (r *PostgresRepository) CreateEnvironment(ctx context.Context, env Environm
 	)
 }
 
-func (r *PostgresRepository) GetEnvironment(ctx context.Context, id int) (Environment, error) {
+func (r *Repository) GetEnvironment(ctx context.Context, id int) (Environment, error) {
 	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, ErrNotFound
@@ -65,7 +65,7 @@ func (r *PostgresRepository) GetEnvironment(ctx context.Context, id int) (Enviro
 	return env, err
 }
 
-func (r *PostgresRepository) GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error) {
+func (r *Repository) GetEnvironmentByName(ctx context.Context, serviceName, name string) (Environment, error) {
 	env, err := postgresutils.GetOne[Environment](r.pool, ctx, getEnvironmentByNameSql, serviceName, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return env, ErrNotFound
@@ -74,7 +74,7 @@ func (r *PostgresRepository) GetEnvironmentByName(ctx context.Context, serviceNa
 	return env, err
 }
 
-func (r *PostgresRepository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error) {
+func (r *Repository) ListEnvironments(ctx context.Context, includeSensitive bool) ([]Environment, error) {
 	sql := listNonsensitiveEnvironmentsSql
 	if includeSensitive {
 		sql = listEnvironmentsSql
@@ -85,7 +85,7 @@ func (r *PostgresRepository) ListEnvironments(ctx context.Context, includeSensit
 	return envs, err
 }
 
-func (r *PostgresRepository) UpdateEnvironment(ctx context.Context, env Environment) (Environment, error) {
+func (r *Repository) UpdateEnvironment(ctx context.Context, env Environment) (Environment, error) {
 	return postgresutils.GetOneLax[Environment](
 		r.pool,
 		ctx,
@@ -97,7 +97,7 @@ func (r *PostgresRepository) UpdateEnvironment(ctx context.Context, env Environm
 	)
 }
 
-func (r *PostgresRepository) DeleteEnvironment(ctx context.Context, id int) error {
+func (r *Repository) DeleteEnvironment(ctx context.Context, id int) error {
 	_, err := r.pool.Exec(ctx, deleteEnvironmentSql, id)
 	return err
 }

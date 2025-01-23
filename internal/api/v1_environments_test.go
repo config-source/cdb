@@ -4,33 +4,33 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/config-source/cdb/pkg/environments"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
 func TestGetEnvironmentByName(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:        1,
-				Name:      "production",
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(
+		context.Background(),
+		services.Service{Name: "test"},
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
+	_, err = tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{Name: "production", ServiceID: svc.ID},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req := httptest.NewRequest("GET", "/api/v1/environments/test/by-name/production", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -43,17 +43,25 @@ func TestGetEnvironmentByName(t *testing.T) {
 }
 
 func TestGetEnvironmentByNameNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(
+		context.Background(),
+		services.Service{Name: "test"},
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/environments/by-name/dev", nil)
+	_, err = tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{Name: "production", ServiceID: svc.ID},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", "/api/v1/environments/test/by-name/dev", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -65,17 +73,25 @@ func TestGetEnvironmentByNameNotFound(t *testing.T) {
 }
 
 func TestGetEnvironmentByID(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(
+		context.Background(),
+		services.Service{Name: "test"},
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/environments/by-id/1", nil)
+	env, err := tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{Name: "production", ServiceID: svc.ID},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/environments/by-id/%d", env.ID), nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -87,16 +103,24 @@ func TestGetEnvironmentByID(t *testing.T) {
 }
 
 func TestGetEnvironmentByIDNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+
+	svc, err := tc.serviceRepo.CreateService(
+		context.Background(),
+		services.Service{Name: "test"},
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
+	_, err = tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{Name: "production", ServiceID: svc.ID},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req := httptest.NewRequest("GET", "/api/v1/environments/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -109,11 +133,9 @@ func TestGetEnvironmentByIDNotFound(t *testing.T) {
 }
 
 func TestCreateEnvironment(t *testing.T) {
-	repo := &testutils.TestRepository{}
+	tc, mux := testAPI(t, true)
 
-	_, mux, _ := testAPI(repo, true)
-
-	svc, err := repo.CreateService(context.Background(), services.Service{Name: "test"})
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}

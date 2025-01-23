@@ -1,10 +1,16 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
+)
+
+type RoleName string
+
+const (
+	Owner     = "OWNER"
+	Developer = "DEVELOPER"
 )
 
 var (
@@ -23,13 +29,4 @@ func (e Service) String() string {
 		e.ID,
 		e.Name,
 	)
-}
-
-type Repository interface {
-	CreateService(context.Context, Service) (Service, error)
-
-	GetService(ctx context.Context, id int) (Service, error)
-	GetServiceByName(ctx context.Context, name string) (Service, error)
-
-	ListServices(ctx context.Context, includeSensitive bool) ([]Service, error)
 }

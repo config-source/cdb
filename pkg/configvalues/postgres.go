@@ -14,14 +14,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type PostgresRepository struct {
+type Repository struct {
 	pool    *pgxpool.Pool
 	log     zerolog.Logger
-	envRepo environments.Repository
+	envRepo *environments.Repository
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool, envRepo environments.Repository) Repository {
-	return &PostgresRepository{
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool, envRepo *environments.Repository) *Repository {
+	return &Repository{
 		log:     log,
 		pool:    pool,
 		envRepo: envRepo,
@@ -46,7 +46,7 @@ var getAllConfigValuesForEnvironmentSql string
 //go:embed queries/get_all_config_values_except_matching_keys.sql
 var getAllConfigValuesForEnvironmentExceptKeysSql string
 
-func (r *PostgresRepository) CreateConfigValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
+func (r *Repository) CreateConfigValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
 	created, err := postgresutils.GetOneLax[ConfigValue](
 		r.pool,
 		ctx,
@@ -64,10 +64,13 @@ func (r *PostgresRepository) CreateConfigValue(ctx context.Context, cv *ConfigVa
 		return nil, err
 	}
 
+	created.Name = cv.Name
+	created.ValueType = cv.ValueType
+
 	return &created, err
 }
 
-func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
+func (r *Repository) UpdateConfigurationValue(ctx context.Context, cv *ConfigValue) (*ConfigValue, error) {
 	updated, err := postgresutils.GetOneLax[ConfigValue](
 		r.pool,
 		ctx,
@@ -99,7 +102,7 @@ func (r *PostgresRepository) UpdateConfigurationValue(ctx context.Context, cv *C
 	return &updated, err
 }
 
-func (r *PostgresRepository) GetConfigValueByEnvAndKey(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
+func (r *Repository) GetConfigValueByEnvAndKey(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
 	cv, err := postgresutils.GetOne[ConfigValue](
 		r.pool,
 		ctx,
@@ -122,7 +125,7 @@ func getAllKeys(values []ConfigValue) []string {
 	return keys
 }
 
-func getConfigurationRecursively(ctx context.Context, r *PostgresRepository, environmentID int, excludedKeys []string) ([]ConfigValue, error) {
+func getConfigurationRecursively(ctx context.Context, r *Repository, environmentID int, excludedKeys []string) ([]ConfigValue, error) {
 	env, err := r.envRepo.GetEnvironment(ctx, environmentID)
 	if err != nil {
 		return nil, err
@@ -146,7 +149,7 @@ func getConfigurationRecursively(ctx context.Context, r *PostgresRepository, env
 	return immediateValues, nil
 }
 
-func (r *PostgresRepository) GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error) {
+func (r *Repository) GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error) {
 	immediateValues, err := postgresutils.GetAll[ConfigValue](r.pool, ctx, getAllConfigValuesForEnvironmentSql, environmentID)
 	if err != nil {
 		return immediateValues, err
@@ -165,7 +168,7 @@ func (r *PostgresRepository) GetConfiguration(ctx context.Context, environmentID
 	return immediateValues, nil
 }
 
-func (r *PostgresRepository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
+func (r *Repository) GetConfigurationValue(ctx context.Context, environmentID int, key string) (*ConfigValue, error) {
 	cv, err := r.GetConfigValueByEnvAndKey(ctx, environmentID, key)
 	if errors.Is(err, ErrNotFound) {
 		env, err := r.envRepo.GetEnvironment(ctx, environmentID)
@@ -191,7 +194,7 @@ func (r *PostgresRepository) GetConfigurationValue(ctx context.Context, environm
 	return cv, err
 }
 
-func (r *PostgresRepository) GetConfigurationValueByID(ctx context.Context, configValueID int) (*ConfigValue, error) {
+func (r *Repository) GetConfigurationValueByID(ctx context.Context, configValueID int) (*ConfigValue, error) {
 	cv, err := postgresutils.GetOne[ConfigValue](r.pool, ctx, getConfigValueByIDSql, configValueID)
 	return &cv, err
 }

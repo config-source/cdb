@@ -12,30 +12,60 @@ import (
 	"github.com/config-source/cdb/pkg/configkeys"
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
+	"github.com/config-source/cdb/pkg/postgresutils"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 	"github.com/rs/zerolog"
 )
 
+type TestContext struct {
+	serviceRepo     *services.Repository
+	environmentRepo *environments.Repository
+	keyRepo         *configkeys.Repository
+	valueRepo       *configvalues.Repository
+
+	api *V1
+
+	gateway *auth.TestGateway
+}
+
 func testAPI(
-	repo *testutils.TestRepository,
+	t *testing.T,
 	alwaysAuthd bool,
-) (*V1, http.Handler, *auth.TestGateway) {
+) (TestContext, http.Handler) {
+	t.Helper()
+
 	gateway := auth.NewTestGateway()
 	tokenSigningKey := []byte("test key")
+
+	pool := postgresutils.InitTestDB(t)
+	repoLogger := zerolog.New(nil).Level(zerolog.Disabled)
+
+	svcRepo := services.NewRepository(repoLogger, pool)
+	envRepo := environments.NewRepository(repoLogger, pool)
+	keyRepo := configkeys.NewRepository(repoLogger, pool)
+	valueRepo := configvalues.NewRepository(repoLogger, pool, envRepo)
 
 	api, mux := NewV1(
 		zerolog.New(nil).Level(zerolog.Disabled),
 		tokenSigningKey,
 		auth.NewTestServiceWithGateway(gateway),
-		configvalues.NewService(repo, repo, repo, gateway, true),
-		environments.NewService(repo, gateway),
-		configkeys.NewService(repo, gateway),
-		services.NewServiceService(repo, gateway),
+		configvalues.NewService(valueRepo, envRepo, keyRepo, gateway, true),
+		environments.NewService(envRepo, gateway),
+		configkeys.NewService(keyRepo, gateway),
+		services.NewServiceService(svcRepo, gateway),
 	)
 
+	tc := TestContext{
+		serviceRepo:     svcRepo,
+		environmentRepo: envRepo,
+		keyRepo:         keyRepo,
+		valueRepo:       valueRepo,
+		api:             api,
+		gateway:         gateway,
+	}
+
 	if alwaysAuthd {
-		return api, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return tc, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user := auth.User{}
 			idToken, err := auth.GenerateIdToken(tokenSigningKey, user)
 			if err != nil {
@@ -48,14 +78,14 @@ func testAPI(
 			)
 
 			mux.ServeHTTP(w, r)
-		}), gateway
+		})
 	}
 
-	return api, mux, gateway
+	return tc, mux
 }
 
 func TestProtectedRoutesAreProtected(t *testing.T) {
-	_, mux, _ := testAPI(&testutils.TestRepository{}, false)
+	_, mux := testAPI(t, false)
 	protectedRoutes := []struct {
 		endpoint string
 		method   string

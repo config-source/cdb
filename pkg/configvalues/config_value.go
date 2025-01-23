@@ -1,7 +1,6 @@
 package configvalues
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -241,15 +240,4 @@ func (cv *ConfigValue) validateBoolean() error {
 	}
 
 	return nil
-}
-
-type Repository interface {
-	CreateConfigValue(context.Context, *ConfigValue) (*ConfigValue, error)
-
-	GetConfiguration(ctx context.Context, environmentID int) ([]ConfigValue, error)
-	GetConfigurationValue(ctx context.Context, environmentID int, key string) (*ConfigValue, error)
-	GetConfigurationValueByID(ctx context.Context, configValueID int) (*ConfigValue, error)
-	GetConfigValueByEnvAndKey(ctx context.Context, environmentID int, key string) (*ConfigValue, error)
-
-	UpdateConfigurationValue(context.Context, *ConfigValue) (*ConfigValue, error)
 }

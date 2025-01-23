@@ -2,25 +2,22 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
 func TestGetServiceByName(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "production"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/services/by-name/production", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -28,21 +25,26 @@ func TestGetServiceByName(t *testing.T) {
 	mux.ServeHTTP(rr, req)
 
 	if rr.Code != 200 {
-		t.Fatalf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
+		t.Errorf("Expected status code 200 got: %d %s", rr.Code, rr.Body.String())
+	}
+
+	var got services.Service
+	if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+
+	if got.ID != svc.ID {
+		t.Errorf("Expected ID %d got %d", svc.ID, got.ID)
 	}
 }
 
 func TestGetServiceByNameNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+	_, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "production"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/services/by-name/dev", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -55,17 +57,13 @@ func TestGetServiceByNameNotFound(t *testing.T) {
 }
 
 func TestGetServiceByID(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "production"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
-	req := httptest.NewRequest("GET", "/api/v1/services/by-id/1", nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/services/by-id/%d", svc.ID), nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
 
@@ -77,16 +75,12 @@ func TestGetServiceByID(t *testing.T) {
 }
 
 func TestGetServiceByIDNotFound(t *testing.T) {
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "production",
-			},
-		},
+	tc, mux := testAPI(t, true)
+	_, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "production"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	_, mux, _ := testAPI(repo, true)
 	req := httptest.NewRequest("GET", "/api/v1/services/by-id/2", nil)
 	rr := httptest.NewRecorder()
 	rr.Body = bytes.NewBuffer([]byte{})
@@ -99,9 +93,7 @@ func TestGetServiceByIDNotFound(t *testing.T) {
 }
 
 func TestCreateService(t *testing.T) {
-	repo := &testutils.TestRepository{}
-
-	_, mux, _ := testAPI(repo, true)
+	tc, mux := testAPI(t, true)
 
 	svc := services.Service{
 		Name: "production",
@@ -138,5 +130,10 @@ func TestCreateService(t *testing.T) {
 
 	if created.ID == 0 {
 		t.Fatal("Expected ID to not be zero.")
+	}
+
+	_, err = tc.serviceRepo.GetService(context.Background(), created.ID)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

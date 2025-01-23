@@ -11,13 +11,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type PostgresRepository struct {
+type Repository struct {
 	pool *pgxpool.Pool
 	log  zerolog.Logger
 }
 
-func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) Repository {
-	return &PostgresRepository{
+func NewRepository(log zerolog.Logger, pool *pgxpool.Pool) *Repository {
+	return &Repository{
 		log:  log,
 		pool: pool,
 	}
@@ -38,7 +38,7 @@ var getAllConfigKeys string
 //go:embed queries/get_all_config_keys_by_service.sql
 var getAllConfigKeysByService string
 
-func (r *PostgresRepository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigKey, error) {
+func (r *Repository) CreateConfigKey(ctx context.Context, ck ConfigKey) (ConfigKey, error) {
 	var canPropagate bool
 	if ck.CanPropagate == nil {
 		canPropagate = true
@@ -57,7 +57,7 @@ func (r *PostgresRepository) CreateConfigKey(ctx context.Context, ck ConfigKey) 
 	)
 }
 
-func (r *PostgresRepository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
+func (r *Repository) GetConfigKey(ctx context.Context, id int) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByIDSql, id)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
@@ -66,7 +66,7 @@ func (r *PostgresRepository) GetConfigKey(ctx context.Context, id int) (ConfigKe
 	return key, err
 }
 
-func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error) {
+func (r *Repository) GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error) {
 	key, err := postgresutils.GetOne[ConfigKey](r.pool, ctx, getConfigKeyByNameSql, serviceName, name)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return key, ErrNotFound
@@ -76,7 +76,7 @@ func (r *PostgresRepository) GetConfigKeyByName(ctx context.Context, serviceName
 
 }
 
-func (r *PostgresRepository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error) {
+func (r *Repository) ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error) {
 	if len(serviceIDs) > 0 {
 		return postgresutils.GetAll[ConfigKey](r.pool, ctx, getAllConfigKeysByService, serviceIDs)
 	} else {

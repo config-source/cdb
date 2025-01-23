@@ -1,7 +1,6 @@
 package configkeys
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -81,13 +80,4 @@ func (ck ConfigKey) String() string {
 		ck.ServiceID,
 		ck.Propagates(),
 	)
-}
-
-type Repository interface {
-	CreateConfigKey(context.Context, ConfigKey) (ConfigKey, error)
-
-	GetConfigKey(ctx context.Context, id int) (ConfigKey, error)
-	GetConfigKeyByName(ctx context.Context, serviceName, name string) (ConfigKey, error)
-
-	ListConfigKeys(ctx context.Context, serviceIDs ...int) ([]ConfigKey, error)
 }

@@ -10,53 +10,61 @@ import (
 	"github.com/config-source/cdb/pkg/configvalues"
 	"github.com/config-source/cdb/pkg/environments"
 	"github.com/config-source/cdb/pkg/services"
-	"github.com/config-source/cdb/pkg/testutils"
 )
 
-func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:        1,
-				Name:      "production",
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-				ServiceID:    1,
-				Service:      "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
+func setupBasicService(t *testing.T, tc TestContext) {
+	t.Helper()
+
+	svc, err := tc.serviceRepo.CreateService(context.Background(), services.Service{Name: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	production, err := tc.environmentRepo.CreateEnvironment(context.Background(), environments.Environment{Name: "production", ServiceID: svc.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tc.environmentRepo.CreateEnvironment(
+		context.Background(),
+		environments.Environment{
+			Name:         "staging",
+			ServiceID:    svc.ID,
+			PromotesToID: &production.ID,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := make([]configkeys.ConfigKey, 2)
+	for _, key := range []configkeys.ConfigKey{
+		{
+			Name:      "owner",
+			ValueType: configkeys.TypeString,
+			ServiceID: svc.ID,
+		},
+		{
+			Name:      "maxReplicas",
+			ValueType: configkeys.TypeInteger,
+			ServiceID: svc.ID,
+		},
+	} {
+		newKey, err := tc.keyRepo.CreateConfigKey(context.Background(), key)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		keys = append(keys, newKey)
+	}
+}
+
+func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
+	tc := initTestDB(t)
+	setupBasicService(t, tc)
+
 	gateway := auth.NewTestGateway()
-	service := configvalues.NewService(repo, repo, repo, gateway, true)
+	service := configvalues.NewService(tc.valueRepo, tc.environmentRepo, tc.keyRepo, gateway, true)
 	val := 10
 	cv, err := service.SetConfigurationValue(
 		context.Background(),
@@ -72,7 +80,7 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 		t.Fatalf("Failed to set configuration value: %s", err)
 	}
 
-	newKey, err := repo.GetConfigKeyByName(context.Background(), "test", "minReplicas")
+	newKey, err := tc.keyRepo.GetConfigKeyByName(context.Background(), "test", "minReplicas")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,48 +95,16 @@ func TestServiceCreatesConfigKeyWhenDynamicConfigKeysIsTrue(t *testing.T) {
 }
 
 func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:        1,
-				Name:      "production",
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-				ServiceID:    1,
-				Service:      "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
-	}
+	tc := initTestDB(t)
+	setupBasicService(t, tc)
 
-	service := configvalues.NewService(repo, repo, repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(
+		tc.valueRepo,
+		tc.environmentRepo,
+		tc.keyRepo,
+		auth.NewTestGateway(),
+		false,
+	)
 	val := 10
 	_, err := service.SetConfigurationValue(
 		context.Background(),
@@ -146,48 +122,16 @@ func TestServiceReturnsErrorWhenDynamicConfigKeysIsFalse(t *testing.T) {
 }
 
 func TestServiceReturnsErrorWhenValueTypeIsNotValid(t *testing.T) {
-	promotesToID := 1
-	repo := &testutils.TestRepository{
-		Services: map[int]services.Service{
-			1: {
-				ID:   1,
-				Name: "test",
-			},
-		},
-		Environments: map[int]environments.Environment{
-			1: {
-				ID:        1,
-				Name:      "production",
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:           2,
-				Name:         "staging",
-				PromotesToID: &promotesToID,
-				ServiceID:    1,
-				Service:      "test",
-			},
-		},
-		ConfigKeys: map[int]configkeys.ConfigKey{
-			1: {
-				ID:        1,
-				Name:      "owner",
-				ValueType: configkeys.TypeString,
-				ServiceID: 1,
-				Service:   "test",
-			},
-			2: {
-				ID:        2,
-				Name:      "maxReplicas",
-				ValueType: configkeys.TypeInteger,
-				ServiceID: 1,
-				Service:   "test",
-			},
-		},
-	}
+	tc := initTestDB(t)
+	setupBasicService(t, tc)
 
-	service := configvalues.NewService(repo, repo, repo, auth.NewTestGateway(), false)
+	service := configvalues.NewService(
+		tc.valueRepo,
+		tc.environmentRepo,
+		tc.keyRepo,
+		auth.NewTestGateway(),
+		false,
+	)
 	val := "test"
 	_, err := service.SetConfigurationValue(
 		context.Background(),

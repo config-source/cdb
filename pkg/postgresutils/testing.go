@@ -6,6 +6,7 @@ package postgresutils
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"os"
@@ -32,10 +33,18 @@ type TestDatabase struct {
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-func toSnakeCase(str string) string {
+func randomString(length int) string {
+	b := make([]byte, length+2)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[2 : length+2]
+}
+
+func toDatabaseName(str string) string {
 	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-	return strings.ToLower(snake)
+	snake = strings.ToLower(snake)
+	suffix := randomString(10)
+	return fmt.Sprintf("%s_%s", snake, suffix)
 }
 
 func findMigrationPath() string {
@@ -92,7 +101,7 @@ func (tr *TestDatabase) Start(testName string) error {
 		return err
 	}
 	tr.conn = conn
-	tr.testName = toSnakeCase(testName)
+	tr.testName = toDatabaseName(testName)
 
 	ctx := context.Background()
 
@@ -128,17 +137,13 @@ func (tr *TestDatabase) Start(testName string) error {
 // Cleanup deletes the test database.
 func (tr *TestDatabase) Cleanup() {
 	if tr.pool != nil {
-		fmt.Println("Closing connection pool to:", tr.testName)
 		tr.pool.Close()
 	}
 
-	fmt.Println("Cleaning up database:", tr.testName)
 	_, err := tr.conn.Exec(context.Background(), fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", tr.testName))
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Cleanup complete for", tr.testName)
 }
 
 func InitTestDB(t *testing.T) *pgxpool.Pool {
