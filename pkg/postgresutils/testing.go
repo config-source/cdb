@@ -35,7 +35,11 @@ var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func randomString(length int) string {
 	b := make([]byte, length+2)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+
 	return fmt.Sprintf("%x", b)[2 : length+2]
 }
 

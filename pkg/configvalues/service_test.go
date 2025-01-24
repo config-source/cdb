@@ -37,7 +37,6 @@ func setupBasicService(t *testing.T, tc TestContext) {
 		t.Fatal(err)
 	}
 
-	keys := make([]configkeys.ConfigKey, 2)
 	for _, key := range []configkeys.ConfigKey{
 		{
 			Name:      "owner",
@@ -50,12 +49,10 @@ func setupBasicService(t *testing.T, tc TestContext) {
 			ServiceID: svc.ID,
 		},
 	} {
-		newKey, err := tc.keyRepo.CreateConfigKey(context.Background(), key)
+		_, err := tc.keyRepo.CreateConfigKey(context.Background(), key)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		keys = append(keys, newKey)
 	}
 }
 

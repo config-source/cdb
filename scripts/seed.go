@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	mathrand "math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -180,7 +181,7 @@ func main() {
 
 		fmt.Println("Done seeding config values.")
 
-		featureEnvCount := rand.Intn(100)
+		featureEnvCount := mathrand.Intn(100)
 		fmt.Printf("Seeding %d feature environments for %s...\n", featureEnvCount, svc.Name)
 
 		for i := range featureEnvCount {
@@ -201,26 +202,26 @@ func main() {
 			))
 			fail(err)
 
-			switch rand.Intn(3) {
+			switch mathrand.Intn(3) {
 			case 0:
 				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
 					fe.ID,
 					owner.ID,
-					fmt.Sprintf("dev-team-%d", rand.Intn(10)),
+					fmt.Sprintf("dev-team-%d", mathrand.Intn(10)),
 				))
 				fail(err)
 			case 1:
 				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 					fe.ID,
 					maxReplicas.ID,
-					rand.Intn(30),
+					mathrand.Intn(30),
 				))
 				fail(err)
 			case 2:
 				_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewInt(
 					fe.ID,
 					minReplicas.ID,
-					rand.Intn(9)+1,
+					mathrand.Intn(9)+1,
 				))
 				fail(err)
 			}
@@ -274,8 +275,6 @@ func main() {
 	legacyProd, err := envRepo.GetEnvironmentByName(ctx, legacySvc.Name, "production")
 	fail(err)
 
-	rand.Seed(time.Now().UnixNano())
-
 	fmt.Println("Seeding 3000 config keys and values for legacy-service...")
 	for i := range 3000 {
 		dummy, err := keyRepo.CreateConfigKey(ctx, configkeys.New(legacySvc.ID, fmt.Sprintf("DUMMY_KEY_%d", i), configkeys.TypeString))
@@ -283,7 +282,11 @@ func main() {
 
 		length := 16
 		b := make([]byte, length+2)
-		rand.Read(b)
+		_, err = rand.Read(b)
+		if err != nil {
+			panic(err)
+		}
+
 		value := fmt.Sprintf("%x", b)[2 : length+2]
 
 		_, err = valueRepo.CreateConfigValue(ctx, configvalues.NewString(
