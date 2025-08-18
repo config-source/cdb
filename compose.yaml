@@ -10,7 +10,7 @@ services:
       FRONTEND_LOCATION: http://frontend:5173
       JWT_SIGNING_KEY: insecure
       LOG_LEVEL: DEBUG
-    image: docker.io/library/golang:1.23
+    image: docker.io/library/golang:1.24
     entrypoint: /app/docker/compose-entrypoint.sh
     working_dir: /app
     volumes:
